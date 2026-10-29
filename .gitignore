@@ -1,0 +1,32 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Scratch & Temporary Testing Files
+scratch/
+*.log
+*.tmp
+*.temp
+
+# Environment Variables & Secrets / Credentials
+.env
+.env.*
+*.env
+credentials.json
+client_secret*.json
+*.pem
+*.key
+
+# IDE Workspace Settings
+*.code-workspace
+.vscode/
+.idea/
+
+# OS Temporary Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
