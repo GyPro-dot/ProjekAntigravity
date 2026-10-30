@@ -5247,24 +5247,21 @@
     <div class="device-switcher-inner">
       <span class="device-switcher-label">Pratinjau Tampilan:</span>
       <div class="device-btn-group">
-        <button id="btnModeMobile" class="device-btn active" onclick="switchDeviceView('mobile')"
-          title="Tampilan Smartphone (375px - 418px)">
+        <button id="btnModeMobile" class="device-btn active" onclick="window.setPreviewMode('mobile')" data-preview="mobile" title="Tampilan Smartphone (375px - 418px)">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <rect x="5" y="2" width="14" height="20" rx="3" />
             <line x1="12" y1="18" x2="12.01" y2="18" />
           </svg>
           📱 Mode Mobile (HP)
         </button>
-        <button id="btnModeTablet" class="device-btn" onclick="switchDeviceView('tablet')"
-          title="Tampilan Tablet / iPad (768px - 820px)">
+        <button id="btnModeTablet" class="device-btn" onclick="window.setPreviewMode('tablet')" data-preview="tablet" title="Tampilan Tablet / iPad (768px - 820px)">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <rect x="4" y="2" width="16" height="20" rx="2" />
             <line x1="12" y1="18" x2="12.01" y2="18" />
           </svg>
           📟 Mode Tablet (iPad)
         </button>
-        <button id="btnModeDesktop" class="device-btn" onclick="switchDeviceView('desktop')"
-          title="Tampilan Layar Lebar Desktop (1280px)">
+        <button id="btnModeDesktop" class="device-btn" onclick="window.setPreviewMode('desktop')" data-preview="desktop" title="Tampilan Layar Lebar Desktop (1280px)">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <rect x="2" y="3" width="20" height="14" rx="2" />
             <line x1="8" y1="21" x2="16" y2="21" />
@@ -5339,7 +5336,7 @@
 
         <!-- Cart Action with Orange Badge (Image 1 & Image 3) -->
         <!-- Orders Action (Pesanan) -->
-        <div class="vt-header-btn" id="vtHeaderOrdersBtn" onclick="switchTab('orders')" title="Pesanan Saya">
+        <div class="vt-header-btn" id="vtHeaderOrdersBtn" onclick="window.switchTab('orders')" data-action="orders" title="Pesanan Saya" style="cursor: pointer;">
           <div style="position: relative; display: inline-flex;">
             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -5351,7 +5348,7 @@
           <span class="vt-btn-label">Pesanan</span>
         </div>
 
-        <div class="vt-header-btn" onclick="switchTab('cart')" title="Keranjang Belanja">
+        <div class="vt-header-btn" id="vtHeaderCartBtn" onclick="window.switchTab('cart')" data-action="cart" title="Keranjang Belanja" style="cursor: pointer;">
           <div style="position: relative; display: inline-flex;">
             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -5365,7 +5362,7 @@
 
         <!-- User / Akun Action dengan Dropdown Menu (Image 1 & Image 2) -->
         <div class="vt-header-btn-wrap" id="userHeaderBtnWrap" style="position: relative;">
-          <div class="vt-header-btn" id="userHeaderBtn" onclick="handleUserHeaderClick(event)" title="Akun Saya">
+          <div class="vt-header-btn" id="userHeaderBtn" onclick="window.handleUserHeaderClick(event)" data-action="auth" title="Akun Saya" style="cursor: pointer;">
             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
@@ -8582,6 +8579,303 @@
       }
     };
 
+    // =============================================================
+    // CORE INTERACTION & PREVIEW ENGINE (HIGH PRIORITY INIT)
+    // =============================================================
+
+    // 1. DEVICE PREVIEW CONTROLLER (MOBILE ~430px, TABLET ~820px, DESKTOP 100% FULL-WIDTH)
+    function setPreviewMode(mode, silent = false) {
+      const btnMobile = document.getElementById("btnModeMobile") || document.getElementById("btnViewMobile");
+      const btnTablet = document.getElementById("btnModeTablet") || document.getElementById("btnViewTablet");
+      const btnDesktop = document.getElementById("btnModeDesktop") || document.getElementById("btnViewDesktop");
+      const appContainer = document.querySelector(".app-container") || document.getElementById("appContainer");
+
+      document.body.classList.remove("is-mobile-view", "is-tablet-view", "is-desktop-view");
+      btnMobile?.classList.remove("active");
+      btnTablet?.classList.remove("active");
+      btnDesktop?.classList.remove("active");
+
+      if (mode === "tablet") {
+        document.body.classList.add("is-tablet-view");
+        btnTablet?.classList.add("active");
+        if (appContainer) {
+          appContainer.style.setProperty("max-width", "820px", "important");
+          appContainer.style.setProperty("width", "100%", "important");
+          appContainer.style.setProperty("margin", "20px auto 40px auto", "important");
+          appContainer.style.setProperty("border-radius", "32px", "important");
+          appContainer.style.setProperty("box-shadow", "0 25px 70px rgba(0, 0, 0, 0.75), 0 0 0 10px #1e293b, 0 0 0 13px #334155", "important");
+        }
+        if (!silent && typeof showToast === "function") showToast("📟 Mode Tablet (iPad 820px)");
+      } else if (mode === "desktop") {
+        document.body.classList.add("is-desktop-view");
+        btnDesktop?.classList.add("active");
+        if (appContainer) {
+          appContainer.style.setProperty("max-width", "100%", "important");
+          appContainer.style.setProperty("width", "100%", "important");
+          appContainer.style.setProperty("margin", "0 auto", "important");
+          appContainer.style.setProperty("border-radius", "0px", "important");
+          appContainer.style.setProperty("box-shadow", "0 0 40px rgba(0, 0, 0, 0.08)", "important");
+        }
+        if (!silent && typeof showToast === "function") showToast("💻 Mode Desktop (Layar Lebar Full-Width)");
+      } else {
+        mode = "mobile";
+        document.body.classList.add("is-mobile-view");
+        btnMobile?.classList.add("active");
+        if (appContainer) {
+          appContainer.style.setProperty("max-width", "430px", "important");
+          appContainer.style.setProperty("width", "100%", "important");
+          appContainer.style.setProperty("margin", "18px auto 40px auto", "important");
+          appContainer.style.setProperty("border-radius", "42px", "important");
+          appContainer.style.setProperty("box-shadow", "0 25px 70px rgba(0, 0, 0, 0.75), 0 0 0 10px #1e293b, 0 0 0 13px #334155", "important");
+        }
+        if (!silent && typeof showToast === "function") showToast("📱 Mode Mobile (HP 430px)");
+      }
+
+      try {
+        if (typeof safeStorage !== "undefined") safeStorage.setItem("vt_device_view", mode);
+        else localStorage.setItem("vt_device_view", mode);
+      } catch (e) { }
+    }
+
+    // (switchDeviceView hoisted to top of script)
+    function switchMode(mode, silent = false) {
+      setPreviewMode(mode, silent);
+    }
+
+    // Expose preview functions to window immediately
+    window.setPreviewMode = setPreviewMode;
+    window.switchDeviceView = setPreviewMode;
+    window.setDeviceView = setPreviewMode;
+    window.switchMode = setPreviewMode;
+
+    // 2. VIEWPORT / TAB NAVIGATION CONTROLLER (ROBUST DISPLAY SWITCHING)
+    function switchTab(tab) {
+      // Hide all view-content elements reliably
+      document.querySelectorAll(".view-content").forEach(v => {
+        v.classList.remove("active");
+        v.style.setProperty("display", "none", "important");
+      });
+      document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".vt-header-btn").forEach(b => b.classList.remove("active"));
+
+      if (tab !== "catalog" && typeof stopStoreAudio === "function") {
+        try { stopStoreAudio(); } catch (e) {}
+      }
+
+      if (tab === "catalog") {
+        const vc = document.getElementById("viewCatalog");
+        if (vc) {
+          vc.classList.add("active");
+          vc.style.setProperty("display", "block", "important");
+        }
+        document.getElementById("navBtnCatalog")?.classList.add("active");
+      } else if (tab === "cart") {
+        const vc = document.getElementById("viewCart");
+        if (vc) {
+          vc.classList.add("active");
+          vc.style.setProperty("display", "block", "important");
+        }
+        document.getElementById("navBtnCart")?.classList.add("active");
+        document.getElementById("vtHeaderCartBtn")?.classList.add("active");
+        try { if (typeof renderCartView === "function") renderCartView(); } catch (e) { console.error(e); }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (tab === "orders") {
+        const vo = document.getElementById("viewOrders");
+        if (vo) {
+          vo.classList.add("active");
+          vo.style.setProperty("display", "block", "important");
+        }
+        document.getElementById("navBtnOrders")?.classList.add("active");
+        document.getElementById("vtHeaderOrdersBtn")?.classList.add("active");
+        const sc = document.getElementById("sidebarOrdersCartCount");
+        if (sc && typeof state !== "undefined" && state?.cart) {
+          sc.innerText = state.cart.reduce((a, b) => a + (b.qty || 1), 0);
+        }
+        try { if (typeof renderOrdersTabs === "function") renderOrdersTabs(); } catch (e) { console.error(e); }
+        try { if (typeof renderOrdersView === "function") renderOrdersView(); } catch (e) { console.error(e); }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (tab === "checkout") {
+        const vco = document.getElementById("viewCheckout");
+        if (vco) {
+          vco.classList.add("active");
+          vco.style.setProperty("display", "block", "important");
+        }
+        try { if (typeof renderCheckoutView === "function") renderCheckoutView(); } catch (e) { console.error(e); }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (tab === "auth") {
+        openAuthModal('login');
+      } else if (tab === "profile") {
+        const vp = document.getElementById("viewProfile");
+        if (vp) {
+          vp.classList.add("active");
+          vp.style.setProperty("display", "block", "important");
+        }
+        const sc = document.getElementById("sidebarCartCount");
+        if (sc && typeof state !== "undefined" && state?.cart) {
+          sc.innerText = state.cart.reduce((a, b) => a + (b.qty || 1), 0);
+        }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (tab === "admin") {
+        if (typeof isStaffUser === "function" && typeof state !== "undefined" && !isStaffUser(state?.currentUser)) {
+          if (typeof showToast === "function") showToast("🔒 Fitur Setting & Stok hanya dapat diakses oleh Petugas / Manajemen Toko.");
+          if (typeof openStaffLoginModal === "function") openStaffLoginModal();
+          return;
+        }
+        const va = document.getElementById("viewAdmin");
+        if (va) {
+          va.classList.add("active");
+          va.style.setProperty("display", "block", "important");
+        }
+        document.getElementById("navBtnAdmin")?.classList.add("active");
+        try { if (typeof renderAdminTable === "function") renderAdminTable(); } catch (e) { console.error(e); }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+
+    // Expose navigation functions to window immediately
+    window.switchTab = switchTab;
+    window.openCart = function () { switchTab("cart"); };
+    window.openOrders = function () { switchTab("orders"); };
+
+    // 3. USER AUTHENTICATION & MODAL CONTROLLER
+    function handleUserHeaderClick(event) {
+      if (event?.stopPropagation) event.stopPropagation();
+      const u = (typeof state !== 'undefined' && state?.currentUser) ? state.currentUser : null;
+      const isCustomerLoggedIn = u && (u.role === "CUSTOMER" && u.name !== "Masuk" && u.name !== "Pelanggan / Masuk");
+      const isStaff = (typeof isStaffUser === 'function' && u) ? isStaffUser(u) : false;
+
+      if (isCustomerLoggedIn || isStaff) {
+        toggleUserDropdown();
+      } else {
+        openAuthModal('login');
+      }
+    }
+
+    function toggleUserDropdown() {
+      const dd = document.getElementById("userAccountDropdown");
+      if (!dd) return;
+      dd.classList.toggle("show-menu");
+      if (dd.classList.contains("show-menu")) {
+        dd.style.setProperty("display", "block", "important");
+      } else {
+        dd.style.setProperty("display", "none", "important");
+      }
+    }
+
+    function closeUserDropdown() {
+      const dd = document.getElementById("userAccountDropdown");
+      if (dd) {
+        dd.classList.remove("show-menu");
+        dd.style.setProperty("display", "none", "important");
+      }
+    }
+
+    function openAuthModal(mode) {
+      if (typeof modalAuthMode !== 'undefined') modalAuthMode = mode || "login";
+      try { if (typeof updateModalAuthUI === 'function') updateModalAuthUI(); } catch (e) {}
+      try { if (typeof hideAuthError === 'function') hideAuthError(); } catch (e) {}
+      const modal = document.getElementById("authModal");
+      if (modal) {
+        modal.style.setProperty("display", "flex", "important");
+        modal.style.setProperty("visibility", "visible", "important");
+        modal.style.setProperty("opacity", "1", "important");
+        modal.style.setProperty("z-index", "9999", "important");
+        setTimeout(() => {
+          const emailInput = document.getElementById("modalAuthEmail");
+          const passInput = document.getElementById("modalAuthPass");
+          if (emailInput && !emailInput.value) emailInput.focus();
+          else if (passInput) passInput.focus();
+        }, 100);
+      }
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById("authModal");
+      if (modal) {
+        modal.style.setProperty("display", "none", "important");
+      }
+      try { if (typeof hideAuthError === 'function') hideAuthError(); } catch (e) {}
+    }
+
+    function openCartModal() {
+      const modal = document.getElementById("cartModal");
+      if (modal) {
+        modal.style.setProperty("display", "flex", "important");
+        modal.style.setProperty("visibility", "visible", "important");
+        modal.style.setProperty("opacity", "1", "important");
+        modal.style.setProperty("z-index", "9999", "important");
+        try { if (typeof renderCartModalItems === "function") renderCartModalItems(); } catch(e){}
+      }
+    }
+
+    function closeCartModal() {
+      const modal = document.getElementById("cartModal");
+      if (modal) modal.style.setProperty("display", "none", "important");
+    }
+
+    // Expose auth & modal functions to window immediately
+    window.handleUserHeaderClick = handleUserHeaderClick;
+    window.toggleUserDropdown = toggleUserDropdown;
+    window.closeUserDropdown = closeUserDropdown;
+    window.openAuthModal = openAuthModal;
+    window.closeAuthModal = closeAuthModal;
+    window.openCartModal = openCartModal;
+    window.closeCartModal = closeCartModal;
+
+    // 4. GLOBAL EVENT DELEGATION LISTENER (FALLBACK ANTI-GAGAL FOR GOOGLE APPS SCRIPT IFRAME)
+    document.addEventListener("click", function (event) {
+      const target = event.target;
+      if (!target) return;
+
+      // A. Device Viewport Switcher
+      const mobileBtn = target.closest("#btnModeMobile, #btnViewMobile, [data-preview='mobile']");
+      if (mobileBtn || (target.closest("button") && target.closest("button").textContent.includes("Mode Mobile"))) {
+        event.preventDefault();
+        window.setPreviewMode("mobile");
+        return;
+      }
+
+      const tabletBtn = target.closest("#btnModeTablet, #btnViewTablet, [data-preview='tablet']");
+      if (tabletBtn || (target.closest("button") && target.closest("button").textContent.includes("Mode Tablet"))) {
+        event.preventDefault();
+        window.setPreviewMode("tablet");
+        return;
+      }
+
+      const desktopBtn = target.closest("#btnModeDesktop, #btnViewDesktop, [data-preview='desktop']");
+      if (desktopBtn || (target.closest("button") && target.closest("button").textContent.includes("Mode Desktop"))) {
+        event.preventDefault();
+        window.setPreviewMode("desktop");
+        return;
+      }
+
+      // B. Pesanan Action Button (Header or Nav)
+      const ordersBtn = target.closest("#vtHeaderOrdersBtn, #navBtnOrders, [data-action='orders']");
+      if (ordersBtn || (target.closest(".vt-header-btn, .nav-item") && target.closest(".vt-header-btn, .nav-item").textContent.trim().includes("Pesanan"))) {
+        event.preventDefault();
+        window.switchTab("orders");
+        return;
+      }
+
+      // C. Keranjang Action Button (Header or Nav)
+      const cartBtn = target.closest("#vtHeaderCartBtn, #navBtnCart, [data-action='cart']");
+      if (cartBtn || (target.closest(".vt-header-btn, .nav-item") && target.closest(".vt-header-btn, .nav-item").textContent.trim().includes("Keranjang"))) {
+        event.preventDefault();
+        window.switchTab("cart");
+        return;
+      }
+
+      // D. Masuk / Akun Action Button (Header)
+      const userBtn = target.closest("#userHeaderBtn, [data-action='auth']");
+      if (userBtn || (target.closest(".vt-header-btn") && target.closest(".vt-header-btn").id === "userHeaderBtn")) {
+        event.preventDefault();
+        window.handleUserHeaderClick(event);
+        return;
+      }
+    }, true);
+
+
+
 
     // 1. DATA PENGGUNA RESMI DENGAN LEVEL HAK AKSES (RBAC)
     const USER_ROLES = {
@@ -9324,9 +9618,13 @@
 
     function showToast(msg) {
       const t = document.getElementById("toast");
+      if (!t) {
+        console.log("[Toast]", msg);
+        return;
+      }
       t.innerHTML = msg;
       t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2800);
+      setTimeout(() => t?.classList?.remove("show"), 2800);
     }
 
     function restoreUserSession() {
@@ -9346,32 +9644,26 @@
 
     // ROBUST INITIALIZATION & LIFECYCLE HANDLER
     function initApplication() {
+      try { applyCloudAssets(); } catch (err) { console.error("applyCloudAssets error:", err); }
+      try { setupImageFallbacks(); } catch (err) { console.error("setupImageFallbacks error:", err); }
+      try { bindInteractiveEventListeners(); } catch (err) { console.error("bindInteractiveEventListeners error:", err); }
+      try { restoreUserSession(); } catch (err) { console.error("restoreUserSession error:", err); }
       try {
-        applyCloudAssets();
-        setupImageFallbacks();
-        bindInteractiveEventListeners();
-        restoreUserSession();
         let savedView = "mobile";
-        try {
-          savedView = safeStorage.getItem("vt_device_view") || "mobile";
-        } catch (e) {
-          savedView = "mobile";
-        }
-        switchDeviceView(savedView, true);
-        updateRoleDisplay();
-        renderCatalog();
-        renderPosCatalog();
-        renderAdminTable();
-        updateSubCatDropdown();
-        renderOrdersTabs();
-        renderOrdersView();
-      } catch (err) {
-        console.error("Error during application initialization:", err);
-      }
+        try { savedView = safeStorage.getItem("vt_device_view") || "mobile"; } catch (e) { }
+        setPreviewMode(savedView, true);
+      } catch (err) { console.error("setPreviewMode error:", err); }
+      try { updateRoleDisplay(); } catch (err) { console.error("updateRoleDisplay error:", err); }
+      try { renderCatalog(); } catch (err) { console.error("renderCatalog error:", err); }
+      try { renderPosCatalog(); } catch (err) { console.error("renderPosCatalog error:", err); }
+      try { renderAdminTable(); } catch (err) { console.error("renderAdminTable error:", err); }
+      try { updateSubCatDropdown(); } catch (err) { console.error("updateSubCatDropdown error:", err); }
+      try { renderOrdersTabs(); } catch (err) { console.error("renderOrdersTabs error:", err); }
+      try { renderOrdersView(); } catch (err) { console.error("renderOrdersView error:", err); }
     }
 
     if (document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", initApplication);
+      document.addEventListener("DOMContentLoaded", initApplication);
     } else {
       initApplication();
     }
@@ -9766,7 +10058,7 @@
 
     function renderCatalog() {
       const grid = document.getElementById("productGridContainer");
-      const q = (document.getElementById("searchInput").value || "").toLowerCase();
+      const q = (document.getElementById("searchInput")?.value || "").toLowerCase();
 
       // Check warehouse filter checkboxes
       const selectedGudang = Array.from(document.querySelectorAll('input[name="filterGudang"]:checked')).map(el => el.value);
@@ -10222,7 +10514,7 @@
     }
 
     function updateSubCatDropdown() {
-      const mainCat = document.getElementById("opMainCat").value;
+      const mainCat = document.getElementById("opMainCat")?.value || "Busana Wanita";
       const subSelect = document.getElementById("opSubCat");
       const list = SUB_CATEGORIES[mainCat] || SUB_CATEGORIES["Busana Wanita"];
 
@@ -10547,67 +10839,8 @@
     }
 
     // TAB NAVIGATION
-    function switchTab(tab) {
-      document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".view-content").forEach(v => v.classList.remove("active"));
+    // (switchTab unified at top of script)
 
-      // Jika pelanggan keluar dari menu display utama, matikan alunan musik MP3
-      if (tab !== "catalog") {
-        stopStoreAudio();
-      }
-
-      if (tab === "catalog") {
-        document.getElementById("viewCatalog").classList.add("active");
-        const b = document.getElementById("navBtnCatalog");
-        if (b) b.classList.add("active");
-      } else if (tab === "cart") {
-        document.getElementById("viewCart").classList.add("active");
-        const b = document.getElementById("navBtnCart");
-        if (b) b.classList.add("active");
-        renderCartView();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (tab === "checkout") {
-        const vco = document.getElementById("viewCheckout");
-        if (vco) vco.classList.add("active");
-        renderCheckoutView();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (tab === "orders") {
-        const vo = document.getElementById("viewOrders");
-        if (vo) vo.classList.add("active");
-        const b = document.getElementById("navBtnOrders");
-        if (b) b.classList.add("active");
-        const sc = document.getElementById("sidebarOrdersCartCount");
-        if (sc) sc.innerText = (state.cart || []).reduce((a, b) => a + (b.qty || 1), 0);
-        renderOrdersTabs();
-        renderOrdersView();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (tab === "pos") {
-        switchTab("catalog");
-        return;
-      } else if (tab === "auth") {
-        openAuthModal('login');
-        return;
-      } else if (tab === "profile") {
-        const vp = document.getElementById("viewProfile");
-        if (vp) vp.classList.add("active");
-        const sc = document.getElementById("sidebarCartCount");
-        if (sc) sc.innerText = (state.cart || []).reduce((a, b) => a + (b.qty || 1), 0);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (tab === "admin") {
-        if (!isStaffUser(state.currentUser)) {
-          showToast("🔒 Fitur 'Setting & Stok' hanya dapat diakses oleh SUPER ADMIN, ADMIN TOKO, atau OPERATOR TOKO.");
-          openStaffLoginModal();
-          return;
-        }
-        document.getElementById("viewAdmin").classList.add("active");
-        const b = document.getElementById("navBtnAdmin");
-        if (b) b.classList.add("active");
-        renderAdminTable();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-
-    // CHECKOUT KERANJANG KE MEJA KASIR POS
     function checkoutCartToPos() {
       if (!state.cart || state.cart.length === 0) {
         showToast("⚠️ Keranjang belanja masih kosong!");
@@ -12856,7 +13089,7 @@
     // POS KASIR
     function renderPosCatalog() {
       const list = document.getElementById("posItemList");
-      const q = (document.getElementById("posSearchInput").value || "").toLowerCase();
+      const q = (document.getElementById("posSearchInput")?.value || "").toLowerCase();
 
       const items = state.products.filter(p => p.nama.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
       list.innerHTML = items.map(p => `
