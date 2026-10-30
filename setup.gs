@@ -169,7 +169,7 @@ function getSampleProduk() {
       450000,
       750000,
       12,
-      "https://lh3.googleusercontent.com/d/1W-GcCiqlNATFnx3r2GHn-pXRtrtUOL_S",
+      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card4_dress.jpg",
       "Saree sutra Banarasi premium dengan tenunan benang zari emas asli, motif floral klasik India.",
       "Aktif"
     ],
@@ -183,7 +183,7 @@ function getSampleProduk() {
       280000,
       485000,
       18,
-      "https://lh3.googleusercontent.com/d/1lExKo17eKjRzTRZYvVILhnhWO1sDc-kV",
+      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card3_kurta.jpg",
       "Setelan Kurti Anarkali anggun dengan sulaman payet tangan khas Jaipur dan selendang senada.",
       "Aktif"
     ],
@@ -197,7 +197,7 @@ function getSampleProduk() {
       850000,
       1450000,
       8,
-      "https://lh3.googleusercontent.com/d/1W-GcCiqlNATFnx3r2GHn-pXRtrtUOL_S",
+      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card4_dress.jpg",
       "Gaun pengantin Lehenga pesta mewah berbordir bunga timbul kristal swarovski lengkap dengan dupatta.",
       "Aktif"
     ],
@@ -211,7 +211,7 @@ function getSampleProduk() {
       120000,
       225000,
       25,
-      "https://lh3.googleusercontent.com/d/1Xl58ZHlX-N0kxsRoFhZ49wohuNHt5Io5",
+      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card2_gelang.jpg",
       "Set gelang pengantin Chuda tradisional India berhias permata berkilau dan latkan gantung.",
       "Aktif"
     ],
@@ -225,7 +225,7 @@ function getSampleProduk() {
       350000,
       590000,
       10,
-      "https://lh3.googleusercontent.com/d/1MM1GkU9KgBxQZggZ3hKtLnWOR3hWzPn4",
+      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/Kotak_Kosmetik_(3).jpg",
       "Set kalung choker batu Kundan kerajaan India lengkap dengan anting jhumka dan maang tikka dahi.",
       "Aktif"
     ],
@@ -239,7 +239,7 @@ function getSampleProduk() {
       95000,
       175000,
       30,
-      "https://lh3.googleusercontent.com/d/1gHVcy2fnnUPSnxbnHG50vGqp3YQhGHMM",
+      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg",
       "Selendang Dupatta bahan jaring lembut dengan pinggiran renda kiran emas mewah untuk pelengkap busana pesta.",
       "Aktif"
     ]

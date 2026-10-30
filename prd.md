@@ -392,3 +392,11 @@ ZONA BAWAH: MASTER CONTEXT & LOGIKA SISTEM TERKINI (LIVING CONTEXT)
        - Menampilkan format judul "Indian Women's Fashion, (jumlah) Produk" saat etalase pertama kali dimuat.
     3. **Sinkronisasi Responsif Tiga Perangkat:**
        - Sinkronisasi grid dan layout katalog antara DesktopView (4 kolom), TabletView (2 kolom lega), dan MobileView (2 kolom kompak) bebas broken alignment.
+  - *v2.1.7 (Global jsDelivr CDN Replacement & Aktivasi Device Switcher):*
+     1. **Global CDN jsDelivr Deployment:**
+        - Seluruh aset gambar dan audio dimigrasikan ke endpoint CDN global publik: `https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/`.
+        - Mengeliminasi seluruh broken image, 404 pada `./assets/`, dan pemblokiran ORB/CORS di Google Apps Script (`script.google.com`).
+        - Pembersihan seluruh atribut `onerror="handleImgError(...)"` pada elemen `<img>`.
+     2. **Aktivasi Utuh Device Switcher:**
+        - Pemasangan handler `switchDeviceView('mobile')`, `switchDeviceView('tablet')`, dan `switchDeviceView('desktop')` pada `.device-switcher-bar`.
+        - Default mode saat aplikasi pertama kali dimuat ditetapkan ke `is-mobile-view`.

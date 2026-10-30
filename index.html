@@ -5247,7 +5247,7 @@
     <div class="device-switcher-inner">
       <span class="device-switcher-label">Pratinjau Tampilan:</span>
       <div class="device-btn-group">
-        <button id="btnViewMobile" class="device-btn active" onclick="setDeviceView('mobile')"
+        <button id="btnModeMobile" class="device-btn active" onclick="switchDeviceView('mobile')"
           title="Tampilan Smartphone (375px - 418px)">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <rect x="5" y="2" width="14" height="20" rx="3" />
@@ -5255,7 +5255,7 @@
           </svg>
           📱 Mode Mobile (HP)
         </button>
-        <button id="btnViewTablet" class="device-btn" onclick="setDeviceView('tablet')"
+        <button id="btnModeTablet" class="device-btn" onclick="switchDeviceView('tablet')"
           title="Tampilan Tablet / iPad (768px - 820px)">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <rect x="4" y="2" width="16" height="20" rx="2" />
@@ -5263,7 +5263,7 @@
           </svg>
           📟 Mode Tablet (iPad)
         </button>
-        <button id="btnViewDesktop" class="device-btn" onclick="setDeviceView('desktop')"
+        <button id="btnModeDesktop" class="device-btn" onclick="switchDeviceView('desktop')"
           title="Tampilan Layar Lebar Desktop (1280px)">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <rect x="2" y="3" width="20" height="14" rx="2" />
@@ -5285,7 +5285,7 @@
     </div>
 
     <!-- AUDIO PLAYER TOKO PAC (mp3 sound-Awal.mp3) -->
-    <audio id="storeBgAudio" src="assets/mp3 sound-Awal.mp3" preload="auto" loop></audio>
+    <audio id="storeBgAudio" src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/mp3%20sound-Awal.mp3" preload="auto" loop></audio>
 
     <!-- 1. TOP UTILITY BAR (1.JPG) -->
     <div class="top-utility-bar">
@@ -5308,8 +5308,7 @@
     <!-- 2. MAIN HEADER BAR (1.JPG & 2.JPG) -->
     <header class="vt-main-header">
       <div class="brand-vt-wrap" onclick="switchTab('catalog')" title="V&T VIC & TIS Home">
-        <img id="mainHeaderLogoImg" src="assets/Logo V & T.jpg" alt="Logo V & T VIC & TIS" class="brand-vt-header-img"
-          onerror="handleImgError(this, 'LOGO_VT')">
+        <img id="mainHeaderLogoImg" src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/Logo%20V%20%26%20T.jpg" alt="Logo V & T VIC & TIS" class="brand-vt-header-img">
       </div>
 
       <div class="header-center-controls">
@@ -5339,6 +5338,19 @@
         </button>
 
         <!-- Cart Action with Orange Badge (Image 1 & Image 3) -->
+        <!-- Orders Action (Pesanan) -->
+        <div class="vt-header-btn" id="vtHeaderOrdersBtn" onclick="switchTab('orders')" title="Pesanan Saya">
+          <div style="position: relative; display: inline-flex;">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          </div>
+          <span class="vt-btn-label">Pesanan</span>
+        </div>
+
         <div class="vt-header-btn" onclick="switchTab('cart')" title="Keranjang Belanja">
           <div style="position: relative; display: inline-flex;">
             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
@@ -5385,6 +5397,16 @@
               <span>⚙️ Setting & Stok Toko</span>
             </a>
 
+            <a class="dropdown-item" onclick="switchTab('orders'); closeUserDropdown();">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              <span>Pesanan Saya</span>
+            </a>
+
             <a class="dropdown-item" onclick="switchTab('profile'); closeUserDropdown();">
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -5428,17 +5450,9 @@
           <span>Kategori All Choice</span>
           <span style="font-size: 0.7rem;">▾</span>
         </div>
-        <a class="sub-nav-link" onclick="selectPillarCategory('All')"><img id="iconWhatsNew" src="assets/whats_new.png"
-            alt="What's New" style="height: 13px; margin-right: 4px; vertical-align: middle;"
-            onerror="handleImgError(this, 'ICON_WHATS_NEW')"> What's New</a>
-        <a class="sub-nav-link" onclick="selectPillarCategory('All')"><img id="iconJustArrived"
-            src="assets/just_arrived.png" alt="Just Arrived"
-            style="height: 13px; margin-right: 4px; vertical-align: middle;"
-            onerror="handleImgError(this, 'ICON_JUST_ARRIVED')"> Just Arrived</a>
-        <a class="sub-nav-link" style="color: #e11d48; font-weight: 700;" onclick="selectPillarCategory('All')"><img
-            id="icon1010" src="assets/10.10.png" alt="10.10"
-            style="height: 13px; margin-right: 4px; vertical-align: middle;"
-            onerror="handleImgError(this, 'ICON_10_10')"> 10.10 Promo</a>
+        <a class="sub-nav-link" onclick="selectPillarCategory('All')"><img id="iconWhatsNew" src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/whats_new.png" alt="What's New" style="height: 13px; margin-right: 4px; vertical-align: middle;"> What's New</a>
+        <a class="sub-nav-link" onclick="selectPillarCategory('All')"><img id="iconJustArrived" src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/just_arrived.png" alt="Just Arrived" style="height: 13px; margin-right: 4px; vertical-align: middle;"> Just Arrived</a>
+        <a class="sub-nav-link" style="color: #e11d48; font-weight: 700;" onclick="selectPillarCategory('All')"><img id="icon1010" src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/10.10.png" alt="10.10" style="height: 13px; margin-right: 4px; vertical-align: middle;"> 10.10 Promo</a>
         <span class="sub-divider"></span>
         <a class="sub-nav-link" onclick="selectPillarCategory('Indian Women\'s Fashion')">👗 Indian Women's Fashion</a>
         <a class="sub-nav-link" onclick="selectPillarCategory('Indian Men\'s Fashion')">👔 Indian Men's Fashion</a>
@@ -5494,8 +5508,7 @@
             <div class="vt-hero-logo-large"
               style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
               <div>
-                <img id="heroStoryLogoImg" src="assets/Logo V & T.jpg" alt="Logo V & T VIC & TIS"
-                  class="vt-hero-logo-img" onerror="handleImgError(this, 'LOGO_VT')">
+                <img id="heroStoryLogoImg" src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/Logo%20V%20%26%20T.jpg" alt="Logo V & T VIC & TIS" class="vt-hero-logo-img">
                 <div class="vt-hero-dept-sub">INDIAN <b>WOMEN'S FASHION</b> | <b>MEN'S FASHION</b></div>
               </div>
               <!-- Tombol Mulai Belanja (Sesuai Gambar 2) -->
@@ -5524,22 +5537,14 @@
           <div class="vt-hero-visuals-col">
             <div class="vt-dual-banners-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
               <!-- Banner 1: Software Solutions Image -->
-              <img id="heroBannerSoftware" src="assets/hero_banner_software.jpg"
-                alt="Custom Software Development Services"
-                style="width: 48%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); object-fit: cover;"
-                onerror="handleImgError(this, 'BANNER_SOFTWARE')">
+              <img id="heroBannerSoftware" src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/hero_banner_software.jpg" alt="Custom Software Development Services" style="width: 48%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); object-fit: cover;">
               <!-- Banner 2: PAC Accessories Image -->
-              <img id="heroBannerPac" src="assets/hero_banner_pac.jpg" alt="PAC Pink Accessories"
-                style="width: 48%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); object-fit: cover;"
-                onerror="handleImgError(this, 'BANNER_PAC')">
+              <img id="heroBannerPac" src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/hero_banner_pac.jpg" alt="PAC Pink Accessories" style="width: 48%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); object-fit: cover;">
             </div>
 
             <!-- Boutique Storefront Clean Single Photo -->
             <div class="vt-storefront-box">
-              <img id="heroBannerBoutique" src="assets/hero_store_mannequins.jpg" class="vt-storefront-img"
-                alt="THE PAC Boutique"
-                style="width: 100%; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); object-fit: cover;"
-                onerror="handleImgError(this, 'BANNER_BOUTIQUE')">
+              <img id="heroBannerBoutique" src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/hero_store_mannequins.jpg" class="vt-storefront-img" alt="THE PAC Boutique" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); object-fit: cover;">
               <div class="storefront-badge-tag">
                 📍 THE PAC Boutique • Jl. Teuku Cik Ditiro No. 22, Medan
               </div>
@@ -5832,8 +5837,7 @@
         <!-- Empty State Box (Fallback if cart is empty) -->
         <div class="cart-hero-card" id="cartEmptyStateBox" style="display: none; padding: 40px 20px; text-align: center;">
           <div class="cart-hero-logo-col">
-            <img src="assets/Logo V & T.jpg" alt="Logo V & T VIC & TIS" class="cart-hero-logo-img"
-              onerror="handleImgError(this, 'LOGO_VT')">
+            <img src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/Logo%20V%20%26%20T.jpg" alt="Logo V & T VIC & TIS" class="cart-hero-logo-img">
           </div>
           <div class="cart-hero-info-col" style="align-items: center; margin: 0 auto; max-width: 460px;">
             <h2 class="cart-empty-title">Keranjang Belanja Anda Kosong</h2>
@@ -6138,8 +6142,7 @@
         <div class="auth-grid-container">
           <!-- Left Column: Big Logo V & T + 3 Carousel Dots -->
           <div class="auth-logo-col">
-            <img src="assets/Logo V & T.jpg" alt="Logo V & T VIC & TIS" class="auth-big-logo-img"
-              onerror="handleImgError(this, 'LOGO_VT')">
+            <img src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/Logo%20V%20%26%20T.jpg" alt="Logo V & T VIC & TIS" class="auth-big-logo-img">
             <div class="auth-dots-indicator">
               <span class="auth-dot"></span>
               <span class="auth-dot"></span>
@@ -6214,6 +6217,166 @@
     <!-- ========================================================== -->
     <!-- VIEW: PROFIL SAYA & AKUN (SESUAI GAMBAR 1 & 3)            -->
     <!-- ========================================================== -->
+    <section id="viewOrders" class="view-content">
+      <div class="profile-page-wrapper">
+        <div class="profile-layout-grid">
+          <!-- Sidebar Kiri: Menu Akun (Sesuai Gambar Referensi) -->
+          <aside class="profile-sidebar">
+            <h3 class="profile-sidebar-title">Akun</h3>
+            <ul class="profile-menu-list">
+              <li class="profile-menu-item active" onclick="switchTab('orders')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                <span>Pesanan Saya</span>
+              </li>
+              <li class="profile-menu-item" onclick="openCartModal()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+                <span>Isi Keranjang <span class="badge"
+                    style="background:#f97316;color:#fff;border-radius:10px;padding:1px 6px;font-size:0.75rem;margin-left:4px;font-weight:700;"
+                    id="sidebarOrdersCartCount">0</span></span>
+              </li>
+              <li class="profile-menu-item" onclick="switchTab('profile')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span>Profil Saya</span>
+              </li>
+              <li class="profile-menu-item" onclick="showToast('📍 Kelola alamat pengiriman Anda')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span>Atur Alamat</span>
+              </li>
+              <li class="profile-menu-item" onclick="openDepositModal()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                  <line x1="1" y1="10" x2="23" y2="10"></line>
+                </svg>
+                <span>Deposit</span>
+              </li>
+              <li class="profile-menu-item" onclick="showToast('⭐ Belum ada ulasan produk')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                  </polygon>
+                </svg>
+                <span>Ulasan Saya</span>
+              </li>
+              <li class="profile-menu-item" onclick="openSavedCartModal()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                <span>Saved Cart</span>
+              </li>
+              <li class="profile-menu-item" onclick="openWatchlistModal()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                  </path>
+                </svg>
+                <span>Watchlist</span>
+              </li>
+              <li class="profile-menu-item" onclick="showToast('🎫 Tidak ada tiket aktif')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Tiket Saya</span>
+              </li>
+              <li class="profile-menu-item sidebar-admin-item" style="display: none; color: #4338ca; font-weight: 700;"
+                onclick="switchTab('admin')">
+                <svg width="18" height="18" fill="none" stroke="#4338ca" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                <span>Setting & Stok Toko</span>
+              </li>
+              <li class="profile-menu-item"
+                style="color: #ef4444; margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 10px;"
+                onclick="handleUserLogout()">
+                <svg width="18" height="18" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span style="color: #ef4444; font-weight: 700;">Keluar (Logout)</span>
+              </li>
+            </ul>
+          </aside>
+
+          <!-- Konten Utama: Pesanan Saya (Sesuai Gambar Referensi) -->
+          <main class="profile-main-content">
+            <!-- Breadcrumb Navigation -->
+            <div class="member-breadcrumb">
+              <a onclick="switchTab('catalog')">Home</a>
+              <span class="member-breadcrumb-sep">&gt;</span>
+              <span>Member</span>
+              <span class="member-breadcrumb-sep">&gt;</span>
+              <span class="member-breadcrumb-current">Pesanan Saya</span>
+            </div>
+
+            <!-- Page Title -->
+            <h2 style="font-size: 1.45rem; font-weight: 800; color: #0f172a; margin: 0 0 18px 0;">Pesanan Saya</h2>
+
+            <!-- Search & Filter Bar Row -->
+            <div class="order-filter-bar">
+              <div class="order-search-box">
+                <svg width="18" height="18" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"
+                  style="position: absolute; left: 14px; top: 12px;">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="orderSearchInput" class="order-search-input"
+                  placeholder="Cari Kode Invoice / SKU / Nama Barang" oninput="handleOrderSearch(this.value)">
+              </div>
+              <div>
+                <select id="orderPurchaseMethodFilter" class="order-select-filter"
+                  onchange="handleOrderMethodFilter(this.value)">
+                  <option value="ALL">Metode Pembelian</option>
+                  <option value="KIRIM">🚚 Kirim Kurir (SICEPAT / J&T)</option>
+                  <option value="AMBIL">🏪 Ambil di Toko</option>
+                </select>
+              </div>
+              <div>
+                <button class="order-date-btn" onclick="openOrderDatePicker()">
+                  <svg width="16" height="16" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span id="orderDateFilterLabel">Pilih Tanggal</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Horizontal Status Tabs Bar (Semua, Belum Bayar, Diproses, Dikirim, Siap Diambil, Terkendala) -->
+            <div class="order-tab-bar" id="orderTabsContainer">
+              <!-- Dynamically populated by JS renderOrdersTabs() -->
+            </div>
+
+            <!-- Orders List Container -->
+            <div id="ordersListContainer" style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Dynamically populated by JS renderOrdersView() -->
+            </div>
+          </main>
+        </div>
+      </div>
+    </section>
+
     <section id="viewProfile" class="view-content">
       <div class="profile-page-wrapper">
         <div class="profile-layout-grid">
@@ -6401,9 +6564,8 @@
     <section id="viewAdmin" class="view-content">
       <div class="pos-header-banner" style="background: var(--primary-dark);">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <img src="assets/Logo V & T.jpg" alt="Logo V & T"
-            style="height: 34px; max-width: 105px; object-fit: contain; background: #fff; padding: 2px 6px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);"
-            onerror="handleImgError(this, 'LOGO_VT');">
+          <img src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/Logo%20V%20%26%20T.jpg" alt="Logo V & T"
+            style="height: 34px; max-width: 105px; object-fit: contain; background: #fff; padding: 2px 6px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">
           <div>
             <h2 style="font-size: 1.1rem; font-family: var(--font-display);">Otoritas Login Petugas & Manajemen</h2>
             <span style="font-size: 0.75rem; opacity: 0.9;">Setting Otoritas Petugas, Stok & Laba</span>
@@ -6631,6 +6793,15 @@
         </svg>
         <span>Keranjang</span>
       </button>
+      <button class="nav-item" id="navBtnOrders" onclick="switchTab('orders')">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <span>Pesanan</span>
+      </button>
       <button class="nav-item" id="navBtnAdmin" onclick="switchTab('admin')" style="display: none;">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="3" />
@@ -6800,9 +6971,7 @@
         <!-- Live Preview Foto Produk -->
         <div
           style="display: flex; gap: 14px; align-items: center; background: #fff8f0; border: 1.5px dashed var(--gold); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 14px;">
-          <img id="editProdImgPreview" src="" alt="Preview Foto"
-            style="width: 72px; height: 88px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); background: #f5edf0;"
-            onerror="handleImgError(this);">
+          <img id="editProdImgPreview" src="" alt="Preview Foto" style="width: 72px; height: 88px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); background: #f5edf0;">
           <div style="flex: 1;">
             <span style="font-size: 0.72rem; font-weight: 700; color: var(--secondary); text-transform: uppercase;">Live
               Preview Foto Baru:</span>
@@ -6900,9 +7069,9 @@
       <!-- Top Bar of Dialog -->
       <div class="detail-dialog-header">
         <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-          <img src="assets/Logo V & T.jpg" alt="Logo V & T"
+          <img src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/Logo%20V%20%26%20T.jpg" alt="Logo V & T"
             style="height: 30px; max-width: 95px; object-fit: contain; cursor: pointer;"
-            onclick="closeProductDetailModal()" onerror="handleImgError(this, 'LOGO_VT');">
+            onclick="closeProductDetailModal()">
         </div>
         <div class="detail-dialog-search">
           <input type="text" placeholder="Cari di V&T VIC & TIS..." oninput="filterCatalog()">
@@ -6937,8 +7106,7 @@
           </div>
           <div class="detail-main-photo-box">
             <button class="detail-arrow-btn left" onclick="prevDetailThumb()">‹</button>
-            <img id="detailMainHeroPhoto" src="" alt="Detail Foto" class="detail-main-img-full"
-              onerror="handleImgError(this);">
+            <img id="detailMainHeroPhoto" src="" alt="Detail Foto" class="detail-main-img-full">
             <button class="detail-arrow-btn right" onclick="nextDetailThumb()">›</button>
             <div class="detail-lens-highlight">
               🔍 Control area Size L • Koleksi Pilihan Terkini
@@ -7857,8 +8025,7 @@
           <!-- Kop Surat PO V&T Vic & Tis & PAC -->
           <div class="doc-brand-header">
             <div style="display: flex; gap: 12px; align-items: center;">
-              <img src="assets/Logo V & T.jpg" alt="Logo V & T"
-                style="height: 44px; max-width: 130px; object-fit: contain;" onerror="handleImgError(this, 'LOGO_VT');">
+              <img src="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/Logo%20V%20%26%20T.jpg" alt="Logo V & T" style="height: 44px; max-width: 130px; object-fit: contain;">
               <div>
                 <div class="doc-brand-title">VIC & TIS (V&T) • PAC BOUTIQUE</div>
                 <div style="font-weight: 700; font-size: 0.85rem; color: #0284c7;">SURAT PURCHASE ORDER RESMI (PO)</div>
@@ -8385,6 +8552,37 @@
 
   <!-- JAVASCRIPT LOGIC -->
   <script>
+    // SAFE STORAGE & SANDBOX COMPATIBILITY FOR GOOGLE APPS SCRIPT IFRAME
+    const _storageFallback = {};
+    const safeStorage = {
+      getItem: (key) => {
+        try {
+          return (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem(key) : (_storageFallback[key] || null);
+        } catch (e) {
+          return _storageFallback[key] || null;
+        }
+      },
+      setItem: (key, val) => {
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) window.localStorage.setItem(key, String(val));
+        } catch (e) {}
+        _storageFallback[key] = String(val);
+      },
+      removeItem: (key) => {
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) window.localStorage.removeItem(key);
+        } catch (e) {}
+        delete _storageFallback[key];
+      },
+      clear: () => {
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) window.localStorage.clear();
+        } catch (e) {}
+        for (let k in _storageFallback) delete _storageFallback[k];
+      }
+    };
+
+
     // 1. DATA PENGGUNA RESMI DENGAN LEVEL HAK AKSES (RBAC)
     const USER_ROLES = {
       "ADMIN-G:PINKY": { role: "SUPER_ADMIN", name: "PINKY", title: "ADMIN-G : PINKY", icon: "👑" },
@@ -8479,217 +8677,164 @@
     };
 
     // ============================================================================
-    // EMBEDDED CLOUD & LOCAL ASSET REGISTRY (Google Apps Script & Localhost Ready)
+    // GLOBAL JS-DELIVR CDN ASSET REGISTRY (GitHub GyPro-dot/ProjekAntigravity@main)
     // ============================================================================
+    const BASE_CDN = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/";
     const SVG_PLACEHOLDER = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNDAwIDQwMCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YxZjVmOSIvPjxwYXRoIGQ9Ik0xMjAgMTYwYTIwIDIwIDAgMSAwIDQwIDAgMjAgMjAgMCAxIDAtNDAgMHptLTEwIDExMGgxODBMMjQwIDE5MGwtMzAgNDAtMjAtMjAtNDAgNTB6IiBmaWxsPSIjY2JkNWUxIi8+PHRleHQgeD0iNTAlIiB5PSIyOTAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjOTRhM2I4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5WJlQgRmFzaGlvbiAmIEx1eHVyeTwvdGV4dD48dGV4dCB4PSI1MCUiIHk9IjMxNSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSI1MDAiIGZpbGw9IiNiYmNlZGYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPihGb3RvIEJlbHVtIERpcGlsaWgpPC90ZXh0Pjwvc3ZnPg==";
 
     const IS_LOCAL = window.location.hostname === 'localhost' ||
       window.location.hostname === '127.0.0.1' ||
       window.location.protocol === 'file:';
 
-    const LOCAL_ASSETS = {
+    const CDN_ASSETS = {
       PLACEHOLDER: SVG_PLACEHOLDER,
       // Official Brand Logos
-      LOGO_VT: "assets/Logo V & T.jpg",
-      LOGO_VT_OPT: "assets/logo_vt_opt.jpg",
+      LOGO_VT: BASE_CDN + "Logo%20V%20%26%20T.jpg",
+      LOGO_VT_OPT: BASE_CDN + "logo_vt_opt.jpg",
 
       // Hero Banners
-      BANNER_SOFTWARE: "assets/hero_banner_software.jpg",
-      BANNER_PAC: "assets/hero_banner_pac.jpg",
-      BANNER_BOUTIQUE: "assets/hero_store_mannequins.jpg",
+      BANNER_SOFTWARE: BASE_CDN + "hero_banner_software.jpg",
+      BANNER_PAC: BASE_CDN + "hero_banner_pac.jpg",
+      BANNER_BOUTIQUE: BASE_CDN + "hero_store_mannequins.jpg",
 
       // Goods & Product Cards
-      CARD_1: "assets/card1_website.jpg",
-      CARD_2: "assets/card2_gelang.jpg",
-      CARD_3: "assets/card3_kurta.jpg",
-      CARD_4: "assets/card4_dress.jpg",
-      CARD_CORSET: "assets/detail_corset_main.jpg",
-      CARD_TAS: "assets/biutteco-tas-kosmetik-make-up-travel-organizer-bag-wanita-x3235.jpg",
-      CARD_KACAMATA: "assets/samjune-kacamata-pria-polarized-sunglasses-anti-reflective-uv400-j-198.jpg",
-      CARD_KOTAK: "assets/Kotak_Kosmetik_(3).jpg",
-      CARD_TENSIMETER: "assets/taffomicron-tensimeter-digital-pengukur-tekanan-darah-indonesian-voice-a01.jpg",
-      CARD_THERMOGUN: "assets/taffomicron-thermogun-thermometer-tembak-suhu-badan-infrared-ad801.jpg",
-      CARD_NEBULIZER: "assets/taffomicron-alat-terapi-pernapasan-mesh-nebulizer-portable-jsl-w302.jpg",
-      CARD_OXIMETER: "assets/taffomicron-fingertip-pulse-oximeter-alat-ukur-saturasi-oksigen-darah-yk-80b.jpg",
-      CARD_KORSET_VELCRO: "assets/taffsport-korset-pembentuk-badan-pria-waist-fat-burner-double-velcro-mwl10.jpg",
-      CARD_DESIGNER: "assets/Designer.jpg",
-      IMG_1: "assets/1.jpg",
-      IMG_2: "assets/2.jpg",
-      IMG_3: "assets/3.jpg",
+      CARD_1: BASE_CDN + "card1_website.jpg",
+      CARD_2: BASE_CDN + "card2_gelang.jpg",
+      CARD_3: BASE_CDN + "card3_kurta.jpg",
+      CARD_4: BASE_CDN + "card4_dress.jpg",
+      CARD_CORSET: BASE_CDN + "detail_corset_main.jpg",
+      CARD_TAS: BASE_CDN + "biutteco-tas-kosmetik-make-up-travel-organizer-bag-wanita-x3235.jpg",
+      CARD_KACAMATA: BASE_CDN + "samjune-kacamata-pria-polarized-sunglasses-anti-reflective-uv400-j-198.jpg",
+      CARD_KOTAK: BASE_CDN + "Kotak_Kosmetik_(3).jpg",
+      CARD_TENSIMETER: BASE_CDN + "taffomicron-tensimeter-digital-pengukur-tekanan-darah-indonesian-voice-a01.jpg",
+      CARD_THERMOGUN: BASE_CDN + "taffomicron-thermogun-thermometer-tembak-suhu-badan-infrared-ad801.jpg",
+      CARD_NEBULIZER: BASE_CDN + "taffomicron-alat-terapi-pernapasan-mesh-nebulizer-portable-jsl-w302.jpg",
+      CARD_OXIMETER: BASE_CDN + "taffomicron-fingertip-pulse-oximeter-alat-ukur-saturasi-oksigen-darah-yk-80b.jpg",
+      CARD_KORSET_VELCRO: BASE_CDN + "taffsport-korset-pembentuk-badan-pria-waist-fat-burner-double-velcro-mwl10.jpg",
+      CARD_DESIGNER: BASE_CDN + "Designer.jpg",
+      IMG_1: BASE_CDN + "1.jpg",
+      IMG_2: BASE_CDN + "2.jpg",
+      IMG_3: BASE_CDN + "3.jpg",
 
       // Product Detail Thumbnails
-      THUMB_1: "assets/detail_thumb_1.jpg",
-      THUMB_2: "assets/detail_thumb_2.jpg",
-      THUMB_3: "assets/detail_thumb_3.jpg",
-      THUMB_4: "assets/detail_thumb_4.jpg",
-      THUMB_5: "assets/detail_thumb_5.jpg",
+      THUMB_1: BASE_CDN + "detail_thumb_1.jpg",
+      THUMB_2: BASE_CDN + "detail_thumb_2.jpg",
+      THUMB_3: BASE_CDN + "detail_thumb_3.jpg",
+      THUMB_4: BASE_CDN + "detail_thumb_4.jpg",
+      THUMB_5: BASE_CDN + "detail_thumb_5.jpg",
 
       // Category Images from Katalog
-      CAT_ACCESSORIES: "assets/All Accesories and Luxury Goods.jpg",
-      CAT_INDIAN_MAN: "assets/Indian Man Fashion.jpg",
-      CAT_INDIAN_WOMAN: "assets/Indian Woman Fashion.jpg",
-      CAT_ALL: "assets/Kategori All Choice.jpg",
+      CAT_ACCESSORIES: BASE_CDN + "Katalog/All%20Accesories%20and%20Luxury%20Goods.jpg",
+      CAT_INDIAN_MAN: BASE_CDN + "Katalog/Indian%20Man%20Fashion.jpg",
+      CAT_INDIAN_WOMAN: BASE_CDN + "Katalog/Indian%20Woman%20Fashion.jpg",
+      CAT_ALL: BASE_CDN + "Katalog/Kategori%20All%20Choice.jpg",
 
       // Navigation & Badges
-      ICON_WHATS_NEW: "assets/whats_new.png",
-      ICON_JUST_ARRIVED: "assets/just_arrived.png",
-      ICON_10_10: "assets/10.10.png",
-      ICON_BELANJA: "assets/belanja_ke_toko.png",
-      ICON_CARA_BELANJA: "assets/cara_belanja.png",
-      ICON_FACEBOOK: "assets/facebook-logo.png",
-      ICON_INSTAGRAM: "assets/instagram-logo.png",
-      ICON_TIKTOK: "assets/tiktok-logo.png"
+      ICON_WHATS_NEW: BASE_CDN + "whats_new.png",
+      ICON_JUST_ARRIVED: BASE_CDN + "just_arrived.png",
+      ICON_10_10: BASE_CDN + "10.10.png",
+      ICON_BELANJA: BASE_CDN + "belanja_ke_toko.png",
+      ICON_CARA_BELANJA: BASE_CDN + "cara_belanja.png",
+      ICON_FACEBOOK: BASE_CDN + "facebook-logo.png",
+      ICON_INSTAGRAM: BASE_CDN + "instagram-logo.png",
+      ICON_TIKTOK: BASE_CDN + "tiktok-logo.png",
+      AUDIO_AWAL: BASE_CDN + "mp3%20sound-Awal.mp3"
     };
 
-    const CLOUD_ASSETS = {
-      PLACEHOLDER: SVG_PLACEHOLDER,
-      // Official Brand Logos (Google Drive CDN)
-      LOGO_VT: "https://lh3.googleusercontent.com/d/1Df-rikaxB27WfchGSwXhOePX-znUpWqM",
-      LOGO_VT_OPT: "https://lh3.googleusercontent.com/d/1fBC265WbrtY8_xJ1_U7fawvHoYeXU9EQ",
-
-      // Hero Banners (Google Drive CDN)
-      BANNER_SOFTWARE: "https://lh3.googleusercontent.com/d/1yxxOmjU_jPpye_eZdxBwCzZTuXKJVdYg",
-      BANNER_PAC: "https://lh3.googleusercontent.com/d/10FwPvzYO4wCtt9_XLIPoBr62nBSWKVya",
-      BANNER_BOUTIQUE: "https://lh3.googleusercontent.com/d/1zohuWu8KOO9HV6M2YEIPygtX-2sGvWC7",
-
-      // Goods & Product Cards (Google Drive CDN)
-      CARD_1: "https://lh3.googleusercontent.com/d/1gHVcy2fnnUPSnxbnHG50vGqp3YQhGHMM",
-      CARD_2: "https://lh3.googleusercontent.com/d/1Xl58ZHlX-N0kxsRoFhZ49wohuNHt5Io5",
-      CARD_3: "https://lh3.googleusercontent.com/d/1lExKo17eKjRzTRZYvVILhnhWO1sDc-kV",
-      CARD_4: "https://lh3.googleusercontent.com/d/1W-GcCiqlNATFnx3r2GHn-pXRtrtUOL_S",
-      CARD_CORSET: "https://lh3.googleusercontent.com/d/1GTnneHtWKiSeOh8fo2FlZYU0zaZntrvh",
-      CARD_TAS: "https://lh3.googleusercontent.com/d/1ln5XsoqMrLpr3uTJSDnUBXK8yRatLimV",
-      CARD_KACAMATA: "https://lh3.googleusercontent.com/d/18d210fNGv1Y5ZlTKfXYRQfHHo7oynOeM",
-      CARD_KOTAK: "https://lh3.googleusercontent.com/d/1MM1GkU9KgBxQZggZ3hKtLnWOR3hWzPn4",
-      CARD_TENSIMETER: "https://lh3.googleusercontent.com/d/19ZTAgSQXZ5DslY-PXHLYh2MOv5b6hrIq",
-      CARD_THERMOGUN: "https://lh3.googleusercontent.com/d/1duq8KsRs_MxAd8YAGj2ttXTdITieLjog",
-      CARD_NEBULIZER: "https://lh3.googleusercontent.com/d/1A6KbU-qXbtSaikeXcBIJsgZlN6FqQfJ5",
-      CARD_OXIMETER: "https://lh3.googleusercontent.com/d/18eahR2WlW_4_WgupkkJBEVJEU9SvD9_H",
-      CARD_KORSET_VELCRO: "https://lh3.googleusercontent.com/d/1ONcrVMGKIRq29jXfXmcIZLvqrzYA7jC7",
-      CARD_DESIGNER: "https://lh3.googleusercontent.com/d/1pgPgDLcpqHALEaP3aH_ayAj59QeBQKSb",
-      IMG_1: "https://lh3.googleusercontent.com/d/1shmE5q6m5m5z9EAiKLEUZhcFR6jDQSv8",
-      IMG_2: "https://lh3.googleusercontent.com/d/1bXdWgkFPzu1nCOvk3mleVizMT5zc-bwz",
-      IMG_3: "https://lh3.googleusercontent.com/d/1ls8A2Q4dHXbZXdZGVCGAr-EqTsJW2N_l",
-
-      // Product Detail Thumbnails (Google Drive CDN)
-      THUMB_1: "https://lh3.googleusercontent.com/d/1KweJ2ogbt94oVeF8AhoZ75VesQlaXh-w",
-      THUMB_2: "https://lh3.googleusercontent.com/d/15n0hE5iILC-XP8qTg3CwtiarWpIxOzqh",
-      THUMB_3: "https://lh3.googleusercontent.com/d/1w5mnNhKPkMuScNO_jBVuyrO6CT7xCRsh",
-      THUMB_4: "https://lh3.googleusercontent.com/d/1isi8jXT3oRALUgGS_22vb2Q45uWTBQyp",
-      THUMB_5: "https://lh3.googleusercontent.com/d/1iZUpRnAl5VNckSGFpM5MyGD7pOhbMO1-",
-
-      // Category Images from Katalog (Google Drive CDN)
-      CAT_ACCESSORIES: "https://lh3.googleusercontent.com/d/1ffM-0VknUebFOVjdKz7qiVK9uuqAtRMV",
-      CAT_INDIAN_MAN: "https://lh3.googleusercontent.com/d/1eUuuSxjkAQwjc9X1QSQaCmXXD0hpjbLz",
-      CAT_INDIAN_WOMAN: "https://lh3.googleusercontent.com/d/1iQLNUJ0xc1YheNazjY-s9invN9Sv6ToR",
-      CAT_ALL: "https://lh3.googleusercontent.com/d/1SuNjCOiE4slbk34nlIJQI7owPWCu-vHR",
-
-      // Navigation & Badges (Google Drive CDN)
-      ICON_WHATS_NEW: "https://lh3.googleusercontent.com/d/15PNbPGeElyHi0tYZOiRsz8LuyCdwsOAp",
-      ICON_JUST_ARRIVED: "https://lh3.googleusercontent.com/d/14RQKWcrEhdd1rDmW0Eef1MyBEeuSkOm3",
-      ICON_10_10: "https://lh3.googleusercontent.com/d/1SsoK4cOCcWyKN5kMCEdfk5cgY5f2L7O8",
-      ICON_BELANJA: "https://lh3.googleusercontent.com/d/1iI823BaOyAjqQWKAkvIyRrgW8X9oAugv",
-      ICON_CARA_BELANJA: "https://lh3.googleusercontent.com/d/1ZGZjGnUPny9713XkQfYz5_6kLSvbTFLI",
-      ICON_FACEBOOK: "https://lh3.googleusercontent.com/d/1R7kBrSkMUSnVoZcBlj-kArSpVfd28kNv",
-      ICON_INSTAGRAM: "https://lh3.googleusercontent.com/d/19r3NgWdGf89ipPGZ8lJpeO_kBvvecw4b",
-      ICON_TIKTOK: "https://lh3.googleusercontent.com/d/1ddoLqRIckZOxqR7KTsGIFJcjhg3vyZ2g"
-    };
-
-    const ASSETS = IS_LOCAL ? LOCAL_ASSETS : CLOUD_ASSETS;
+    // Keep backwards compatibility aliases
+    const LOCAL_ASSETS = CDN_ASSETS;
+    const CLOUD_ASSETS = CDN_ASSETS;
+    const ASSETS = CDN_ASSETS;
 
     const ASSET_MAP = {
       // Logos
-      "assets/Logo V & T.jpg": ASSETS.LOGO_VT,
-      "assets/Logo V& T.jpg": ASSETS.LOGO_VT,
-      "assets/Logo V & T.png": ASSETS.LOGO_VT,
-      "assets/logo_vt.png": ASSETS.LOGO_VT,
-      "assets/logo_vt_opt.jpg": ASSETS.LOGO_VT_OPT,
+      "assets/Logo V & T.jpg": CDN_ASSETS.LOGO_VT,
+      "assets/Logo V& T.jpg": CDN_ASSETS.LOGO_VT,
+      "assets/Logo V & T.png": CDN_ASSETS.LOGO_VT,
+      "assets/logo_vt.png": CDN_ASSETS.LOGO_VT,
+      "assets/logo_vt_opt.jpg": CDN_ASSETS.LOGO_VT_OPT,
 
       // Hero Banners
-      "assets/hero_banner_software.jpg": ASSETS.BANNER_SOFTWARE,
-      "assets/hero_banner_pac.jpg": ASSETS.BANNER_PAC,
-      "assets/hero_store_mannequins.jpg": ASSETS.BANNER_BOUTIQUE,
+      "assets/hero_banner_software.jpg": CDN_ASSETS.BANNER_SOFTWARE,
+      "assets/hero_banner_pac.jpg": CDN_ASSETS.BANNER_PAC,
+      "assets/hero_store_mannequins.jpg": CDN_ASSETS.BANNER_BOUTIQUE,
 
       // Product Goods & Cards
-      "assets/card1_website.jpg": ASSETS.CARD_1,
-      "assets/card2_gelang.jpg": ASSETS.CARD_2,
-      "assets/card3_kurta.jpg": ASSETS.CARD_3,
-      "assets/card4_dress.jpg": ASSETS.CARD_4,
-      "assets/detail_corset_main.jpg": ASSETS.CARD_CORSET,
-      "assets/biutteco-tas-kosmetik-make-up-travel-organizer-bag-wanita-x3235.jpg": ASSETS.CARD_TAS,
-      "assets/samjune-kacamata-pria-polarized-sunglasses-anti-reflective-uv400-j-198.jpg": ASSETS.CARD_KACAMATA,
-      "assets/Kotak_Kosmetik_(3).jpg": ASSETS.CARD_KOTAK,
-      "assets/taffomicron-tensimeter-digital-pengukur-tekanan-darah-indonesian-voice-a01.jpg": ASSETS.CARD_TENSIMETER,
-      "assets/taffomicron-thermogun-thermometer-tembak-suhu-badan-infrared-ad801.jpg": ASSETS.CARD_THERMOGUN,
-      "assets/taffomicron-alat-terapi-pernapasan-mesh-nebulizer-portable-jsl-w302.jpg": ASSETS.CARD_NEBULIZER,
-      "assets/taffomicron-fingertip-pulse-oximeter-alat-ukur-saturasi-oksigen-darah-yk-80b.jpg": ASSETS.CARD_OXIMETER,
-      "assets/taffsport-korset-pembentuk-badan-pria-waist-fat-burner-double-velcro-mwl10.jpg": ASSETS.CARD_KORSET_VELCRO,
-      "assets/Designer.jpg": ASSETS.CARD_DESIGNER,
-      "assets/1.jpg": ASSETS.IMG_1,
-      "assets/2.jpg": ASSETS.IMG_2,
-      "assets/3.jpg": ASSETS.IMG_3,
+      "assets/card1_website.jpg": CDN_ASSETS.CARD_1,
+      "assets/card2_gelang.jpg": CDN_ASSETS.CARD_2,
+      "assets/card3_kurta.jpg": CDN_ASSETS.CARD_3,
+      "assets/card4_dress.jpg": CDN_ASSETS.CARD_4,
+      "assets/detail_corset_main.jpg": CDN_ASSETS.CARD_CORSET,
+      "assets/biutteco-tas-kosmetik-make-up-travel-organizer-bag-wanita-x3235.jpg": CDN_ASSETS.CARD_TAS,
+      "assets/samjune-kacamata-pria-polarized-sunglasses-anti-reflective-uv400-j-198.jpg": CDN_ASSETS.CARD_KACAMATA,
+      "assets/Kotak_Kosmetik_(3).jpg": CDN_ASSETS.CARD_KOTAK,
+      "assets/taffomicron-tensimeter-digital-pengukur-tekanan-darah-indonesian-voice-a01.jpg": CDN_ASSETS.CARD_TENSIMETER,
+      "assets/taffomicron-thermogun-thermometer-tembak-suhu-badan-infrared-ad801.jpg": CDN_ASSETS.CARD_THERMOGUN,
+      "assets/taffomicron-alat-terapi-pernapasan-mesh-nebulizer-portable-jsl-w302.jpg": CDN_ASSETS.CARD_NEBULIZER,
+      "assets/taffomicron-fingertip-pulse-oximeter-alat-ukur-saturasi-oksigen-darah-yk-80b.jpg": CDN_ASSETS.CARD_OXIMETER,
+      "assets/taffsport-korset-pembentuk-badan-pria-waist-fat-burner-double-velcro-mwl10.jpg": CDN_ASSETS.CARD_KORSET_VELCRO,
+      "assets/Designer.jpg": CDN_ASSETS.CARD_DESIGNER,
+      "assets/1.jpg": CDN_ASSETS.IMG_1,
+      "assets/2.jpg": CDN_ASSETS.IMG_2,
+      "assets/3.jpg": CDN_ASSETS.IMG_3,
 
       // Product Detail Thumbnails
-      "assets/detail_thumb_1.jpg": ASSETS.THUMB_1,
-      "assets/detail_thumb_2.jpg": ASSETS.THUMB_2,
-      "assets/detail_thumb_3.jpg": ASSETS.THUMB_3,
-      "assets/detail_thumb_4.jpg": ASSETS.THUMB_4,
-      "assets/detail_thumb_5.jpg": ASSETS.THUMB_5,
+      "assets/detail_thumb_1.jpg": CDN_ASSETS.THUMB_1,
+      "assets/detail_thumb_2.jpg": CDN_ASSETS.THUMB_2,
+      "assets/detail_thumb_3.jpg": CDN_ASSETS.THUMB_3,
+      "assets/detail_thumb_4.jpg": CDN_ASSETS.THUMB_4,
+      "assets/detail_thumb_5.jpg": CDN_ASSETS.THUMB_5,
 
       // Categories
-      "assets/All Accesories and Luxury Goods.jpg": ASSETS.CAT_ACCESSORIES,
-      "assets/Indian Man Fashion.jpg": ASSETS.CAT_INDIAN_MAN,
-      "assets/Indian Woman Fashion.jpg": ASSETS.CAT_INDIAN_WOMAN,
-      "assets/Kategori All Choice.jpg": ASSETS.CAT_ALL,
+      "assets/All Accesories and Luxury Goods.jpg": CDN_ASSETS.CAT_ACCESSORIES,
+      "assets/Indian Man Fashion.jpg": CDN_ASSETS.CAT_INDIAN_MAN,
+      "assets/Indian Woman Fashion.jpg": CDN_ASSETS.CAT_INDIAN_WOMAN,
+      "assets/Kategori All Choice.jpg": CDN_ASSETS.CAT_ALL,
+      "assets/Katalog/All Accesories and Luxury Goods.jpg": CDN_ASSETS.CAT_ACCESSORIES,
+      "assets/Katalog/Indian Man Fashion.jpg": CDN_ASSETS.CAT_INDIAN_MAN,
+      "assets/Katalog/Indian Woman Fashion.jpg": CDN_ASSETS.CAT_INDIAN_WOMAN,
+      "assets/Katalog/Kategori All Choice.jpg": CDN_ASSETS.CAT_ALL,
 
       // Navigation & Badges
-      "assets/whats_new.png": ASSETS.ICON_WHATS_NEW,
-      "assets/just_arrived.png": ASSETS.ICON_JUST_ARRIVED,
-      "assets/10.10.png": ASSETS.ICON_10_10,
-      "assets/belanja_ke_toko.png": ASSETS.ICON_BELANJA,
-      "assets/cara_belanja.png": ASSETS.ICON_CARA_BELANJA,
-      "assets/facebook-logo.png": ASSETS.ICON_FACEBOOK,
-      "assets/instagram-logo.png": ASSETS.ICON_INSTAGRAM,
-      "assets/tiktok-logo.png": ASSETS.ICON_TIKTOK,
+      "assets/whats_new.png": CDN_ASSETS.ICON_WHATS_NEW,
+      "assets/just_arrived.png": CDN_ASSETS.ICON_JUST_ARRIVED,
+      "assets/10.10.png": CDN_ASSETS.ICON_10_10,
+      "assets/belanja_ke_toko.png": CDN_ASSETS.ICON_BELANJA,
+      "assets/cara_belanja.png": CDN_ASSETS.ICON_CARA_BELANJA,
+      "assets/facebook-logo.png": CDN_ASSETS.ICON_FACEBOOK,
+      "assets/instagram-logo.png": CDN_ASSETS.ICON_INSTAGRAM,
+      "assets/tiktok-logo.png": CDN_ASSETS.ICON_TIKTOK,
       "assets/Template-1.jpg": SVG_PLACEHOLDER
     };
 
     function resolveImgUrl(url) {
       if (!url) return SVG_PLACEHOLDER;
       if (url.startsWith("data:")) return url;
-      if (IS_LOCAL) {
-        if (!url.startsWith("http://") && !url.startsWith("https://")) {
-          const clean = url.replace(/\\/g, "/").trim();
-          if (ASSET_MAP[clean]) return ASSET_MAP[clean];
-          const filename = clean.split("/").pop();
-          if (filename && ASSET_MAP["assets/" + filename]) return ASSET_MAP["assets/" + filename];
-          return clean;
-        }
-        for (const [key, cloudUrl] of Object.entries(CLOUD_ASSETS)) {
-          if (cloudUrl === url && LOCAL_ASSETS[key]) {
-            return LOCAL_ASSETS[key];
-          }
-        }
-      } else {
-        if (url.startsWith("http://") || url.startsWith("https://")) return url;
-        const clean = url.replace(/\\/g, "/").trim();
-        if (ASSET_MAP[clean]) return ASSET_MAP[clean];
-        const filename = clean.split("/").pop();
-        if (filename && ASSET_MAP["assets/" + filename]) return ASSET_MAP["assets/" + filename];
-        return ASSET_MAP[clean] || clean;
+      if (url.startsWith("https://cdn.jsdelivr.net/")) return url;
+
+      const clean = url.replace(/\\/g, "/").trim();
+      if (ASSET_MAP[clean]) return ASSET_MAP[clean];
+      const filename = clean.split("/").pop();
+      if (filename && ASSET_MAP["assets/" + filename]) return ASSET_MAP["assets/" + filename];
+
+      if (clean.startsWith("http://") || clean.startsWith("https://")) {
+        // Map old Drive URLs if any match
+        return clean;
       }
-      return url;
+
+      let pathOnly = clean;
+      if (pathOnly.startsWith("assets/")) pathOnly = pathOnly.substring(7);
+      if (pathOnly.startsWith("/")) pathOnly = pathOnly.substring(1);
+
+      const encoded = pathOnly.split("/").map(seg => encodeURIComponent(seg).replace(/'/g, "%27")).join("/");
+      return BASE_CDN + encoded;
     }
 
     function handleImgError(el, fallbackKey) {
       if (!el) return;
       el.onerror = null;
-      if (fallbackKey && LOCAL_ASSETS[fallbackKey] && el.src !== LOCAL_ASSETS[fallbackKey]) {
-        el.src = LOCAL_ASSETS[fallbackKey];
-        return;
-      }
-      if (fallbackKey && ASSETS[fallbackKey] && el.src !== ASSETS[fallbackKey]) {
-        el.src = ASSETS[fallbackKey];
+      if (fallbackKey && CDN_ASSETS[fallbackKey]) {
+        el.src = CDN_ASSETS[fallbackKey];
         return;
       }
       el.src = SVG_PLACEHOLDER;
@@ -8699,37 +8844,29 @@
       try {
         const logoImgs = document.querySelectorAll(".brand-vt-header-img, .vt-hero-logo-img, .cart-hero-logo-img, .auth-big-logo-img, .modal-header-logo-img");
         logoImgs.forEach(img => {
-          if (ASSETS.LOGO_VT) img.src = ASSETS.LOGO_VT;
+          img.src = CDN_ASSETS.LOGO_VT;
         });
         const bSoft = document.getElementById("heroBannerSoftware");
-        if (bSoft && ASSETS.BANNER_SOFTWARE) bSoft.src = ASSETS.BANNER_SOFTWARE;
+        if (bSoft) bSoft.src = CDN_ASSETS.BANNER_SOFTWARE;
         const bPac = document.getElementById("heroBannerPac");
-        if (bPac && ASSETS.BANNER_PAC) bPac.src = ASSETS.BANNER_PAC;
+        if (bPac) bPac.src = CDN_ASSETS.BANNER_PAC;
         const bBoutique = document.getElementById("heroBannerBoutique");
-        if (bBoutique && ASSETS.BANNER_BOUTIQUE) bBoutique.src = ASSETS.BANNER_BOUTIQUE;
+        if (bBoutique) bBoutique.src = CDN_ASSETS.BANNER_BOUTIQUE;
 
         const iWN = document.getElementById("iconWhatsNew");
-        if (iWN && ASSETS.ICON_WHATS_NEW) iWN.src = ASSETS.ICON_WHATS_NEW;
+        if (iWN) iWN.src = CDN_ASSETS.ICON_WHATS_NEW;
         const iJA = document.getElementById("iconJustArrived");
-        if (iJA && ASSETS.ICON_JUST_ARRIVED) iJA.src = ASSETS.ICON_JUST_ARRIVED;
+        if (iJA) iJA.src = CDN_ASSETS.ICON_JUST_ARRIVED;
         const i10 = document.getElementById("icon1010");
-        if (i10 && ASSETS.ICON_10_10) i10.src = ASSETS.ICON_10_10;
+        if (i10) i10.src = CDN_ASSETS.ICON_10_10;
 
-        if (IS_LOCAL) {
-          const allImgs = document.querySelectorAll("img[src*='googleusercontent.com']");
-          allImgs.forEach(img => {
-            const resolved = resolveImgUrl(img.getAttribute("src"));
-            if (resolved && !resolved.includes("googleusercontent.com")) {
-              img.src = resolved;
-            }
-          });
-        }
+        const bgAudio = document.getElementById("storeBgAudio");
+        if (bgAudio) bgAudio.src = CDN_ASSETS.AUDIO_AWAL;
       } catch (e) {
         console.warn("applyCloudAssets warning:", e);
       }
     }
 
-    // 3. MASTER DATA PRODUK (SESUAI GAMBAR 2 & 3 - ASET LOKAL ASLI BEBAS BROKEN/DOUBLE)
     let state = {
       currentUser: USER_ROLES["PELANGGAN:TAMU"],
       generatedOtp: "",
@@ -9207,63 +9344,71 @@
       } catch (e) { }
     }
 
-    // INIT
-    window.addEventListener("DOMContentLoaded", () => {
-      applyCloudAssets();
-      restoreUserSession();
+    // ROBUST INITIALIZATION & LIFECYCLE HANDLER
+    function initApplication() {
       try {
-        const savedView = localStorage.getItem("vt_device_view");
-        if (savedView && ["mobile", "tablet", "desktop"].includes(savedView)) {
-          setDeviceView(savedView, true);
-        } else {
-          // Auto-detect berdasarkan lebar layar riil pengguna
-          const w = window.innerWidth;
-          if (w >= 1024) {
-            setDeviceView("desktop", true);
-          } else if (w >= 640) {
-            setDeviceView("tablet", true);
-          } else {
-            setDeviceView("mobile", true);
-          }
+        applyCloudAssets();
+        setupImageFallbacks();
+        bindInteractiveEventListeners();
+        restoreUserSession();
+        let savedView = "mobile";
+        try {
+          savedView = safeStorage.getItem("vt_device_view") || "mobile";
+        } catch (e) {
+          savedView = "mobile";
         }
-      } catch (e) { }
-      updateRoleDisplay();
-      renderCatalog();
-      renderPosCatalog();
-      renderAdminTable();
-      updateSubCatDropdown();
-      renderOrdersTabs();
-      renderOrdersView();
-    });
+        switchDeviceView(savedView, true);
+        updateRoleDisplay();
+        renderCatalog();
+        renderPosCatalog();
+        renderAdminTable();
+        updateSubCatDropdown();
+        renderOrdersTabs();
+        renderOrdersView();
+      } catch (err) {
+        console.error("Error during application initialization:", err);
+      }
+    }
+
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", initApplication);
+    } else {
+      initApplication();
+    }
 
     // VIEWPORT SWITCHER (MOBILE, TABLET, DESKTOP)
-    function setDeviceView(mode, silent = false) {
-      const btnMobile = document.getElementById("btnViewMobile");
-      const btnTablet = document.getElementById("btnViewTablet");
-      const btnDesktop = document.getElementById("btnViewDesktop");
+    function switchDeviceView(mode, silent = false) {
+      const btnMobile = document.getElementById("btnModeMobile") || document.getElementById("btnViewMobile");
+      const btnTablet = document.getElementById("btnModeTablet") || document.getElementById("btnViewTablet");
+      const btnDesktop = document.getElementById("btnModeDesktop") || document.getElementById("btnViewDesktop");
 
       document.body.classList.remove("is-mobile-view", "is-tablet-view", "is-desktop-view");
       if (btnMobile) btnMobile.classList.remove("active");
       if (btnTablet) btnTablet.classList.remove("active");
       if (btnDesktop) btnDesktop.classList.remove("active");
 
-      if (mode === "mobile") {
-        document.body.classList.add("is-mobile-view");
-        if (btnMobile) btnMobile.classList.add("active");
-        if (!silent) showToast("📱 Mode Mobile (Layar HP 418px)");
-      } else if (mode === "tablet") {
+      if (mode === "tablet") {
         document.body.classList.add("is-tablet-view");
         if (btnTablet) btnTablet.classList.add("active");
-        if (!silent) showToast("📟 Mode Tablet (Layar iPad / Tab 820px)");
-      } else {
+        if (!silent && typeof showToast === "function") showToast("📟 Mode Tablet (iPad 820px)");
+      } else if (mode === "desktop") {
         document.body.classList.add("is-desktop-view");
         if (btnDesktop) btnDesktop.classList.add("active");
-        if (!silent) showToast("💻 Mode Desktop (Layar Lebar 1280px)");
+        if (!silent && typeof showToast === "function") showToast("💻 Mode Desktop (Layar Lebar 1280px)");
+      } else {
+        // Default: mobile
+        document.body.classList.add("is-mobile-view");
+        if (btnMobile) btnMobile.classList.add("active");
+        if (!silent && typeof showToast === "function") showToast("📱 Mode Mobile (HP 418px)");
       }
 
       try {
         localStorage.setItem("vt_device_view", mode);
       } catch (e) { }
+    }
+
+    function setDeviceView(mode, silent = false) {
+      switchDeviceView(mode, silent);
     }
 
     // AUDIO STATE & LIFECYCLE MANAGEMENT (mp3 sound-Awal.mp3)
@@ -9708,7 +9853,7 @@
         return `
           <div class="vt-prod-card" onclick="openProductDetail('${p.id}')">
             <div class="vt-card-thumb-wrap">
-              <img class="vt-card-thumb-img" src="${resolveImgUrl(p.fotoUrl)}" alt="${p.nama}" loading="lazy" onerror="handleImgError(this);">
+              <img class="vt-card-thumb-img" src="${resolveImgUrl(p.fotoUrl)}" alt="${p.nama}" loading="lazy">
             </div>
             <div class="vt-card-body">
               <h4 class="vt-card-title">${p.nama}</h4>
@@ -9777,7 +9922,7 @@
 
       if (thumbsCol) {
         thumbsCol.innerHTML = thumbUrls.map((url, idx) => `
-          <img src="${url}" class="detail-thumb-box ${idx === 0 ? 'active' : ''}" onclick="selectDetailThumb(${idx})" onerror="handleImgError(this);">
+          <img src="${url}" class="detail-thumb-box ${idx === 0 ? 'active' : ''}" onclick="selectDetailThumb(${idx})">
         `).join("");
       }
 
@@ -10426,8 +10571,17 @@
         if (vco) vco.classList.add("active");
         renderCheckoutView();
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (tab === "orders" || tab === "pos") {
-        // Fitur Pesanan & Kasir POS telah dinonaktifkan
+      } else if (tab === "orders") {
+        const vo = document.getElementById("viewOrders");
+        if (vo) vo.classList.add("active");
+        const b = document.getElementById("navBtnOrders");
+        if (b) b.classList.add("active");
+        const sc = document.getElementById("sidebarOrdersCartCount");
+        if (sc) sc.innerText = (state.cart || []).reduce((a, b) => a + (b.qty || 1), 0);
+        renderOrdersTabs();
+        renderOrdersView();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (tab === "pos") {
         switchTab("catalog");
         return;
       } else if (tab === "auth") {
@@ -11083,7 +11237,7 @@
             <div class="order-body-grid">
               <!-- Thumbnail with Item Count Tag -->
               <div class="order-thumb-wrap">
-                <img src="${thumbImg}" alt="Produk" class="order-thumb-img" onerror="this.src='assets/detail_corset_main.jpg'">
+                <img src="${thumbImg}" alt="Produk" class="order-thumb-img">
                 <div class="order-thumb-tag">${itemCount} Produk</div>
               </div>
 
@@ -11185,7 +11339,7 @@
             <div style="display: flex; flex-direction: column; gap: 10px;">
               ${(order.items || []).map(it => `
                 <div style="display: flex; gap: 12px; align-items: center; border: 1px solid #f1f5f9; background: #ffffff; padding: 10px; border-radius: 8px;">
-                  <img src="${it.fotoUrl || 'assets/3.jpg'}" alt="${it.nama}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0;" onerror="this.src='assets/detail_corset_main.jpg'">
+                  <img src="${it.fotoUrl || 'https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/3.jpg'}" alt="${it.nama}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0;">
                   <div style="flex: 1;">
                     <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">${it.nama}</div>
                     <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">SKU: <b>${it.sku || '-'}</b> • Varian: <b>${it.varian || '-'}</b></div>
@@ -11440,7 +11594,7 @@
           <div class="cart-jaknot-item-card" id="cartItemRow_${idx}">
             <input type="checkbox" class="cart-custom-checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCartItemCheck(${idx})">
             
-            <img src="${resolveImgUrl(it.fotoUrl || 'assets/card1_website.jpg')}" alt="${it.nama}" class="cart-jaknot-thumb" onerror="handleImgError(this);">
+            <img src="${resolveImgUrl(it.fotoUrl || 'assets/card1_website.jpg')}" alt="${it.nama}" class="cart-jaknot-thumb">
             
             <div class="cart-jaknot-info-col">
               <h3 class="cart-jaknot-prod-title" onclick="openProductDetailModal('${it.id || it.idProduk || ''}')">${it.nama}</h3>
@@ -11729,7 +11883,7 @@
 
             return `
               <div style="display: flex; gap: 14px; align-items: center; padding-bottom: 12px; border-bottom: ${idx === checkedItems.length - 1 ? 'none' : '1px solid #f1f5f9'};">
-                <img src="${resolveImgUrl(it.fotoUrl || 'assets/card1_website.jpg')}" alt="${it.nama}" style="width: 58px; height: 58px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0;" onerror="handleImgError(this);">
+                <img src="${resolveImgUrl(it.fotoUrl || 'assets/card1_website.jpg')}" alt="${it.nama}" style="width: 58px; height: 58px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <div style="flex: 1; min-width: 0;">
                   <div style="font-size: 0.88rem; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                     ${it.nama}
@@ -12553,7 +12707,7 @@
       const savedItems = state.products.slice(0, 2);
       body.innerHTML = savedItems.map(p => `
         <div style="display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
-          <img src="${resolveImgUrl(p.fotoUrl)}" style="width: 48px; height: 58px; object-fit: cover; border-radius: 6px;" onerror="handleImgError(this);">
+          <img src="${resolveImgUrl(p.fotoUrl)}" style="width: 48px; height: 58px; object-fit: cover; border-radius: 6px;">
           <div style="flex: 1;">
             <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">${p.nama}</div>
             <div style="font-size: 0.72rem; color: #64748b;">${p.sku} | ${p.warna || 'Default'}</div>
@@ -12944,7 +13098,7 @@
         return `
           <tr style="border-bottom: 1px solid var(--border); ${isLow ? 'background: #fffafa;' : ''}">
             <td style="padding: 6px 10px; width: 48px;">
-              <img src="${resolveImgUrl(p.fotoUrl)}" style="width: 38px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); background: #eee;" onerror="handleImgError(this);">
+              <img src="${resolveImgUrl(p.fotoUrl)}" style="width: 38px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); background: #eee;">
             </td>
             <td style="padding: 6px 10px; font-weight: 700; font-size: 0.75rem;">${p.sku}</td>
             <td style="padding: 6px 10px;">
@@ -13564,7 +13718,330 @@
       closeVariantModal();
       openEditProductModal(state.selectedProduct.id);
     }
-  </script>
+  
+
+    // -------------------------------------------------------------
+    // MISSING INTERACTION & HELPER HANDLERS
+    // -------------------------------------------------------------
+    function changeCartItemQty(idx, delta) {
+      if (!state.cart || !state.cart[idx]) return;
+      state.cart[idx].qty = (Number(state.cart[idx].qty) || 1) + delta;
+      if (state.cart[idx].qty <= 0) {
+        state.cart.splice(idx, 1);
+      } else {
+        const price = getCartItemPrice(state.cart[idx]);
+        state.cart[idx].subtotal = price * state.cart[idx].qty;
+      }
+      if (typeof saveGuestCartToStorage === 'function') saveGuestCartToStorage();
+      if (typeof updateCartBadge === 'function') updateCartBadge();
+      if (typeof renderCartView === 'function') renderCartView();
+      const cartModal = document.getElementById("cartModal");
+      if (cartModal && cartModal.style.display === "flex") {
+        if (typeof openCartModal === 'function') openCartModal();
+      }
+    }
+
+    function toggleAllChoiceDropdown() {
+      const menu = document.getElementById("allChoiceDropdownMenu");
+      if (!menu) return;
+      menu.style.display = (menu.style.display === "none" || !menu.style.display) ? "block" : "none";
+    }
+
+    function selectPillarCategory(cat) {
+      if (typeof selectMainCategory === 'function') {
+        if (cat === 'All' || cat === 'Semua') {
+          selectMainCategory('Semua');
+        } else {
+          selectMainCategory(cat);
+        }
+      }
+      const menu = document.getElementById("allChoiceDropdownMenu");
+      if (menu) menu.style.display = "none";
+    }
+
+    function openLocationSelectorModal() {
+      if (typeof openLocationPickerModal === 'function') openLocationPickerModal();
+    }
+
+    function openVoucherModal() {
+      if (typeof showToast === 'function') showToast('🎟️ Belum ada voucher promo aktif saat ini.');
+    }
+
+    function openProductDetailModal(id) {
+      if (typeof openProductDetail === 'function') openProductDetail(id);
+    }
+
+
+    // IMAGE ASSET FALLBACK FOR GOOGLE APPS SCRIPT IFRAME
+    function setupImageFallbacks() {
+      const heroLogo = document.getElementById("heroStoryLogoImg");
+      if (heroLogo) {
+        heroLogo.addEventListener("error", function () {
+          if (this.src !== CDN_ASSETS.LOGO_VT_OPT) {
+            this.src = CDN_ASSETS.LOGO_VT_OPT;
+          }
+        });
+      }
+      const headerLogo = document.getElementById("mainHeaderLogoImg");
+      if (headerLogo) {
+        headerLogo.addEventListener("error", function () {
+          if (this.src !== CDN_ASSETS.LOGO_VT_OPT) {
+            this.src = CDN_ASSETS.LOGO_VT_OPT;
+          }
+        });
+      }
+    }
+
+
+    // DIRECT DOM EVENT LISTENERS (Guarantees functioning inside Google Apps Script iframe)
+    function bindInteractiveEventListeners() {
+      // 1. Device Viewport Switcher
+      const btnMobile = document.getElementById("btnModeMobile") || document.getElementById("btnViewMobile");
+      if (btnMobile) {
+        btnMobile.onclick = function() { switchDeviceView('mobile'); };
+        btnMobile.addEventListener("click", function() { switchDeviceView('mobile'); });
+      }
+
+      const btnTablet = document.getElementById("btnModeTablet") || document.getElementById("btnViewTablet");
+      if (btnTablet) {
+        btnTablet.onclick = function() { switchDeviceView('tablet'); };
+        btnTablet.addEventListener("click", function() { switchDeviceView('tablet'); });
+      }
+
+      const btnDesktop = document.getElementById("btnModeDesktop") || document.getElementById("btnViewDesktop");
+      if (btnDesktop) {
+        btnDesktop.onclick = function() { switchDeviceView('desktop'); };
+        btnDesktop.addEventListener("click", function() { switchDeviceView('desktop'); });
+      }
+
+      // 2. Navigation Tabs (Katalog, Keranjang, Pesanan, Admin)
+      const navCatalog = document.getElementById("navBtnCatalog");
+      if (navCatalog) {
+        navCatalog.onclick = function() { switchTab('catalog'); };
+        navCatalog.addEventListener("click", function() { switchTab('catalog'); });
+      }
+
+      const navCart = document.getElementById("navBtnCart");
+      if (navCart) {
+        navCart.onclick = function() { switchTab('cart'); };
+        navCart.addEventListener("click", function() { switchTab('cart'); });
+      }
+
+      const navOrders = document.getElementById("navBtnOrders");
+      if (navOrders) {
+        navOrders.onclick = function() { switchTab('orders'); };
+        navOrders.addEventListener("click", function() { switchTab('orders'); });
+      }
+
+      const navAdmin = document.getElementById("navBtnAdmin");
+      if (navAdmin) {
+        navAdmin.onclick = function() { switchTab('admin'); };
+        navAdmin.addEventListener("click", function() { switchTab('admin'); });
+      }
+
+      // 3. Header Action Buttons
+      const headerOrders = document.getElementById("vtHeaderOrdersBtn");
+      if (headerOrders) {
+        headerOrders.onclick = function() { switchTab('orders'); };
+        headerOrders.addEventListener("click", function() { switchTab('orders'); });
+      }
+
+      const headerUserBtn = document.getElementById("userHeaderBtn");
+      if (headerUserBtn) {
+        headerUserBtn.onclick = function(e) { handleUserHeaderClick(e); };
+        headerUserBtn.addEventListener("click", function(e) { handleUserHeaderClick(e); });
+      }
+
+      const headerBrand = document.querySelector(".brand-vt-wrap");
+      if (headerBrand) {
+        headerBrand.onclick = function() { switchTab('catalog'); };
+        headerBrand.addEventListener("click", function() { switchTab('catalog'); });
+      }
+
+      const headerCart = document.querySelector(".header-actions-right .vt-header-btn[title='Keranjang Belanja']");
+      if (headerCart) {
+        headerCart.onclick = function() { switchTab('cart'); };
+        headerCart.addEventListener("click", function() { switchTab('cart'); });
+      }
+    }
+
+
+    // -------------------------------------------------------------
+    // EXPOSE ALL EVENT HANDLERS TO GLOBAL WINDOW OBJECT FOR IFRAME / GAS COMPATIBILITY
+    // -------------------------------------------------------------
+    (function registerGlobalHandlers(w) {
+      if (!w) return;
+      // Viewport Switcher
+      w.switchDeviceView = typeof switchDeviceView === 'function' ? switchDeviceView : function() {};
+      w.setDeviceView = w.switchDeviceView;
+      w.switchMode = w.switchDeviceView;
+      w.setMode = w.switchDeviceView;
+
+      // Navigation & Tabs
+      w.switchTab = typeof switchTab === 'function' ? switchTab : function() {};
+      w.openCart = function() { switchTab('cart'); };
+      w.openOrders = function() { switchTab('orders'); };
+
+      // User & Auth
+      w.handleUserHeaderClick = typeof handleUserHeaderClick === 'function' ? handleUserHeaderClick : function() {};
+      w.openAuthModal = typeof openAuthModal === 'function' ? openAuthModal : function() {};
+      w.closeAuthModal = typeof closeAuthModal === 'function' ? closeAuthModal : function() {};
+      w.toggleAuthMode = typeof toggleAuthMode === 'function' ? toggleAuthMode : function() {};
+      w.toggleAuthModalMode = typeof toggleAuthModalMode === 'function' ? toggleAuthModalMode : function() {};
+      w.submitModalAuthForm = typeof submitModalAuthForm === 'function' ? submitModalAuthForm : function() {};
+      w.submitAuthForm = typeof submitAuthForm === 'function' ? submitAuthForm : function() {};
+      w.handleGoogleSignIn = typeof handleGoogleSignIn === 'function' ? handleGoogleSignIn : function() {};
+      w.handleSocialAuth = typeof handleSocialAuth === 'function' ? handleSocialAuth : function() {};
+      w.handleUserLogout = typeof handleUserLogout === 'function' ? handleUserLogout : function() {};
+      w.closeUserDropdown = typeof closeUserDropdown === 'function' ? closeUserDropdown : function() {};
+      w.openEditProfileModal = typeof openEditProfileModal === 'function' ? openEditProfileModal : function() {};
+      w.openResetPasswordModal = typeof openResetPasswordModal === 'function' ? openResetPasswordModal : function() {};
+      w.closeResetPasswordModal = typeof closeResetPasswordModal === 'function' ? closeResetPasswordModal : function() {};
+      w.handleResetPasswordSubmit = typeof handleResetPasswordSubmit === 'function' ? handleResetPasswordSubmit : function() {};
+      w.openSetNewPassModal = typeof openSetNewPassModal === 'function' ? openSetNewPassModal : function() {};
+      w.closeSetNewPassModal = typeof closeSetNewPassModal === 'function' ? closeSetNewPassModal : function() {};
+      w.submitNewPassword = typeof submitNewPassword === 'function' ? submitNewPassword : function() {};
+      w.togglePasswordVisibility = typeof togglePasswordVisibility === 'function' ? togglePasswordVisibility : function() {};
+      w.hideAuthError = typeof hideAuthError === 'function' ? hideAuthError : function() {};
+
+      // Catalog & Categories
+      w.filterCatalog = typeof filterCatalog === 'function' ? filterCatalog : function() {};
+      w.selectMainCategory = typeof selectMainCategory === 'function' ? selectMainCategory : function() {};
+      w.selectPillarCategory = typeof selectPillarCategory === 'function' ? selectPillarCategory : function() {};
+      w.toggleAllChoiceDropdown = typeof toggleAllChoiceDropdown === 'function' ? toggleAllChoiceDropdown : function() {};
+      w.handleSubCatChange = typeof handleSubCatChange === 'function' ? handleSubCatChange : function() {};
+      w.handleFabricChange = typeof handleFabricChange === 'function' ? handleFabricChange : function() {};
+      w.updateSubCatDropdown = typeof updateSubCatDropdown === 'function' ? updateSubCatDropdown : function() {};
+      w.toggleMobileFilter = typeof toggleMobileFilter === 'function' ? toggleMobileFilter : function() {};
+      w.toggleSidebarGroup = typeof toggleSidebarGroup === 'function' ? toggleSidebarGroup : function() {};
+      w.resetAllFilters = typeof resetAllFilters === 'function' ? resetAllFilters : function() {};
+      w.scrollToCatalog = typeof scrollToCatalog === 'function' ? scrollToCatalog : function() {};
+      w.jumpToGateway = typeof jumpToGateway === 'function' ? jumpToGateway : function() {};
+
+      // Product Details
+      w.openProductDetail = typeof openProductDetail === 'function' ? openProductDetail : function() {};
+      w.openProductDetailModal = typeof openProductDetailModal === 'function' ? openProductDetailModal : function() {};
+      w.closeProductDetailModal = typeof closeProductDetailModal === 'function' ? closeProductDetailModal : function() {};
+      w.selectDetailColor = typeof selectDetailColor === 'function' ? selectDetailColor : function() {};
+      w.selectDetailSize = typeof selectDetailSize === 'function' ? selectDetailSize : function() {};
+      w.selectDetailThumb = typeof selectDetailThumb === 'function' ? selectDetailThumb : function() {};
+      w.nextDetailThumb = typeof nextDetailThumb === 'function' ? nextDetailThumb : function() {};
+      w.prevDetailThumb = typeof prevDetailThumb === 'function' ? prevDetailThumb : function() {};
+      w.copyDetailSkuCode = typeof copyDetailSkuCode === 'function' ? copyDetailSkuCode : function() {};
+      w.handleDetailCtaClick = typeof handleDetailCtaClick === 'function' ? handleDetailCtaClick : function() {};
+      w.shareDetailProduct = typeof shareDetailProduct === 'function' ? shareDetailProduct : function() {};
+
+      // Variant Sheet
+      w.setSheetColor = typeof setSheetColor === 'function' ? setSheetColor : function() {};
+      w.setSheetSize = typeof setSheetSize === 'function' ? setSheetSize : function() {};
+      w.adjustSheetQty = typeof adjustSheetQty === 'function' ? adjustSheetQty : function() {};
+      w.closeVariantModal = typeof closeVariantModal === 'function' ? closeVariantModal : function() {};
+      w.openEditFromVariant = typeof openEditFromVariant === 'function' ? openEditFromVariant : function() {};
+
+      // Cart Operations
+      w.addToCart = typeof addToCart === 'function' ? addToCart : function() {};
+      w.confirmAddToCart = typeof confirmAddToCart === 'function' ? confirmAddToCart : function() {};
+      w.openCartModal = typeof openCartModal === 'function' ? openCartModal : function() {};
+      w.closeCartModal = typeof closeCartModal === 'function' ? closeCartModal : function() {};
+      w.changeCartItemQty = typeof changeCartItemQty === 'function' ? changeCartItemQty : function() {};
+      w.removeCartItemAt = typeof removeCartItemAt === 'function' ? removeCartItemAt : function() {};
+      w.removeCart = typeof removeCart === 'function' ? removeCart : function() {};
+      w.deleteSelectedCartItems = typeof deleteSelectedCartItems === 'function' ? deleteSelectedCartItems : function() {};
+      w.saveActiveCartItems = typeof saveActiveCartItems === 'function' ? saveActiveCartItems : function() {};
+      w.toggleAllCartItems = typeof toggleAllCartItems === 'function' ? toggleAllCartItems : function() {};
+      w.toggleCartItemCheck = typeof toggleCartItemCheck === 'function' ? toggleCartItemCheck : function() {};
+      w.filterCartItems = typeof filterCartItems === 'function' ? filterCartItems : function() {};
+      w.setCartDeliveryMode = typeof setCartDeliveryMode === 'function' ? setCartDeliveryMode : function() {};
+      w.handleCartCheckoutAction = typeof handleCartCheckoutAction === 'function' ? handleCartCheckoutAction : function() {};
+      w.checkoutToWhatsApp = typeof checkoutToWhatsApp === 'function' ? checkoutToWhatsApp : function() {};
+
+      // Checkout & Addresses
+      w.setCheckoutAddressType = typeof setCheckoutAddressType === 'function' ? setCheckoutAddressType : function() {};
+      w.setCheckoutDeliveryMode = typeof setCheckoutDeliveryMode === 'function' ? setCheckoutDeliveryMode : function() {};
+      w.openChooseAddressModal = typeof openChooseAddressModal === 'function' ? openChooseAddressModal : function() {};
+      w.closeChooseAddressModal = typeof closeChooseAddressModal === 'function' ? closeChooseAddressModal : function() {};
+      w.selectDeliveryAddress = typeof selectDeliveryAddress === 'function' ? selectDeliveryAddress : function() {};
+      w.openAddressFormModal = typeof openAddressFormModal === 'function' ? openAddressFormModal : function() {};
+      w.closeAddressFormModal = typeof closeAddressFormModal === 'function' ? closeAddressFormModal : function() {};
+      w.handleAddressFormSubmit = typeof handleAddressFormSubmit === 'function' ? handleAddressFormSubmit : function() {};
+      w.processCheckoutPayment = typeof processCheckoutPayment === 'function' ? processCheckoutPayment : function() {};
+      w.submitFinalTransaction = typeof submitFinalTransaction === 'function' ? submitFinalTransaction : function() {};
+
+      // Payment & BCA
+      w.openBcaPaymentModal = typeof openBcaPaymentModal === 'function' ? openBcaPaymentModal : function() {};
+      w.closeBcaPaymentModal = typeof closeBcaPaymentModal === 'function' ? closeBcaPaymentModal : function() {};
+      w.copyBcaAmount = typeof copyBcaAmount === 'function' ? copyBcaAmount : function() {};
+      w.handleBcaProofUpload = typeof handleBcaProofUpload === 'function' ? handleBcaProofUpload : function() {};
+      w.confirmBcaTransfer = typeof confirmBcaTransfer === 'function' ? confirmBcaTransfer : function() {};
+      w.sendBcaConfirmationWhatsApp = typeof sendBcaConfirmationWhatsApp === 'function' ? sendBcaConfirmationWhatsApp : function() {};
+
+      // Orders
+      w.filterCustomerOrders = typeof filterCustomerOrders === 'function' ? filterCustomerOrders : function() {};
+      w.handleOrderSearch = typeof handleOrderSearch === 'function' ? handleOrderSearch : function() {};
+      w.handleOrderMethodFilter = typeof handleOrderMethodFilter === 'function' ? handleOrderMethodFilter : function() {};
+      w.openOrderDatePicker = typeof openOrderDatePicker === 'function' ? openOrderDatePicker : function() {};
+      w.openOrderDetailModal = typeof openOrderDetailModal === 'function' ? openOrderDetailModal : function() {};
+      w.closeOrderDetailModal = typeof closeOrderDetailModal === 'function' ? closeOrderDetailModal : function() {};
+      w.orderDetailViaWhatsApp = typeof orderDetailViaWhatsApp === 'function' ? orderDetailViaWhatsApp : function() {};
+
+      // Receipts & Invoices
+      w.openCustomerReceiptModal = typeof openCustomerReceiptModal === 'function' ? openCustomerReceiptModal : function() {};
+      w.closeCustomerReceiptModal = typeof closeCustomerReceiptModal === 'function' ? closeCustomerReceiptModal : function() {};
+      w.printCustomerReceipt = typeof printCustomerReceipt === 'function' ? printCustomerReceipt : function() {};
+      w.sendCustomerReceiptToWhatsApp = typeof sendCustomerReceiptToWhatsApp === 'function' ? sendCustomerReceiptToWhatsApp : function() {};
+      w.openCustomerInvoiceModal = typeof openCustomerInvoiceModal === 'function' ? openCustomerInvoiceModal : function() {};
+      w.closeCustomerInvoiceModal = typeof closeCustomerInvoiceModal === 'function' ? closeCustomerInvoiceModal : function() {};
+      w.selectInvoice = typeof selectInvoice === 'function' ? selectInvoice : function() {};
+      w.filterCustomerInvoices = typeof filterCustomerInvoices === 'function' ? filterCustomerInvoices : function() {};
+      w.sendCurrentInvoiceToWhatsApp = typeof sendCurrentInvoiceToWhatsApp === 'function' ? sendCurrentInvoiceToWhatsApp : function() {};
+      w.printCurrentPosAsA4Invoice = typeof printCurrentPosAsA4Invoice === 'function' ? printCurrentPosAsA4Invoice : function() {};
+
+      // Audio & Utilities
+      w.toggleStoreAudio = typeof toggleStoreAudio === 'function' ? toggleStoreAudio : function() {};
+      w.showToast = typeof showToast === 'function' ? showToast : function() {};
+      w.copyToClipboard = typeof copyToClipboard === 'function' ? copyToClipboard : function() {};
+      w.openLocationPickerModal = typeof openLocationPickerModal === 'function' ? openLocationPickerModal : function() {};
+      w.openLocationSelectorModal = typeof openLocationSelectorModal === 'function' ? openLocationSelectorModal : function() {};
+      w.openVoucherModal = typeof openVoucherModal === 'function' ? openVoucherModal : function() {};
+      w.openDepositModal = typeof openDepositModal === 'function' ? openDepositModal : function() {};
+      w.closeDepositModal = typeof closeDepositModal === 'function' ? closeDepositModal : function() {};
+      w.openSavedCartModal = typeof openSavedCartModal === 'function' ? openSavedCartModal : function() {};
+      w.closeSavedCartModal = typeof closeSavedCartModal === 'function' ? closeSavedCartModal : function() {};
+      w.openWatchlistModal = typeof openWatchlistModal === 'function' ? openWatchlistModal : function() {};
+      w.closeWatchlistModal = typeof closeWatchlistModal === 'function' ? closeWatchlistModal : function() {};
+
+      // Operator & Admin
+      w.openOperatorInputModal = typeof openOperatorInputModal === 'function' ? openOperatorInputModal : function() {};
+      w.closeOperatorInputModal = typeof closeOperatorInputModal === 'function' ? closeOperatorInputModal : function() {};
+      w.submitOperatorNewProduct = typeof submitOperatorNewProduct === 'function' ? submitOperatorNewProduct : function() {};
+      w.openEditProductModal = typeof openEditProductModal === 'function' ? openEditProductModal : function() {};
+      w.closeEditProductModal = typeof closeEditProductModal === 'function' ? closeEditProductModal : function() {};
+      w.saveProductEdit = typeof saveProductEdit === 'function' ? saveProductEdit : function() {};
+      w.deleteCurrentEditProduct = typeof deleteCurrentEditProduct === 'function' ? deleteCurrentEditProduct : function() {};
+      w.confirmDeleteProduct = typeof confirmDeleteProduct === 'function' ? confirmDeleteProduct : function() {};
+      w.resetEditPhoto = typeof resetEditPhoto === 'function' ? resetEditPhoto : function() {};
+      w.resetEditDesc = typeof resetEditDesc === 'function' ? resetEditDesc : function() {};
+      w.previewEditImage = typeof previewEditImage === 'function' ? previewEditImage : function() {};
+      w.handleEditGalleryUpload = typeof handleEditGalleryUpload === 'function' ? handleEditGalleryUpload : function() {};
+      w.handleOpGalleryUpload = typeof handleOpGalleryUpload === 'function' ? handleOpGalleryUpload : function() {};
+      w.openStaffLoginModal = typeof openStaffLoginModal === 'function' ? openStaffLoginModal : function() {};
+      w.closeStaffLoginModal = typeof closeStaffLoginModal === 'function' ? closeStaffLoginModal : function() {};
+      w.verifyStaffLoginModal = typeof verifyStaffLoginModal === 'function' ? verifyStaffLoginModal : function() {};
+      w.verifyStaffInSettings = typeof verifyStaffInSettings === 'function' ? verifyStaffInSettings : function() {};
+      w.openPoModal = typeof openPoModal === 'function' ? openPoModal : function() {};
+      w.closePoModal = typeof closePoModal === 'function' ? closePoModal : function() {};
+      w.sendPoToWhatsApp = typeof sendPoToWhatsApp === 'function' ? sendPoToWhatsApp : function() {};
+      w.openPrintStockModal = typeof openPrintStockModal === 'function' ? openPrintStockModal : function() {};
+      w.closePrintStockModal = typeof closePrintStockModal === 'function' ? closePrintStockModal : function() {};
+      w.setStockFilterTab = typeof setStockFilterTab === 'function' ? setStockFilterTab : function() {};
+      w.setStockPeriod = typeof setStockPeriod === 'function' ? setStockPeriod : function() {};
+      w.printA4Document = typeof printA4Document === 'function' ? printA4Document : function() {};
+      w.printModalDoc = typeof printModalDoc === 'function' ? printModalDoc : function() {};
+      w.quickRestock = typeof quickRestock === 'function' ? quickRestock : function() {};
+      w.closeReorderSupplierModal = typeof closeReorderSupplierModal === 'function' ? closeReorderSupplierModal : function() {};
+      w.openReorderSupplierModal = typeof openReorderSupplierModal === 'function' ? openReorderSupplierModal : function() {};
+    })(typeof window !== 'undefined' ? window : this);
+</script>
 
   <!-- FLOATING WHATSAPP HELP BUTTON (1.JPG & 2.JPG) -->
   <a class="floating-wa-help" onclick="openWhatsAppChat()" title="Hubungi Customer Support">

@@ -387,7 +387,7 @@ function simpanProduk(data) {
         Number(data.hargaModal) || 0,
         Number(data.hargaJual) || 0,
         Number(data.stok) || 0,
-        data.fotoUrl || "https://lh3.googleusercontent.com/d/1gHVcy2fnnUPSnxbnHG50vGqp3YQhGHMM",
+        data.fotoUrl || "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg",
         data.deskripsi || "",
         "Aktif"
       ];
