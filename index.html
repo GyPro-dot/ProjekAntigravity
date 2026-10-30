@@ -7231,8 +7231,8 @@
   </div>
 
   <!-- MODAL: KERANJANG & CHECKOUT WHATSAPP -->
-  <div class="modal-overlay" id="cartModal">
-    <div class="bottom-sheet">
+  <div class="modal-overlay" id="cartModal" onclick="if(event.target === this) closeCartModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
       <div class="sheet-header">
         <span class="sheet-title">Keranjang Belanja Toko PAC</span>
         <button class="icon-btn" onclick="closeCartModal()" style="border:none;">✕</button>
@@ -8126,7 +8126,7 @@
 
   <!-- MODAL: MASUK / DAFTAR SESUAI GAMBAR REFERENSI JAKNOT -->
   <div class="modal-overlay" id="authModal" onclick="if(event.target === this) closeAuthModal()">
-    <div class="auth-modal-card">
+    <div class="auth-modal-card" onclick="event.stopPropagation()">
       <!-- Header Bar: Title & Close Button -->
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
         <h2 style="font-size: 1.45rem; font-weight: 800; color: #0f172a; margin: 0;" id="modalAuthHeading">Masuk</h2>
@@ -8239,7 +8239,7 @@
 
   <!-- MODAL: ATUR ULANG PASSWORD (SESUAI GAMBAR 4) -->
   <div class="modal-overlay" id="resetPasswordModal" onclick="if(event.target === this) closeResetPasswordModal()">
-    <div class="auth-modal-card" style="max-width: 440px;">
+    <div class="auth-modal-card" onclick="event.stopPropagation()" style="max-width: 440px;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
         <h2 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Atur ulang password</h2>
         <button type="button" onclick="closeResetPasswordModal()"
@@ -8276,7 +8276,7 @@
 
   <!-- MODAL: PREVIEW EMAIL RESET PASSWORD (GMAIL STYLE SESUAI GAMBAR 9) -->
   <div class="modal-overlay" id="emailPreviewModal" onclick="if(event.target === this) closeEmailPreviewModal()">
-    <div style="background: #ffffff; border-radius: 12px; max-width: 640px; width: 95%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <div onclick="event.stopPropagation()" style="background: #ffffff; border-radius: 12px; max-width: 640px; width: 95%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
       <!-- Top Bar: Gmail Browser Header -->
       <div style="background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; border-radius: 12px 12px 0 0;">
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -8332,7 +8332,7 @@
 
   <!-- MODAL: SET PASSWORD BARU -->
   <div class="modal-overlay" id="setNewPassModal" onclick="if(event.target === this) closeSetNewPassModal()">
-    <div class="auth-modal-card" style="max-width: 440px;">
+    <div class="auth-modal-card" onclick="event.stopPropagation()" style="max-width: 440px;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
         <h2 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Buat Password Baru</h2>
         <button type="button" onclick="closeSetNewPassModal()" style="background: none; border: none; cursor: pointer; color: #64748b; font-size: 1.35rem; line-height: 1; padding: 4px 6px;">✕</button>
@@ -8384,7 +8384,7 @@
 
   <!-- MODAL: SAVED CART -->
   <div class="modal-overlay" id="savedCartModal" onclick="if(event.target === this) closeSavedCartModal()">
-    <div class="bottom-sheet" style="max-width: 520px;">
+    <div class="bottom-sheet" onclick="event.stopPropagation()" style="max-width: 520px;">
       <div class="sheet-header">
         <span class="sheet-title">🛒 Saved Cart (Disimpan untuk Nanti)</span>
         <button class="icon-btn" onclick="closeSavedCartModal()" style="border:none;">✕</button>
@@ -8444,7 +8444,7 @@
 
   <!-- MODAL: DETAIL PESANAN (JAKNOT STYLE) -->
   <div class="modal-overlay" id="orderDetailModal" onclick="if(event.target === this) closeOrderDetailModal()">
-    <div class="bottom-sheet" style="max-width: 620px;">
+    <div class="bottom-sheet" onclick="event.stopPropagation()" style="max-width: 620px;">
       <div class="sheet-header">
         <div style="display: flex; align-items: center; gap: 8px;">
           <svg width="20" height="20" fill="none" stroke="#0284c7" stroke-width="2" viewBox="0 0 24 24">
@@ -8470,7 +8470,7 @@
   <!-- MODAL: LOGIN OTORITAS PETUGAS & MANAJEMEN TOKO (KHUSUS SUPER ADMIN, ADMIN TOKO, OPERATOR TOKO) -->
   <div class="modal-overlay" id="staffLoginModal" onclick="if(event.target === this) closeStaffLoginModal()"
     style="display: none;">
-    <div class="bottom-sheet" style="max-width: 480px;">
+    <div class="bottom-sheet" onclick="event.stopPropagation()" style="max-width: 480px;">
       <div class="sheet-header">
         <div style="display: flex; align-items: center; gap: 8px;">
           <svg width="22" height="22" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24">
@@ -8826,6 +8826,11 @@
     document.addEventListener("click", function (event) {
       const target = event.target;
       if (!target) return;
+
+      // PENGECUALIAN MUTLAK: Jangan proses jika klik terjadi di dalam modal aktif
+      if (target instanceof Element && target.closest(".auth-modal-card, .bottom-sheet, .detail-dialog-wrap, .modal-card, .modal-content, input, textarea, select")) {
+        return;
+      }
 
       // A. Device Viewport Switcher
       const mobileBtn = target.closest("#btnModeMobile, #btnViewMobile, [data-preview='mobile']");
@@ -14521,9 +14526,10 @@
         const authModal = document.getElementById("authModal");
         if (authModal) {
           authModal.addEventListener("click", function (e) {
+            // Strictly close ONLY when clicking the backdrop overlay directly
             if (e.target === authModal) closeAuthModalDirect();
           });
-          authModal.querySelectorAll("button.icon-btn, .close-btn, [onclick*='closeAuthModal']").forEach(btn => {
+          authModal.querySelectorAll("button.icon-btn, button.close-btn, button[onclick*='closeAuthModal'], button[title='Tutup']").forEach(btn => {
             btn.addEventListener("click", (e) => { e?.preventDefault?.(); closeAuthModalDirect(); });
           });
         }
@@ -14531,9 +14537,10 @@
         const cartModal = document.getElementById("cartModal");
         if (cartModal) {
           cartModal.addEventListener("click", function (e) {
+            // Strictly close ONLY when clicking the backdrop overlay directly
             if (e.target === cartModal) closeCartModalDirect();
           });
-          cartModal.querySelectorAll("button.icon-btn, .close-btn, [onclick*='closeCartModal']").forEach(btn => {
+          cartModal.querySelectorAll("button.icon-btn, button.close-btn, button[onclick*='closeCartModal']").forEach(btn => {
             btn.addEventListener("click", (e) => { e?.preventDefault?.(); closeCartModalDirect(); });
           });
         }
@@ -14541,15 +14548,47 @@
         // F. Global Capturing Event Delegation (Anti-Gagal)
         document.addEventListener("click", function (e) {
           const target = e.target;
-          if (!target) return;
+          if (!target || !(target instanceof Element)) return;
 
-          // Backdrop clicks
-          if (target.id === "authModal") { closeAuthModalDirect(); return; }
-          if (target.id === "cartModal") { closeCartModalDirect(); return; }
+          // 1. PENGECUALIAN MUTLAK: Klik di dalam konten/kartu modal tidak boleh menutup modal
+          // dan tidak boleh memicu navigasi background!
+          const isInsideModalContent = target.closest(
+            ".auth-modal-card, .bottom-sheet, .detail-dialog-wrap, .modal-card, .modal-content, input, textarea, select, label, form, .floating-label-field"
+          );
 
-          // Close button clicks
-          if (target.closest("[onclick*='closeAuthModal'], #authModal .icon-btn")) { closeAuthModalDirect(); return; }
-          if (target.closest("[onclick*='closeCartModal'], #cartModal .icon-btn")) { closeCartModalDirect(); return; }
+          // 2. Tombol Tutup Eksplisit (X / Tutup)
+          const isExplicitCloseBtn = target.closest(
+            "button.icon-btn, button.close-btn, button[onclick*='closeAuthModal'], button[onclick*='closeCartModal'], button[onclick*='closeOrderDetailModal'], [data-close-modal], button[title='Tutup']"
+          );
+
+          if (isExplicitCloseBtn) {
+            if (target.closest("#authModal")) {
+              e.preventDefault();
+              closeAuthModalDirect();
+              return;
+            }
+            if (target.closest("#cartModal")) {
+              e.preventDefault();
+              closeCartModalDirect();
+              return;
+            }
+          }
+
+          // Jika klik berada di dalam isi/kartu modal (dan bukan tombol close),
+          // HENTIKAN delegasi global di sini agar user leluasa klik input, mengetik, atau submit form.
+          if (isInsideModalContent) {
+            return;
+          }
+
+          // 3. Klik Backdrop Luar (HANYA jika tepat di elemen overlay)
+          if (target === authModal || (target.id === "authModal" && target.classList.contains("modal-overlay"))) {
+            closeAuthModalDirect();
+            return;
+          }
+          if (target === cartModal || (target.id === "cartModal" && target.classList.contains("modal-overlay"))) {
+            closeCartModalDirect();
+            return;
+          }
 
           // Mode Mobile
           if (target.closest("#btnModeMobile, #btnViewMobile, [data-preview='mobile']") ||
