@@ -348,6 +348,13 @@ function simpanProduk(data) {
       }
     }
 
+    // Pastikan fotoUrl menggunakan tautan CDN jsDelivr dari repo GyPro-dot/ProjekAntigravity@main/assets/ alih-alih googleusercontent
+    var defaultCdnFoto = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
+    var finalFotoUrl = data.fotoUrl || defaultCdnFoto;
+    if (finalFotoUrl.indexOf("googleusercontent.com") !== -1 || finalFotoUrl.indexOf("drive.google.com") !== -1) {
+      finalFotoUrl = defaultCdnFoto;
+    }
+
     if (isEdit) {
       // Update produk eksisting
       sheet.getRange(targetRow, COL_PRODUK.SKU + 1).setValue(data.sku || "");
@@ -358,7 +365,7 @@ function simpanProduk(data) {
       sheet.getRange(targetRow, COL_PRODUK.MODAL + 1).setValue(Number(data.hargaModal) || 0);
       sheet.getRange(targetRow, COL_PRODUK.JUAL + 1).setValue(Number(data.hargaJual) || 0);
       sheet.getRange(targetRow, COL_PRODUK.STOK + 1).setValue(Number(data.stok) || 0);
-      if (data.fotoUrl) sheet.getRange(targetRow, COL_PRODUK.FOTO + 1).setValue(data.fotoUrl);
+      sheet.getRange(targetRow, COL_PRODUK.FOTO + 1).setValue(finalFotoUrl);
       sheet.getRange(targetRow, COL_PRODUK.DESKRIPSI + 1).setValue(data.deskripsi || "");
       return { success: true, message: "Produk " + id + " berhasil diperbarui!" };
     } else {
@@ -387,7 +394,7 @@ function simpanProduk(data) {
         Number(data.hargaModal) || 0,
         Number(data.hargaJual) || 0,
         Number(data.stok) || 0,
-        data.fotoUrl || "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg",
+        finalFotoUrl,
         data.deskripsi || "",
         "Aktif"
       ];
