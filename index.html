@@ -14281,6 +14281,334 @@
     <span style="font-size: 1.15rem;">💬</span>
     <span>Butuh bantuan? <b>Hubungi kami</b></span>
   </a>
+
+  <!-- STANDALONE UI CONTROLLER (100% INDEPENDENT OF OTHER SCRIPTS FOR GOOGLE APPS SCRIPT IFRAME) -->
+  <script id="standalone-ui-controller">
+    (function () {
+      "use strict";
+
+      function initStandaloneUI() {
+        // A. Visual Indicator: "● UI Ready" Badge
+        try {
+          const label = document.querySelector(".device-switcher-label");
+          if (label && !document.getElementById("ui-ready-badge")) {
+            const badge = document.createElement("span");
+            badge.id = "ui-ready-badge";
+            badge.textContent = "● UI Ready";
+            badge.style.cssText = "display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 700; color: #10b981; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; cursor: default;";
+            label.appendChild(badge);
+          }
+        } catch (e) {
+          console.warn("[StandaloneUI] Failed to append indicator badge:", e);
+        }
+
+        // B. Device Preview Mode Controller (Mobile ~430px, Tablet ~820px, Desktop 100% full-width)
+        function applyPreviewMode(mode) {
+          const btnMobile = document.getElementById("btnModeMobile") || document.getElementById("btnViewMobile");
+          const btnTablet = document.getElementById("btnModeTablet") || document.getElementById("btnViewTablet");
+          const btnDesktop = document.getElementById("btnModeDesktop") || document.getElementById("btnViewDesktop");
+          const container = document.querySelector(".app-container") || document.getElementById("appContainer");
+
+          document.body.classList.remove("is-mobile-view", "is-tablet-view", "is-desktop-view");
+          btnMobile?.classList.remove("active");
+          btnTablet?.classList.remove("active");
+          btnDesktop?.classList.remove("active");
+
+          if (mode === "tablet") {
+            document.body.classList.add("is-tablet-view");
+            btnTablet?.classList.add("active");
+            if (container) {
+              container.style.setProperty("max-width", "820px", "important");
+              container.style.setProperty("width", "100%", "important");
+              container.style.setProperty("margin", "20px auto 40px auto", "important");
+              container.style.setProperty("border-radius", "32px", "important");
+              container.style.setProperty("box-shadow", "0 25px 70px rgba(0, 0, 0, 0.75), 0 0 0 10px #1e293b, 0 0 0 13px #334155", "important");
+            }
+          } else if (mode === "desktop") {
+            document.body.classList.add("is-desktop-view");
+            btnDesktop?.classList.add("active");
+            if (container) {
+              container.style.setProperty("max-width", "100%", "important");
+              container.style.setProperty("width", "100%", "important");
+              container.style.setProperty("margin", "0 auto", "important");
+              container.style.setProperty("border-radius", "0px", "important");
+              container.style.setProperty("box-shadow", "0 0 40px rgba(0, 0, 0, 0.08)", "important");
+            }
+          } else {
+            // Mobile default (430px)
+            document.body.classList.add("is-mobile-view");
+            btnMobile?.classList.add("active");
+            if (container) {
+              container.style.setProperty("max-width", "430px", "important");
+              container.style.setProperty("width", "100%", "important");
+              container.style.setProperty("margin", "18px auto 40px auto", "important");
+              container.style.setProperty("border-radius", "42px", "important");
+              container.style.setProperty("box-shadow", "0 25px 70px rgba(0, 0, 0, 0.75), 0 0 0 10px #1e293b, 0 0 0 13px #334155", "important");
+            }
+          }
+
+          try {
+            localStorage.setItem("vt_device_view", mode);
+          } catch (e) { }
+
+          try {
+            if (typeof window.showToast === "function") {
+              const labelMap = { mobile: "📱 Mode Mobile (HP 430px)", tablet: "📟 Mode Tablet (iPad 820px)", desktop: "💻 Mode Desktop (Layar Lebar)" };
+              window.showToast(labelMap[mode] || mode);
+            }
+          } catch (e) { }
+        }
+
+        // Expose to window
+        window.setPreviewMode = applyPreviewMode;
+        window.switchDeviceView = applyPreviewMode;
+        window.setDeviceView = applyPreviewMode;
+        window.switchMode = applyPreviewMode;
+
+        // C. Navigation View Switcher (Pesanan, Keranjang, dsb.)
+        function showView(targetViewId, activeBtnId) {
+          document.querySelectorAll(".view-content").forEach(v => {
+            v.classList.remove("active");
+            v.style.setProperty("display", "none", "important");
+          });
+          document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+          document.querySelectorAll(".vt-header-btn").forEach(b => b.classList.remove("active"));
+
+          const targetView = document.getElementById(targetViewId);
+          if (targetView) {
+            targetView.classList.add("active");
+            targetView.style.setProperty("display", "block", "important");
+            targetView.style.setProperty("visibility", "visible", "important");
+            targetView.style.setProperty("opacity", "1", "important");
+            targetView.style.setProperty("pointer-events", "auto", "important");
+          }
+
+          if (activeBtnId) {
+            const btn = document.getElementById(activeBtnId);
+            if (btn) btn.classList.add("active");
+          }
+
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function openOrdersView() {
+          showView("viewOrders", "vtHeaderOrdersBtn");
+          const navBtn = document.getElementById("navBtnOrders");
+          if (navBtn) navBtn.classList.add("active");
+          try {
+            if (typeof window.switchTab === "function" && window.switchTab !== openOrdersView) {
+              window.switchTab("orders");
+            }
+          } catch (e) { }
+        }
+
+        function openCartView() {
+          showView("viewCart", "vtHeaderCartBtn");
+          const navBtn = document.getElementById("navBtnCart");
+          if (navBtn) navBtn.classList.add("active");
+          try {
+            if (typeof window.switchTab === "function" && window.switchTab !== openCartView) {
+              window.switchTab("cart");
+            }
+          } catch (e) { }
+        }
+
+        function openAuthModalDirect() {
+          const modal = document.getElementById("authModal");
+          if (modal) {
+            modal.classList.add("active");
+            modal.style.setProperty("display", "flex", "important");
+            modal.style.setProperty("visibility", "visible", "important");
+            modal.style.setProperty("opacity", "1", "important");
+            modal.style.setProperty("pointer-events", "auto", "important");
+            modal.style.setProperty("z-index", "99999", "important");
+          }
+          try {
+            if (typeof window.openAuthModal === "function" && window.openAuthModal !== openAuthModalDirect) {
+              window.openAuthModal("login");
+            }
+          } catch (e) { }
+        }
+
+        function closeAuthModalDirect() {
+          const modal = document.getElementById("authModal");
+          if (modal) {
+            modal.classList.remove("active");
+            modal.style.setProperty("display", "none", "important");
+          }
+          try {
+            if (typeof window.closeAuthModal === "function" && window.closeAuthModal !== closeAuthModalDirect) {
+              window.closeAuthModal();
+            }
+          } catch (e) { }
+        }
+
+        function openCartModalDirect() {
+          const modal = document.getElementById("cartModal");
+          if (modal) {
+            modal.classList.add("active");
+            modal.style.setProperty("display", "flex", "important");
+            modal.style.setProperty("visibility", "visible", "important");
+            modal.style.setProperty("opacity", "1", "important");
+            modal.style.setProperty("pointer-events", "auto", "important");
+            modal.style.setProperty("z-index", "99999", "important");
+          }
+          try {
+            if (typeof window.openCartModal === "function" && window.openCartModal !== openCartModalDirect) {
+              window.openCartModal();
+            }
+          } catch (e) { }
+        }
+
+        function closeCartModalDirect() {
+          const modal = document.getElementById("cartModal");
+          if (modal) {
+            modal.classList.remove("active");
+            modal.style.setProperty("display", "none", "important");
+          }
+          try {
+            if (typeof window.closeCartModal === "function" && window.closeCartModal !== closeCartModalDirect) {
+              window.closeCartModal();
+            }
+          } catch (e) { }
+        }
+
+        window.standaloneOpenOrders = openOrdersView;
+        window.standaloneOpenCart = openCartView;
+        window.standaloneOpenAuth = openAuthModalDirect;
+        window.standaloneCloseAuth = closeAuthModalDirect;
+        window.standaloneOpenCartModal = openCartModalDirect;
+        window.standaloneCloseCartModal = closeCartModalDirect;
+
+        // D. Bind Direct Listeners to Interactive Elements
+        const btnMobile = document.getElementById("btnModeMobile") || document.getElementById("btnViewMobile");
+        if (btnMobile) {
+          btnMobile.onclick = () => applyPreviewMode("mobile");
+          btnMobile.addEventListener("click", () => applyPreviewMode("mobile"));
+        }
+
+        const btnTablet = document.getElementById("btnModeTablet") || document.getElementById("btnViewTablet");
+        if (btnTablet) {
+          btnTablet.onclick = () => applyPreviewMode("tablet");
+          btnTablet.addEventListener("click", () => applyPreviewMode("tablet"));
+        }
+
+        const btnDesktop = document.getElementById("btnModeDesktop") || document.getElementById("btnViewDesktop");
+        if (btnDesktop) {
+          btnDesktop.onclick = () => applyPreviewMode("desktop");
+          btnDesktop.addEventListener("click", () => applyPreviewMode("desktop"));
+        }
+
+        const btnOrders = document.getElementById("vtHeaderOrdersBtn");
+        if (btnOrders) {
+          btnOrders.onclick = (e) => { e?.preventDefault?.(); openOrdersView(); };
+          btnOrders.addEventListener("click", (e) => { e?.preventDefault?.(); openOrdersView(); });
+        }
+
+        const btnCart = document.getElementById("vtHeaderCartBtn");
+        if (btnCart) {
+          btnCart.onclick = (e) => { e?.preventDefault?.(); openCartView(); };
+          btnCart.addEventListener("click", (e) => { e?.preventDefault?.(); openCartView(); });
+        }
+
+        const btnUser = document.getElementById("userHeaderBtn");
+        if (btnUser) {
+          btnUser.onclick = (e) => { e?.preventDefault?.(); openAuthModalDirect(); };
+          btnUser.addEventListener("click", (e) => { e?.preventDefault?.(); openAuthModalDirect(); });
+        }
+
+        // E. Bind Modal Close Handlers (X & Backdrop)
+        const authModal = document.getElementById("authModal");
+        if (authModal) {
+          authModal.addEventListener("click", function (e) {
+            if (e.target === authModal) closeAuthModalDirect();
+          });
+          authModal.querySelectorAll("button.icon-btn, .close-btn, [onclick*='closeAuthModal']").forEach(btn => {
+            btn.addEventListener("click", (e) => { e?.preventDefault?.(); closeAuthModalDirect(); });
+          });
+        }
+
+        const cartModal = document.getElementById("cartModal");
+        if (cartModal) {
+          cartModal.addEventListener("click", function (e) {
+            if (e.target === cartModal) closeCartModalDirect();
+          });
+          cartModal.querySelectorAll("button.icon-btn, .close-btn, [onclick*='closeCartModal']").forEach(btn => {
+            btn.addEventListener("click", (e) => { e?.preventDefault?.(); closeCartModalDirect(); });
+          });
+        }
+
+        // F. Global Capturing Event Delegation (Anti-Gagal)
+        document.addEventListener("click", function (e) {
+          const target = e.target;
+          if (!target) return;
+
+          // Backdrop clicks
+          if (target.id === "authModal") { closeAuthModalDirect(); return; }
+          if (target.id === "cartModal") { closeCartModalDirect(); return; }
+
+          // Close button clicks
+          if (target.closest("[onclick*='closeAuthModal'], #authModal .icon-btn")) { closeAuthModalDirect(); return; }
+          if (target.closest("[onclick*='closeCartModal'], #cartModal .icon-btn")) { closeCartModalDirect(); return; }
+
+          // Mode Mobile
+          if (target.closest("#btnModeMobile, #btnViewMobile, [data-preview='mobile']") ||
+            (target.closest("button") && target.closest("button").textContent.includes("Mode Mobile"))) {
+            e.preventDefault();
+            applyPreviewMode("mobile");
+            return;
+          }
+
+          // Mode Tablet
+          if (target.closest("#btnModeTablet, #btnViewTablet, [data-preview='tablet']") ||
+            (target.closest("button") && target.closest("button").textContent.includes("Mode Tablet"))) {
+            e.preventDefault();
+            applyPreviewMode("tablet");
+            return;
+          }
+
+          // Mode Desktop
+          if (target.closest("#btnModeDesktop, #btnViewDesktop, [data-preview='desktop']") ||
+            (target.closest("button") && target.closest("button").textContent.includes("Mode Desktop"))) {
+            e.preventDefault();
+            applyPreviewMode("desktop");
+            return;
+          }
+
+          // Pesanan
+          if (target.closest("#vtHeaderOrdersBtn, #navBtnOrders, [data-action='orders']") ||
+            (target.closest(".vt-header-btn, .nav-item") && target.closest(".vt-header-btn, .nav-item").textContent.trim().includes("Pesanan"))) {
+            e.preventDefault();
+            openOrdersView();
+            return;
+          }
+
+          // Keranjang
+          if (target.closest("#vtHeaderCartBtn, #navBtnCart, [data-action='cart']") ||
+            (target.closest(".vt-header-btn, .nav-item") && target.closest(".vt-header-btn, .nav-item").textContent.trim().includes("Keranjang"))) {
+            e.preventDefault();
+            openCartView();
+            return;
+          }
+
+          // Masuk / Akun
+          if (target.closest("#userHeaderBtn, [data-action='auth']") ||
+            (target.closest(".vt-header-btn") && target.closest(".vt-header-btn").id === "userHeaderBtn")) {
+            e.preventDefault();
+            openAuthModalDirect();
+            return;
+          }
+        }, true);
+      }
+
+      // Safe execution check
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initStandaloneUI);
+      } else {
+        initStandaloneUI();
+      }
+    })();
+  </script>
 </body>
 
 </html>
