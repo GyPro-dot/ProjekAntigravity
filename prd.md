@@ -326,11 +326,34 @@ ZONA BAWAH: MASTER CONTEXT & LOGIKA SISTEM TERKINI (LIVING CONTEXT)
     4. **Optimalisasi Responsif TabletView (iPad):** Menata ulang Halaman Keranjang (`.cart-hero-card` dan `.cart-footer-grid`) serta Modal Autentikasi (`.auth-grid-container`) menjadi layout seimbang 2-kolom pada resolusi 820px.
     5. **Dual-Pane Kasir POS Modern:** Menata ulang Meja Kasir POS (`#viewPos`) menjadi tata letak 2-kolom profesional pada Desktop & Tablet (Kiri: katalog pencarian produk dengan scroll mandiri 520px; Kanan: nota belanja kasir fixed di samping) dan alur 1-kolom teratur pada Mobile.
     6. **Fluid Utility & Sub-Navbar:** Menyelaraskan padding `.top-utility-bar` dan membatasi `max-width: calc(100% - 20px)` pada dropdown Kategori All Choice agar bebas dari clipping di tepi layar.
-  - *v2.0.8 (Pemulihan Tampilan Logo & Gambar via Smart Dual-Mode Resolver):*
-    1. **Smart Environment Auto-Detector (`IS_LOCAL`):** Otomatis mendeteksi lingkungan runtime peramban (`localhost` / `127.0.0.1` vs `script.google.com`).
-    2. **Localview High-Speed Asset Mapping:** Saat dibuka di Localview, seluruh aset (Logo Resmi V&T, hero banner software, butik PAC, ikon navigasi PNG, dan foto produk) langsung dilayani dari direktori lokal `assets/` dengan respon instan 0 milidetik dan 100% kebal terhadap pemblokiran Chrome ORB / ekstensi adblock.
-    3. **Preservasi Cloud GAS Google Drive CDN:** Saat aplikasi diunggah ke Google Apps Script online, sistem secara otomatis beralih menggunakan tautan resmi CDN Google Drive sehingga tetap kompatibel di cloud.
-    4. **Multi-Tier Self-Healing Fallback (`handleImgError`):** Menjamin tag gambar yang mengalami kegagalan jaringan otomatis mencoba berkas lokal terlebih dahulu sebelum jatuh ke SVG Vector placeholder bersih (bebas dari ikon retak peramban).
+  - *v2.1.1 (Pengaktifan Penuh CRUD Foto, Narasi & Data Produk serta Sinkronisasi Database Lokal & Cloud):*
+    1. **Dual-Layer Database Persistence:**
+       - Menambahkan penyimpanan otomatis data produk pada `localStorage: vt_custom_products` sehingga perubahan nama, foto, harga, stok, dan narasi deskripsi tetap bertahan saat peramban dimuat ulang.
+       - Menyediakan endpoint REST API `GET /api/products` dan `POST /api/products` pada `scratch/local_server.js` yang secara otomatis menyinkronkan seluruh perubahan ke berkas basis data disk `scratch/products_database.json`.
+       - Mengintegrasikan fungsi cloud sync `syncProductToBackend(product, action)` dengan Google Apps Script `code.gs` (`simpanProduk` dan `hapusProduk`).
+    2. **Pembaruan Fitur Edit Narasi & Foto (`#editProductModal`):**
+       - Menambahkan tombol *"🗑️ Hapus Foto"* & *"✕ Kosongkan"* untuk mereset foto produk ke placeholder.
+       - Menambahkan tombol *"🗑️ Hapus Narasi"* untuk mengosongkan narasi deskripsi produk dengan 1 klik.
+       - Menambahkan tombol *"🗑️ Hapus Produk"* warna merah di bilah bawah modal edit untuk menghapus item secara langsung.
+       - Memperbaiki `saveProductEdit()` agar perubahan narasi deskripsi (`p.deskripsi`) selalu tersimpan secara akurat tanpa terhalang kondisi kosong.
+    3. **Pembaruan Fitur Tambah Produk (`#operatorModal`):**
+       - Menghubungkan input narasi deskripsi (`#opProdDesc`) ke `newProduct.deskripsi` dan menyimpannya secara otomatis ke database lokal dan cloud.
+    4. **Pembaruan Fitur Hapus Produk (`renderAdminTable`):**
+       - Menambahkan tombol aksi *"🗑 Hapus"* (merah) pada setiap baris produk di tabel Setting & Stok (`#viewAdmin`).
+       - Dilengkapi konfirmasi pengamanan (*safety prompt*) sebelum produk dihapus secara permanen dari sistem dan database.
+    5. **Penampilan Narasi pada Modal Detail Produk Pelanggan (`#productDetailModal`):**
+       - Menyediakan kotak informasi narasi elegan bertema *PAC Indian Luxury* (`#detailProductDescText`) yang menampilkan narasi dan deskripsi produk secara lengkap saat pelanggan mengklik produk dari katalog.
+  - *v2.1.3 (Penambahan Fitur Cetak Struk Sesuai Pesanan Customer):*
+    1. **Struk Resmi Pesanan Customer (`#customerReceiptModal`):**
+       - Menampilkan kop resmi butik, nomor invoice otomatis (`INV-YYYYMMDD-XXXX`), waktu pemesanan, identitas customer, lokasi belanja, dan rincian produk yang dipesan (nama barang, SKU, varian ukuran/warna, jumlah, dan subtotal).
+       - Menampilkan subtotal, kode unik transfer 3 digit, dan total pembayaran yang akurat.
+    2. **Multi-Format Printing (Thermal & A4):**
+       - Mendukung cetak struk kasir termal (58mm/80mm) untuk printer bluetooth / mini thermal.
+       - Mendukung cetak dokumen faktur standar (A4 / PDF).
+       - Mendukung pengiriman ringkasan struk pesanan otomatis ke WhatsApp Toko.
+    3. **Integrasi Alur Checkout BCA:**
+       - Menambahkan tombol *"🧾 Cetak Struk Sesuai Pesanan Customer"* pada dialog pembayaran transfer BCA.
+       - Otomatis membuka jendela struk resmi saat pembeli mengonfirmasi *"✅ Saya Sudah Bayar BCA"*.
 
 
 
@@ -338,3 +361,34 @@ ZONA BAWAH: MASTER CONTEXT & LOGIKA SISTEM TERKINI (LIVING CONTEXT)
 
 
 
+
+
+
+  - *v2.1.4 (Penyediaan Opsi Logout Resmi untuk Admin dan Operator):*
+    1. **Tombol Logout di Header Banner Manajemen (`#viewAdmin`):**
+       - Menambahkan tombol merah `🚪 Logout Petugas` di bilah atas halaman Otoritas Login Petugas & Manajemen (`#viewAdmin`) di samping tombol `Ke Beranda`.
+    2. **Tombol Logout di Kotak Otoritas PIN Petugas:**
+       - Mengganti tombol `Mode Tamu` menjadi tombol merah `🚪 Logout Petugas` yang jelas di dalam kartu verifikasi PIN petugas toko.
+    3. **Penyelarasan Menu Dropdown Akun Header untuk Petugas:**
+       - Mengizinkan staf (Admin & Operator) membuka dropdown menu profil akun dengan mengklik nama/avatar di header.
+       - Menampilkan identitas petugas (`👑 PINKY`), lencana wewenang (`🛡️ SUPER_ADMIN / ADMIN_TOKO / OPERATOR_TOKO`), link cepat ke `Setting & Stok`, dan opsi `🚪 Logout Petugas (PINKY)` berwarna merah.
+    4. **Alur Logout Petugas Terpadu (`handleUserLogout`):**
+       - Membersihkan sesi `vt_active_user`, mereset `state.currentUser` ke `PELANGGAN:TAMU`, menyembunyikan tombol navigasi admin, menjaga integritas keranjang belanja pelanggan, menampilkan Toast konfirmasi logout resmi, dan mengarahkan tampilan kembali ke katalog toko.
+  - *v2.1.5 (Sistem Alur Lengkap Checkout & Manajemen Alamat Ambil vs Kirim):*
+    1. **Halaman Pemesanan Interaktif (`#viewCheckout`):**
+       - Menyediakan alur bertahap dengan Stepper Bar (1 Keranjang, 2 Pemesanan, 3 Pembayaran).
+       - Menghadirkan Toggle Mode Pengambilan: `[ 🏢 Ambil (Gratis Ongkir) ]` dan `[ 🚚 Kirim ]`.
+       - Mode Kirim otomatis menambahkan Biaya Pengiriman (Rp4.900) dan menampilkan kartu Alamat Pengiriman lengkap dengan tab `Pribadi` / `Dropship`.
+    2. **Modal Pilih Alamat (`#chooseAddressModal`):**
+       - Menampilkan kartu alamat tersimpan dengan penanda status `[Utama]`, nomor kontak, alamat lengkap, tombol `Ubah`, dan tombol shortcut `+ Tambah Alamat`.
+    3. **Modal Form Ubah & Tambah Alamat (`#addressFormModal`):**
+       - Form input elegan bergaya Outlined Input untuk nama penerima, nomor telepon, kota/kecamatan, kode pos, alamat lengkap, dan status alamat utama.
+    4. **Sinkronisasi Database Multi-Layer:**
+       - Sinkronisasi data alamat ke in-memory state, `localStorage: vt_user_addresses`, Localview REST API `/api/addresses` (`scratch/addresses_database.json`), serta Cloud Google Apps Script `code.gs` (`simpanAlamat` dan `ambilAlamat`).
+  - *v2.1.6 (Pengurutan 4 Kategori Resmi, Penyelarasan Judul Katalog & Sinkronisasi Tampilan Multi-Device):*
+    1. **Hierarki Urutan Etalase Toko:**
+       - Menetapkan urutan default produk: 1) "Indian Women's Fashion", 2) "Indian Men's Fashion", 3) "Aksesories & Perhiasan", 4) "Luxury Goods".
+    2. **Judul Etalase Dinamis:**
+       - Menampilkan format judul "Indian Women's Fashion, (jumlah) Produk" saat etalase pertama kali dimuat.
+    3. **Sinkronisasi Responsif Tiga Perangkat:**
+       - Sinkronisasi grid dan layout katalog antara DesktopView (4 kolom), TabletView (2 kolom lega), dan MobileView (2 kolom kompak) bebas broken alignment.

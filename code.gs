@@ -403,6 +403,36 @@ function simpanProduk(data) {
 }
 
 // ----------------------------------------------------------------------------
+// 5B. API HAPUS PRODUK DARI DATABASE
+// ----------------------------------------------------------------------------
+function hapusProduk(id) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("DataProduk");
+    if (!sheet) return { success: false, message: "Tab DataProduk tidak ditemukan." };
+
+    var idStr = String(id || "").trim();
+    if (idStr && sheet.getLastRow() > 1) {
+      var ids = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+      for (var i = 0; i < ids.length; i++) {
+        if (String(ids[i][0]).trim() === idStr) {
+          sheet.deleteRow(i + 2);
+          return { success: true, message: "Produk " + idStr + " berhasil dihapus dari database!" };
+        }
+      }
+    }
+    return { success: false, message: "Produk dengan ID " + idStr + " tidak ditemukan." };
+  } catch (err) {
+    Logger.log("Error hapusProduk: " + err.toString());
+    return { success: false, message: err.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ----------------------------------------------------------------------------
 // 6. API SIMPAN PENGATURAN TOKO (PIN, KONTAK, REKENING)
 // ----------------------------------------------------------------------------
 function simpanPengaturan(dataObj) {
@@ -434,6 +464,94 @@ function simpanPengaturan(dataObj) {
     return { success: true, message: "Pengaturan toko berhasil disimpan!" };
   } catch (err) {
     Logger.log("Error simpanPengaturan: " + err.toString());
+    return { success: false, message: err.toString() };
+  }
+}
+
+
+// ----------------------------------------------------------------------------
+// 7. API ALAMAT PENGIRIMAN PELANGGAN (SIMPAN & AMBIL DARI DATABASE)
+// ----------------------------------------------------------------------------
+function simpanAlamat(data) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
+
+    var sheet = ss.getSheetByName("AlamatPelanggan");
+    if (!sheet) {
+      sheet = ss.insertSheet("AlamatPelanggan");
+      sheet.appendRow(["IdAlamat", "NamaPenerima", "NoTelepon", "KotaKecamatan", "KodePos", "AlamatLengkap", "IsUtama", "Tanggal"]);
+    }
+
+    var id = String(data.id || "").trim();
+    if (id && sheet.getLastRow() > 1) {
+      var ids = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+      for (var i = 0; i < ids.length; i++) {
+        if (String(ids[i][0]).trim() === id) {
+          var row = i + 2;
+          sheet.getRange(row, 2, 1, 7).setValues([[
+            data.nama || "",
+            data.telepon || "",
+            data.kotaKecamatan || "",
+            data.kodePos || "",
+            data.alamat || "",
+            data.isUtama ? "TRUE" : "FALSE",
+            new Date().toISOString()
+          ]]);
+          return { success: true, id: id, message: "Alamat berhasil diperbarui di basis data cloud!" };
+        }
+      }
+    }
+
+    var newId = id || ("ADDR-" + Utilities.getUuid().substring(0, 8).toUpperCase());
+    sheet.appendRow([
+      newId,
+      data.nama || "",
+      data.telepon || "",
+      data.kotaKecamatan || "",
+      data.kodePos || "",
+      data.alamat || "",
+      data.isUtama ? "TRUE" : "FALSE",
+      new Date().toISOString()
+    ]);
+
+    return { success: true, id: newId, message: "Alamat baru berhasil disimpan di basis data cloud!" };
+  } catch (err) {
+    Logger.log("Error simpanAlamat: " + err.toString());
+    return { success: false, message: err.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function ambilAlamat() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
+
+    var sheet = ss.getSheetByName("AlamatPelanggan");
+    if (!sheet || sheet.getLastRow() <= 1) return { success: true, addresses: [] };
+
+    var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues();
+    var list = [];
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      list.push({
+        id: String(r[0]),
+        nama: String(r[1]),
+        telepon: String(r[2]),
+        kotaKecamatan: String(r[3]),
+        kodePos: String(r[4]),
+        alamat: String(r[5]),
+        isUtama: String(r[6]).toUpperCase() === "TRUE",
+        pinpoint: false
+      });
+    }
+    return { success: true, addresses: list };
+  } catch (err) {
+    Logger.log("Error ambilAlamat: " + err.toString());
     return { success: false, message: err.toString() };
   }
 }

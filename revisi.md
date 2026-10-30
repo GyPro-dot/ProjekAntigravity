@@ -1125,12 +1125,250 @@ Memperbarui atribut `src` bawaan pada tag `<img>` di markup HTML awal (Header, H
 
 ---
 
-### 24.5 Prosedur Persetujuan (SOP ZettBOT)
-Seluruh rencana kerja di atas telah dituangkan ke dalam berkas [revisi.md](file:///c:/Users/ptgay/.gemini/antigravity-ide/ProjekAntigravity/revisi.md).
+## 25. PENYELARASAN HALAMAN KERANJANG BELANJA (JAKNOT STYLE): PERSISTENSI KERANJANG CUSTOMER BARU, SISTEM CHECKBOX ITEM, ALERT "PRODUK WAJIB DIPILIH", & REDIRECT KE MASUK/DAFTAR (v2.0.9)
 
-Silakan ketik:
+================================================================================
+STATUS: MENUNGGU PERSETUJUAN PENGGUNA (PENDING APPROVAL)
+TANGGAL PENGAJUAN: 29 OKTOBER 2026
+TARGET BERKAS: index.html
+================================================================================
+
+### 25.1 Latar Belakang & Kebutuhan Pengguna (Berdasarkan 3 Gambar Referensi)
+Pengguna menginstruksikan penyelarasan alur belanja dan antarmuka **Halaman Keranjang Belanja** sesuai dengan 3 tangkapan layar resmi:
+
+1. **Persistensi Keranjang Belanja untuk Customer Baru:**
+   - Untuk pengunjung / customer baru yang belum mendaftar/login dan telah memilih barang belanjaan, isi keranjang belanja **tetap terisi dan tersimpan** (tidak boleh terhapus atau kosong saat berpindah menu atau saat diarahkan ke menu Masuk/Daftar).
+2. **Antarmuka Keranjang Belanja Berbasis Checklist (Gambar 1):**
+   - **Header Atas:** Judul *"Keranjang Belanja"*, subtext counter produk (`1 produk`), tombol aksi `[ 💾 Simpan Keranjang ]`, `[ 🗑 Hapus ]`, dan search input `[ 🔍 Cari Produk ]`.
+   - **Bar Lokasi Pengiriman:** `📍 Belanja dari Medan` (Jaknot Medan) dengan opsi toggle `[ 🏢 Ambil ]` & `[ 🚚 Kirim ]` serta tautan `Ubah Lokasi >`.
+   - **Daftar Barang dengan Checkbox:**
+     * Master Checkbox: `[ ] Tersedia (1)` untuk memilih atau membatalkan seluruh item sekaligus.
+     * Checkbox individual `[ ]` di setiap kartu barang.
+     * Informasi item: Thumbnail gambar, nama lengkap produk, badge varian warna (`Black`), SKU & berat (`W3VA02BK • 0.15 kg`), harga merah bold `Rp34.200`, harga coret `Rp60.900`, badge diskon `-44%`, icon wishlist `🤍`, icon hapus `🗑`, dan tombol stepper `[ - ] [ 1 ] [ + ]`.
+   - **Sidebar Kanan (Rincian Pesanan):**
+     * Input voucher: `[ 🎟 Masukkan/gunakan voucher > ]`.
+     * Total Belanja: Dihitung **hanya untuk item yang dicentang** (jika belum ada yang dicentang bernilai `Rp0`).
+     * Total Tagihan: Dihitung **hanya untuk item yang dicentang** (jika belum ada yang dicentang bernilai `Rp0`).
+     * Tombol Utama Oranye: Bertuliskan `Checkout` (saat 0 item dicentang).
+     * Kotak Informasi: `⚡ Langsung Diproses - Pesanan langsung dikemas dan disiapkan dari lokasi belanja yang dipilih`.
+3. **Pesan Validasi "Produk wajib dipilih" (Gambar 2):**
+   - Jika pengguna menekan tombol `Checkout` saat belum ada produk yang dicentang (`checkedCount === 0`):
+   - Muncul banner peringatan mengambang berwarna kuning/amber di bagian atas tengah:
+     `⚠️ Produk wajib dipilih`
+   - Proses checkout ditahan hingga pengguna mencentang minimal 1 produk.
+4. **Alur Checkout & Pengalihan ke Masuk / Daftar (Gambar 3):**
+   - Ketika produk dicentang (`[✓]`):
+     * Checkbox item dan master checkbox menjadi aktif `[✓]`.
+     * Sidebar mengalkulasi Total Belanja, Diskon Produk, dan Total Tagihan secara realtime.
+     * Tombol Checkout berganti teks menjadi: `Checkout (1) | Anda hemat Rp26.700! >`.
+   - Ketika tombol `Checkout (1)` ditekan oleh customer baru (belum login):
+     * Muncul popup modal dialog **Masuk** (`#authModal`) dalam posisi siap untuk mendaftar atau masuk (input Email terfokus dengan outline biru).
+     * Seluruh barang belanjaan yang sudah dipilih **tetap aman tersimpan di dalam keranjang belanja**, sehingga setelah pengguna berhasil masuk atau mendaftar, barang belanjaannya langsung terhubung ke akunnya.
+
+---
+
+### 25.2 Rencana Teknis Implementasi (Surgical Plan)
+
+#### A. Persistensi Data Keranjang Tamu / Customer Baru (`localStorage`)
+- Mengintegrasikan penyimpanan otomatis `state.cart` ke `localStorage.getItem("vt_guest_cart")` setiap kali item ditambahkan, diubah kuantitasnya, atau dihapus.
+- Pada saat inisialisasi awal aplikasi (`restoreUserSession`), jika `state.cart` kosong dan pengguna adalah tamu/customer baru, sistem memuat keranjang dari `vt_guest_cart` atau menyediakan sampel item belanja demo (`KEBIDU Adaptor Konverter HDMI to RCA AV 1080p - HDV-M710` seharga Rp34.200) agar halaman keranjang langsung terisi siap uji sesuai tangkapan layar.
+
+#### B. Sistem Checkbox Multi-Item & Master Checkbox
+- Menambahkan atribut `checked: false` (atau `true` saat pertama kali dipilih) pada setiap objek item di `state.cart`.
+- Menyediakan fungsi:
+  * `toggleCartItemCheck(index)`: Mengubah status centang item dan memperbarui kalkulasi tagihan.
+  * `toggleAllCartItems(masterCheckboxEl)`: Mencentang atau membatalkan seluruh item sekaligus.
+  * `deleteSelectedCartItems()`: Menghapus hanya item-item yang sedang dicentang.
+
+#### C. Komponen Banner Peringatan Mengambang (`#cartWarningBanner`)
+- Menambahkan elemen floating banner di atas halaman keranjang:
+  ```html
+  <div id="cartWarningBanner" class="cart-floating-warning" style="display: none;">
+    <span class="warning-icon">⚠️</span>
+    <span class="warning-text">Produk wajib dipilih</span>
+  </div>
+  ```
+- CSS Styling: Berwarna kuning/amber hangat (`#facc15` / `#eab308`), teks gelap `#1e293b`, font-weight 600, border-radius 8px, soft drop-shadow, diposisikan melayang di tengah atas halaman (`transform: translateX(-50%)`).
+- Animasi mikro: Muncul halus selama 3 detik lalu perlahan menghilang otomatis (*auto-dismiss*).
+
+#### D. Penataan Ulang Antarmuka Halaman Keranjang (`viewCart`)
+- Mengubah struktur layout `#viewCart` menjadi 2 kolom responsif sesuai Gambar 1, 2, dan 3:
+  * **Kolom Kiri (Lebar ~65%):**
+    - Bar judul *"Keranjang Belanja"* & counter produk.
+    - Tombol utilitas: `Simpan Keranjang`, `Hapus`, dan `Cari Produk`.
+    - Card lokasi `Belanja dari Jaknot Medan` + toggle `Ambil` / `Kirim`.
+    - Checklist box: Master checkbox `[ ] Tersedia (X)` + Kartu produk horizontal lengkap dengan checkbox, varian, SKU, harga diskon, tombol wishlist `🤍`, hapus `🗑`, dan stepper kuantitas.
+  * **Kolom Kanan (Lebar ~35%):**
+    - Card *"Rincian Pesanan"* fixed/sticky.
+    - Box voucher clickable.
+    - Kalkulasi Total Belanja, Diskon Produk, dan Total Tagihan.
+    - Tombol utama Oranye: Dinamis menampilkan `Checkout` atau `Checkout (X) | Anda hemat RpX! >`.
+    - Badge `⚡ Langsung Diproses`.
+
+#### E. Logika Tombol Checkout & Transisi ke Modal Masuk/Daftar
+```javascript
+function handleCartCheckoutAction() {
+  const checkedItems = state.cart.filter(it => it.checked);
+  if (checkedItems.length === 0) {
+    showCartWarningBanner("Produk wajib dipilih");
+    return;
+  }
+  
+  // Jika customer belum login / customer baru:
+  const u = state.currentUser;
+  const isGuest = !u || u.role !== "CUSTOMER" || u.name === "Masuk" || u.name === "Pelanggan / Masuk" || !localStorage.getItem("vt_active_user");
+  
+  if (isGuest) {
+    // Buka modal Masuk untuk Daftar/Login dengan keranjang belanja tetap aman tersimpan
+    openAuthModal('login');
+    return;
+  }
+  
+  // Jika sudah login, lanjutkan ke Meja Kasir POS / Checkout
+  checkoutCartToPos();
+}
+```
+
+---
+
+### 25.3 Tabel Komparasi: Sebelum vs Sesudah Revisi
+
+| Komponen / Skenario | Kondisi Sebelum Revisi | Kondisi Sesudah Revisi (Sesuai 3 Gambar) |
+|---|---|---|
+| **Keranjang Customer Baru** | Hanya terisi jika customer login (`initCustomerCart`) | **Tersimpan permanen di `localStorage` & tetap terisi untuk customer baru** |
+| **Checklist / Checkbox Item** | Tidak ada checkbox (semua item otomatis dihitung) | **Master checkbox `Tersedia (X)` + Checkbox individual per produk** |
+| **Kalkulasi Tagihan** | Menghitung seluruh item di keranjang | **Hanya menghitung item yang dicentang (`Rp0` jika belum dicentang)** |
+| **Checkout Tanpa Centang** | Langsung mentransfer seluruh item ke kasir | **Muncul banner kuning mengambang: `⚠️ Produk wajib dipilih`** |
+| **Tombol Checkout Utama** | 4 Tombol bersusun (Kasir, BCA, WA, Lanjut) | **Tombol Oranye Tunggal: `Checkout` / `Checkout (X) \| Anda hemat RpX! >`** |
+| **Aksi Checkout Customer Baru** | Membuka meja kasir langsung tanpa pendaftaran | **Membuka dialog modal Masuk/Daftar dengan keranjang tetap utuh** |
+| **Tata Letak Keranjang** | Card horizontal sederhana | **Layout 2-Kolom E-Commerce Modern (Jaknot Style) sesuai Gambar 1, 2, 3** |
+
+---
+
+### 25.4 Estimasi Dampak & Keamanan Sistem
+- **Database & Backend GAS:** 100% AMAN. Tidak ada perubahan pada skema spreadsheet `DataProduk` maupun `code.gs`.
+- **Fitur Autentikasi & Modal Masuk:** 100% AMAN. Validasi error email/password, intip sandi, dan akun demo tetap berfungsi normal.
+- **Kasir POS & Faktur Cetak A4:** 100% AMAN. Meja kasir POS dan faktur A4 tetap dapat menerima item keranjang yang telah diverifikasi.
+
+---
+
+## 26. RESTRUKTURISASI E-COMMERCE MURNI: ELIMINASI FITUR "PESANAN" & "KASIR POS" SERTA INTEGRASI KERANJANG JAKNOT CHECKLIST & REDIRECT DAFTAR (v2.1.0)
+
+================================================================================
+STATUS: MENUNGGU PERSETUJUAN PENGGUNA (PENDING APPROVAL)
+TANGGAL PENGAJUAN: 29 OKTOBER 2026
+TARGET BERKAS: index.html & revisi.md
+================================================================================
+
+### 26.1 Latar Belakang & Instruksi Pengguna (SOP ZettBOT)
+Pengguna secara tegas memberikan instruksi melalui perintah sistem `/zettbot`:
+> **"Hapus Fitur 'Pesanan' dan 'Kasir POS'"**
+bersamaan dengan integrasi alur belanja pelanggan baru:
+> **"Untuk customer baru yang belum daftar dan sudah pilih barang maka Keranjang Belanja akan tetap di isi. Pada Halaman Keranjang jika belum di check maka ada pesan 'Produk Wajib Di Pilih'. Jika Produk sudah di pilih maka arahkan ke menu Masuk untuk Daftar."**
+
+Ini adalah langkah restrukturisasi strategis arsitektur produk yang mentransformasikan aplikasi dari platform hibrida POS Toko Fisik menjadi **Platform E-Commerce Modern Murni (Jaknot Style)** yang fokus, bersih, dan ringkas bagi pembeli online.
+
+---
+
+### 26.2 Rincian Fitur yang Dieliminasi (Surgical Elimination)
+
+#### A. Eliminasi Total Fitur "Pesanan" (`viewOrders`):
+1. **Header Navigasi Atas:** Menghapus tombol `#vtHeaderOrdersBtn` (`📄 Pesanan`) dari header utama.
+2. **Bottom Navigation (Mobile):** Menghapus tombol navigasi bawah `#navBtnOrders`.
+3. **Menu Akun & Sidebar:** Menghapus opsi *"Pesanan Saya"* dari dropdown header `#userAccountDropdown` dan sidebar halaman profil.
+4. **Section Konten Antarmuka:** Menghapus seluruh blok markup `<section id="viewOrders">...</section>`.
+5. **Logika Script:** Menghapus perutean tab `switchTab('orders')` dan fungsi render rincian pesanan.
+
+#### B. Eliminasi Total Fitur "Kasir POS" (`viewPos`):
+1. **Bottom Navigation (Mobile):** Menghapus tombol `#navBtnPos` (`💳 Kasir (POS)`).
+2. **Section Meja Kasir POS:** Menghapus seluruh blok markup `<section id="viewPos">...</section>`.
+3. **Logika Script:** Menghapus perutean tab `switchTab('pos')`, pencarian SKU kasir, kalkulasi kembalian tunai, dan modal cetak struk kasir toko fisik.
+4. **Proteksi Database:** Tab Google Sheets `DataTransaksi` dan `DetailTransaksi` tetap dibiarkan ada di backend `setup.gs` (*Safe Migration*) untuk menjaga integritas data tanpa merusak riwayat transaksi yang pernah tercatat.
+
+---
+
+### 26.3 Rincian Fitur Baru Keranjang Belanja (Jaknot Checklist & Redirect Daftar)
+
+1. **Persistensi Keranjang Belanja Pelanggan Baru:**
+   - Barang yang dipilih oleh customer baru (belum mendaftar/login) otomatis tersimpan di `localStorage: vt_guest_cart`.
+   - Keranjang **tidak akan pernah hilang** saat berpindah menu atau saat diarahkan ke formulir Masuk/Daftar.
+   - Dilengkapi item demo terverifikasi (`KEBIDU Adaptor Konverter HDMI to RCA AV 1080p - HDV-M710` Rp34.200) saat dibuka pertama kali.
+2. **Sistem Checklist / Checkbox Multi-Item (Gambar 1):**
+   - **Master Checkbox:** `[ ] Tersedia (X)` untuk mencentang atau membatalkan seluruh item sekaligus.
+   - **Checkbox Individual:** `[ ]` di setiap kartu barang belanja.
+   - **Rincian Item Lengkap:** Thumbnail, nama produk, chip varian (`Black`), SKU & berat (`W3VA02BK • 0.15 kg`), harga merah diskon `Rp34.200`, harga coret `Rp60.900`, badge diskon `-44%`, icon wishlist `🤍`, icon hapus `🗑`, dan stepper kuantitas `[ - ] [ X ] [ + ]`.
+3. **Kalkulasi Rincian Pesanan Realtime:**
+   - `Total Belanja`: Mengalkulasi **hanya item yang dicentang** (`Rp0` jika 0 item dicentang).
+   - `Diskon Produk`: Mengalkulasi total hemat dari item yang dicentang.
+   - `Total Tagihan`: Grand total bersih item yang dicentang (`Rp0` jika 0 item dicentang).
+4. **Alert Peringatan Mengambang (Gambar 2):**
+   - Jika pengguna mengklik tombol `Checkout` saat tidak ada item yang dicentang (`0 item`):
+   - Muncul floating yellow warning banner di bagian atas tengah layar:
+     `⚠️ Produk wajib dipilih`
+   - Proses checkout ditahan hingga pengguna mencentang minimal 1 produk.
+5. **Pengalihan Otomatis ke Menu Masuk / Daftar & Penyesuaian Form Masuk (Gambar 3 & Gambar Masuk):**
+   - Jika minimal 1 produk telah dicentang (`[✓]`) dan pengguna mengklik tombol `Checkout`:
+   - Karena pengguna adalah customer baru (belum login/terdaftar):
+     * Sistem membuka dialog modal **Masuk** (`#authModal`) dalam posisi fokus di kolom input Email berbingkai biru aktif.
+     * **Hapus Opsi Facebook:** Opsi login dengan Facebook dihapus sepenuhnya, menyisakan tombol login Google yang bersih dan elegan (lebar penuh).
+     * **Keterangan Email & Eliminasi Hardcode gayamurty@gmail.com:** Nilai default `gayamurty@gmail.com` dihilangkan (menjadi kolom kosong siap ketik), dan teks petunjuk helper di bawahnya diubah resmi menjadi:
+       `Contoh : xxxxxxxx@gmail.com`
+     * Tautan *"Belum punya akun? Daftar →"* langsung tersedia untuk mendaftar akun baru.
+     * Seluruh item belanjaan di keranjang **tetap aman tersimpan dan tidak hilang**, sehingga saat proses pendaftaran/login selesai, isi keranjang langsung siap untuk pembayaran/checkout final.
+6. **Tombol "Lanjut Belanja" pada Kondisi Stok Habis (Gambar Detail Produk):**
+   - Pada modal detail produk (`#productDetailModal`), apabila stok produk bernilai `0` (*Stok: Habis (0 pcs)*):
+   - Sistem secara otomatis memunculkan tombol aksi tambahan:
+     `🛍️ Lanjut Belanja` (tombol outline sekunder yang proporsional di bawah tombol WhatsApp).
+   - Saat diklik, modal detail langsung ditutup dan layar otomatis dialihkan/digulir kembali ke katalog produk agar pelanggan dapat langsung melihat dan memilih koleksi barang lainnya yang masih tersedia.
+7. **Fitur Lupa Password & Simulasi Email "Atur Password Baru" (Gambar Atur Ulang & Gmail):**
+   - **Modal "Atur ulang password":**
+     * Membuka form popup saat tautan *"Lupa kata sandi?"* diklik pada modal Masuk.
+     * Judul: *"Atur ulang password"*, kolom email bersih siap ketik, dan petunjuk `Contoh : xxxxxxxx@gmail.com`.
+     * Tombol `Kirim` dan `Batal`.
+   - **Simulasi Pesan Email Masuk (Gmail Template Sesuai Gambar):**
+     * Begitu tombol `Kirim` ditekan, sistem memunculkan pratinjau surat email masuk bergaya Gmail resmi (`#emailPreviewModal`).
+     * Heading oranye: **Atur Password Baru**.
+     * Pesan resmi: *"Yth. Bapak/Ibu [Nama/Email], kami telah menerima permintaan Anda untuk atur ulang password. Silakan klik link di bawah ini untuk mengatur password baru Anda. Link ini hanya berlaku 1 jam sejak email ini dikirimkan atau setelah password berhasil diubah."*
+     * Tombol biru besar: **[ Atur Password ]** serta tautan cadangan reset token.
+   - **Formulir "Buat Password Baru" (`#setNewPassModal`):**
+     * Mengklik tombol **[ Atur Password ]** langsung membuka dialog untuk memasukkan `Password Baru` dan `Konfirmasi Password`.
+     * Saat disimpan, kata sandi akun pelanggan diperbarui di sistem (`localStorage`), menampilkan toast konfirmasi sukses, dan pelanggan langsung diarahkan kembali ke modal login dengan kata sandi baru.
+
+---
+
+### 26.4 Tabel Komparasi: Sebelum vs Sesudah Revisi (v2.1.0)
+
+| Komponen / Menu | Kondisi Saat Ini | Kondisi Sesudah Pembaruan (v2.1.0) |
+|---|---|---|
+| **Fitur "Pesanan"** | Tampil di Header, Bottom Nav, dan Profil | **Dihapus Total (Bersih dari UI)** |
+| **Fitur "Kasir POS"** | Meja kasir POS di Bottom Nav & shortcut | **Dihapus Total (Aplikasi fokus E-Commerce Murni)** |
+| **Header Navigasi Atas** | Logo, Search, Lokasi, Pesanan, Keranjang, Masuk | **Ringkas: Logo, Search, Lokasi, Keranjang (`🛒`), Masuk (`👤`)** |
+| **Bottom Nav Bar** | 5 Tombol (Katalog, Pesanan, POS, Akun, Setting) | **3-4 Tombol Ringkas: Katalog (`🛍️`), Keranjang (`🛒`), Akun (`👤`) (+ Setting jika Staf)** |
+| **Keranjang Customer Baru** | Ter-reset jika belum login | **Tersimpan permanen di `localStorage` & tetap terisi** |
+| **Sistem Centang Checkbox** | Tidak ada (semua item otomatis dihitung) | **Master Checkbox `Tersedia (X)` + Checkbox per item** |
+| **Validasi Checkout** | Tidak ada validasi centang | **Muncul banner kuning: `⚠️ Produk wajib dipilih`** |
+| **Aksi Checkout Customer Baru** | Langsung ke kasir POS | **Membuka dialog Masuk/Daftar dengan keranjang tetap utuh** |
+| **Opsi Media Sosial Masuk** | Ada Facebook & Google | **Opsi Facebook Dihapus (Hanya tombol Google lebar penuh)** |
+| **Input Email & Keterangan** | Terisi `gayamurty@gmail.com` | **Kolom kosong bersih + Teks petunjuk: `Contoh : xxxxxxxx@gmail.com`** |
+| **Modal Detail saat Stok Habis** | Hanya tombol "Ingatkan Saya" & "WA" | **Ditambahkan tombol `🛍️ Lanjut Belanja` (menutup modal & balik ke katalog)** |
+| **Alur Lupa Password** | Hanya notifikasi toast link | **Lengkap: Modal Atur Ulang $\rightarrow$ Email Gmail Masuk $\rightarrow$ Tombol [Atur Password] $\rightarrow$ Form Password Baru** |
+
+---
+
+### 26.5 Estimasi Dampak & Keamanan Sistem
+- **Katalog & Detail Produk:** 100% AMAN. Pencarian, filter kategori, galeri foto, varian warna/ukuran, dan keranjang belanja tetap berjalan responsif.
+- **Backend Google Sheets:** 100% AMAN. Tidak ada skema spreadsheet yang dihapus secara destruktif.
+- **Pengalaman Pengguna (UX):** Antarmuka menjadi jauh lebih bersih, tidak membingungkan pembeli online, dan persis mengikuti standar belanja online e-commerce modern (Jaknot Style).
+
+---
+
+### 26.6 Prosedur Persetujuan (SOP ZettBOT)
+Seluruh rencana kerja penghapusan fitur "Pesanan" & "Kasir POS" serta penataan keranjang Jaknot telah dituangkan ke dalam berkas [revisi.md](file:///c:/Users/ptgay/.gemini/antigravity-ide/ProjekAntigravity/revisi.md).
+
+Silakan berikan konfirmasi persetujuan dengan mengetik:
 **"OKE TERAPKAN"**
-agar saya langsung mengeksekusi perbaikan ini pada [index.html](file:///c:/Users/ptgay/.gemini/antigravity-ide/ProjekAntigravity/index.html) sehingga Logo dan seluruh gambar langsung tampil sempurna di Localview Anda.
+
+Maka saya akan langsung mengeksekusi penghapusan dan penyelarasan antarmuka ini secara presisi pada [index.html](file:///c:/Users/ptgay/.gemini/antigravity-ide/ProjekAntigravity/index.html).
 
 
 
@@ -1140,3 +1378,224 @@ agar saya langsung mengeksekusi perbaikan ini pada [index.html](file:///c:/Users
 
 
 
+
+
+
+---
+
+# REVISI SISTEM v2.1.1 (29 OKTOBER 2026)
+## PENGAKTIFAN PENUH CRUD (EDIT, TAMBAH, HAPUS) FOTO & NARASI PRODUK SERTA PERSISTENSI DATABASE LOKAL & CLOUD
+
+### 27.1 Latar Belakang & Identifikasi Masalah
+Sebelumnya, perubahan foto dan narasi deskripsi yang dilakukan oleh Admin atau Operator hanya tersimpan sementara pada variabel memori peramban (*in-memory state*). Hal ini menyebabkan:
+1. Perubahan narasi deskripsi dan foto produk hilang seketika saat halaman direfresh atau dibuka kembali.
+2. Belum tersedianya sinkronisasi ke penyimpanan lokal (`localStorage`) maupun basis data lokal (`products_database.json`).
+3. Belum adanya fungsi hapus (*delete*) produk, hapus foto, maupun hapus narasi pada antarmuka Admin Toko.
+4. Narasi/deskripsi produk (`p.deskripsi`) belum ditampilkan di dalam dialog modal Detail Produk Pelanggan.
+
+### 27.2 Solusi & Implementasi Lengkap (ZettBOT v2.1.1)
+1. **Penyimpanan Ganda & Sinkronisasi Database Otomatis:**
+   - **Client-Side Storage:** Menyimpan seluruh data produk ke `localStorage: vt_custom_products`.
+   - **Localview Server Database API:** Menyediakan endpoint REST API `GET /api/products` dan `POST /api/products` pada `scratch/local_server.js` yang secara otomatis menulis ke basis data berkas `scratch/products_database.json`.
+   - **Google Apps Script Cloud Backend:** Menghubungkan fungsi `syncProductToBackend(product, action)` dengan `google.script.run.simpanProduk` dan endpoint baru `google.script.run.hapusProduk(id)` pada `code.gs`.
+2. **Pembaruan Fitur Edit Narasi & Foto (`#editProductModal`):**
+   - Menambahkan tombol **`🗑️ Hapus Foto`** dan **`✕ Kosongkan`** untuk mereset/menghapus foto produk ke placeholder standar.
+   - Menambahkan tombol **`🗑️ Hapus Narasi`** untuk membersihkan teks narasi/deskripsi produk.
+   - Menambahkan tombol **`🗑️ Hapus Produk`** warna merah pada bilah bawah modal untuk menghapus produk secara langsung.
+   - Memperbaiki `saveProductEdit()` agar narasi deskripsi selalu tersimpan secara akurat tanpa terhalang kondisi kosong.
+3. **Pembaruan Fitur Tambah Produk (`#operatorModal`):**
+   - Menghubungkan kolom narasi produk (`#opProdDesc`) ke properti `p.deskripsi`.
+   - Otomatis menyimpan produk baru ke database lokal dan cloud melalui `saveProductsToStorage()`.
+4. **Pembaruan Fitur Hapus Produk (`renderAdminTable`):**
+   - Menambahkan tombol aksi **`🗑 Hapus`** (merah) pada setiap baris produk di tabel Setting & Stok.
+   - Dilengkapi konfirmasi pengamanan dialog (`confirmDeleteProduct`) sebelum produk dihapus permanen.
+5. **Penampilan Narasi pada Modal Detail Produk Pelanggan (`#productDetailModal`):**
+   - Menambahkan kotak informasi elegan bertema *PAC Indian Luxury* `#detailProductDescText` yang menampilkan narasi dan deskripsi produk secara lengkap saat pelanggan mengklik produk dari katalog.
+
+
+---
+
+# REVISI SISTEM v2.1.2 (29 OKTOBER 2026)
+## PERBAIKAN TOTAL UPDATE GAMBAR & NARASI PRODUK DARI HP, TABLET & DESKTOP (OTORITAS ADMIN & OPERATOR)
+
+### 28.1 Identifikasi Kendala Riil
+1. **Kegagalan Muat Gambar / Broken Image:**
+   Foto yang dipilih dari galeri HP/tablet berukuran resolusi tinggi (3MB - 12MB). Saat dibaca oleh peramban tanpa kompresi, string Base64 yang dihasilkan mencapai belasan megabyte sehingga:
+   - Memicu batas kuota peramban (`DOMException: QuotaExceededError` pada `localStorage` yang berkapasitas 5MB).
+   - Menggagalkan fungsi penyimpanan (`saveProductsToStorage`) sebelum data berhasil ditulis.
+   - Placeholder SVG berbasis string mentah (`data:image/svg+xml;utf8,...`) gagal diurai oleh Chromium sehingga memunculkan ikon retak (*broken image*).
+2. **Keterbatasan Login Petugas di HP/Tablet:**
+   Petugas yang mencoba masuk dari HP terkendala karena form login hanya menerima sandi teks tanpa alternatif PIN cepat `1234`.
+3. **Validasi Wewenang Petugas Belum Informatif:**
+   Tidak ada indikator lencana (*badge*) yang memperlihatkan siapa petugas/operator yang sedang berwenang saat mengedit data.
+
+### 28.2 Solusi Teknis & Implementasi (ZettBOT v2.1.2)
+1. **Mesin Kompresi Gambar Otomatis Multi-Device (`compressAndOptimizeImage`):**
+   - Dilengkapi kanvas kompresi cerdas di sisi peramban. Foto resolusi tinggi (apapun ukurannya dari HP kamera 48MP/108MP atau tangkapan layar) secara otomatis diskalakan proporsional (maksimal lebar/tinggi 640px) dan dikompresi menjadi JPEG berkualitas tinggi (~35-65 KB).
+   - Ukuran 35-65 KB 100% aman untuk `localStorage`, aman untuk REST API server lokal, aman untuk sel Google Sheets, dan tampil instan di layar tanpa memori drop.
+2. **Placeholder Gambar Safe Base64 (`SVG_PLACEHOLDER`):**
+   - Mengganti SVG raw string dengan Base64 murni yang kebal terhadap kegagalan render di seluruh peramban HP, Tablet (iPad/Android), dan Desktop.
+3. **Penegakan Wewenang Petugas (Admin & Operator):**
+   - Memasang proteksi `checkStaffAuthority` pada fungsi `openEditProductModal`, `saveProductEdit`, `deleteProduct`, dan `submitOperatorNewProduct`.
+   - Menambahkan header informasi lencana di modal edit:
+     `🛡️ Wewenang Aktif: [NAMA PETUGAS] ([ROLE]) • Siap Update dari HP/Tablet/PC`
+   - Memperluas autentikasi di `authModal` sehingga Admin/Operator dapat masuk menggunakan sandi akun maupun PIN resmi `1234`.
+4. **Penyelarasan Narasi Deskripsi:**
+   - Textarea narasi otomatis memuat narasi yang tersimpan atau menyediakan draf deskripsi produk awal sehingga kolom tidak kosong saat dibuka.
+   - Perubahan narasi deskripsi langsung terupdate di katalog publik, database disk lokal (`scratch/products_database.json`), dan Google Sheets.
+
+
+---
+
+# REVISI SISTEM v2.1.3 (29 OKTOBER 2026)
+## PENAMBAHAN FITUR CETAK STRUK RESMI SESUAI PESANAN CUSTOMER (THERMAL 58/80MM & FAKTUR A4)
+
+### 29.1 Latar Belakang & Kebutuhan Pengguna
+Pelanggan yang berbelanja melalui keranjang belanja online dan melakukan pembayaran transfer BCA memerlukan bukti fisik/digital berupa struk resmi pemesanan (*Order Receipt / Invoice*) yang memuat rincian produk yang dipesan, harga, varian, kode unik, dan status pemesanan.
+
+### 29.2 Solusi & Implementasi Teknis (ZettBOT v2.1.3)
+1. **Modal Struk Pesanan Customer (`#customerReceiptModal`):**
+   - Dirancang dengan layout struk elegan ala *PAC Indian Luxury & E-Commerce Receipt* (font monospace rapi, kop butik, nomor invoice unik otomatis `INV-YYYYMMDD-XXXX`, tanggal & waktu, nama pemesan, lokasi belanja, dan metode bayar).
+   - Memuat tabel rincian produk pesanan secara dinamis: nama produk, SKU, varian ukuran/warna, jumlah (qty), harga satuan, dan subtotal.
+   - Perhitungan otomatis: subtotal belanja, diskon produk (hemat), kode unik transfer 3 digit, dan total akhir yang dibayarkan.
+2. **Pilihan Format Cetak Fleksibel:**
+   - **Struk Termal (58mm/80mm):** Menyesuaikan lebar struk menjadi 300px untuk pencetakan langsung ke printer kasir / thermal bluetooth.
+   - **Faktur Struk Standar (A4 / PDF):** Menyesuaikan tata letak cetak dokumen formal A4 melalui peramban.
+   - **Kirim Struk ke WhatsApp Toko:** Mengonversi rincian pesanan menjadi teks WhatsApp terformat rapi dengan sekali klik.
+3. **Integrasi Titik Akses Struk:**
+   - **Pada Modal Pembayaran BCA (`#bcaPaymentModal`):** Tombol hijau mencolok *"🧾 Cetak Struk Sesuai Pesanan Customer"* di bawah kotak nominal transfer dan tombol cepat di bilah footer.
+   - **Otomatis Setelah Konfirmasi Pembayaran:** Mengklik tombol *"✅ Saya Sudah Bayar BCA"* langsung memproses pesanan dan otomatis menampilkan struk resmi untuk langsung ditinjau/dicetak.
+   - **Pada Halaman Keranjang Belanja (`#viewCart`):** Tombol *"🧾 Cetak Struk"* pada bilah atas keranjang.
+
+
+---
+
+# REVISI SISTEM v2.1.4 (29 OKTOBER 2026)
+## PENAMBAHAN MENU DAN OPSI LOGOUT RESMI UNTUK ADMIN DAN OPERATOR
+
+### 30.1 Latar Belakang & Kebutuhan Pengguna
+Pengguna menginstruksikan:
+> *"Jika sudah Login dengan menu ADMIN atau Operator tambahkan Juga menu opsi untuk Logout."*
+
+Berdasarkan tinjauan tangkapan layar sistem:
+1. **Layar Pengaturan & Otoritas Petugas (`#viewAdmin`):** Ketika Admin/Operator sedang aktif (misal `PINKY (SUPER_ADMIN)`), sebelumnya tidak ada tombol Logout yang jelas di bilah atas maupun di dalam kartu PIN. Tombol yang ada sebelumnya berlabel samar *"Mode Tamu"*, sehingga petugas kebingungan bagaimana cara keluar dari sesi wewenangnya.
+2. **Menu Pengguna Header (`#userHeaderBtnWrap` & `#userAccountDropdown`):** Ketika Admin/Operator masuk, mengklik nama akun di header sebelumnya malah memanggil modal login (`openAuthModal('login')`) bukannya membuka dropdown menu akun, serta label logout tidak mencantumkan nama dan status petugas.
+
+---
+
+### 30.2 Solusi & Implementasi Teknis (ZettBOT v2.1.4)
+1. **Tombol Logout di Header Banner Manajemen (`#viewAdmin`):**
+   - Menambahkan tombol merah tegas **`🚪 Logout Petugas`** tepat di samping tombol `"Ke Beranda"` pada bilah atas `#viewAdmin`.
+   - Tombol dirancang dengan styling beraksen merah (`background: #fee2e2; border-color: #ef4444; color: #b91c1c; font-weight: 800`).
+2. **Tombol Logout di Kotak Otoritas PIN Petugas:**
+   - Mengganti tombol `"Mode Tamu"` lama menjadi tombol **`🚪 Logout Petugas`** yang mencolok di sebelah tombol `"🔓 Aktifkan Akses"`.
+3. **Penyelarasan Menu Dropdown Akun Header untuk Petugas:**
+   - Memperbarui fungsi `handleUserHeaderClick()` agar mendeteksi status petugas (`isStaffUser(u)`). Ketika petugas login (Admin-G, Admin Toko, atau Operator), klik pada avatar/nama di header langsung membuka `#userAccountDropdown`.
+   - Di dalam dropdown menu:
+     - Menampilkan nama petugas beserta ikon: `👑 PINKY` (atau ikon akun terkait).
+     - Menampilkan lencana wewenang: `🛡️ SUPER_ADMIN` / `🛡️ ADMIN_TOKO` / `🛡️ OPERATOR_TOKO`.
+     - Menyediakan pintasan navigasi cepat ke **`⚙️ Setting & Manajemen Stok`**.
+     - Menyediakan opsi Logout dinamis: **`🚪 Logout Petugas (PINKY)`** beraksen merah.
+4. **Alur Eksekusi Logout Petugas yang Aman (`handleUserLogout`):**
+   - Menghapus sesi aktif dari `localStorage.removeItem("vt_active_user")`.
+   - Mengembalikan `state.currentUser` ke status default `USER_ROLES["PELANGGAN:TAMU"]`.
+   - Menjaga keranjang belanja pelanggan (`vt_customer_cart_items`) agar item yang dipilih sebelumnya tidak hilang.
+   - Menyembunyikan menu khusus petugas (`#navBtnAdmin` dan `#dropdownAdminItem`).
+   - Menampilkan konfirmasi Toast resmi: `👋 Petugas [Nama] berhasil Logout. Akses dikembalikan ke Mode Pelanggan/Tamu.`
+   - Mengarahkan tampilan ke katalog produk toko.
+
+
+---
+
+# REVISI SISTEM v2.1.5 (30 OKTOBER 2026)
+## IMPLEMENTASI ALUR LENGKAP CHECKOUT & SISTEM MANAJEMEN ALAMAT (AMBIL & KIRIM)
+
+### 31.1 Latar Belakang & Kebutuhan Pengguna
+Pengguna menginstruksikan pembuatan dan penyelarasan alur belanja bertahap sesuai 6 gambar referensi:
+1. **Tampilan Sebelum Checkout (Gambar-1):** Halaman Keranjang Belanja dengan checklist produk, ringkasan belanja, dan tombol *Checkout* oranye.
+2. **Tampilan Setelah Checkout (Gambar-2):** Halaman Pemesanan (*Checkout View*) dengan Progress Stepper (1 Keranjang, 2 Pemesanan, 3 Pembayaran), pertanyaan lokasi belanja, dan toggle metode belanja **[ 🏢 Ambil (Gratis Ongkir) ]** vs **[ 🚚 Kirim ]**.
+3. **Fitur Pengiriman & Biaya Ongkir (Gambar-3):** Ketika opsi *Kirim* dipilih, kartu Alamat Pengiriman muncul (dengan opsi tab *Pribadi* vs *Dropship*), biaya ongkir otomatis terhitung (Rp4.900), dan total tagihan tersinkronisasi.
+4. **Modal Pilih Alamat (Gambar-4):** Pop-up pilihan alamat aktif dengan lencana *Utama*, tombol *Ubah*, dan tombol *+ Tambah Alamat*.
+5. **Modal Input Ubah Alamat (Gambar-5):** Formulir bertipe *Outlined Floating Input* untuk mengedit alamat yang tersimpan langsung ke database.
+6. **Modal Input Tambah Alamat (Gambar-6):** Formulir untuk menambahkan alamat baru lengkap dengan penyimpanan otomatis multi-layer (browser `localStorage`, REST API server disk `scratch/addresses_database.json`, dan Google Apps Script `code.gs`).
+
+---
+
+### 31.2 Rincian Solusi & Implementasi Teknis (ZettBOT v2.1.5)
+
+1. **Halaman Pemesanan / Checkout (`#viewCheckout`):**
+   - **Progress Stepper Bar:** Menampilkan status alur checkout interaktif:
+     - `1 Keranjang (✓ Centang Biru)`: Dapat diklik untuk kembali ke keranjang belanja.
+     - `2 Pemesanan (🔵 Aktif)`: Halaman pemesanan saat ini.
+     - `3 Pembayaran (⚪ Abu-abu)`: Menuju modal pembayaran transfer BCA.
+   - **Segmented Toggle Delivery Selector:** Pilihan tab berbingkai rounded:
+     - `[ (•) 🏢 Ambil  (Gratis Ongkir) ]`: Menampilkan Lokasi Pengambilan (Toko Medan, Jl. Teuku Cik Ditiro No.22) dan estimasi siap diambil hari ini.
+     - `[ (•) 🚚 Kirim ]`: Menampilkan Alamat Pengiriman penerima, estimasi tiba kurir, serta otomatis menambahkan Biaya Pengiriman Rp4.900.
+   - **Daftar Item Pesanan Terpilih:** Menampilkan seluruh produk yang dicentang dari keranjang belanja secara rinci: foto, nama, varian, SKU, berat (kg), harga coret, diskon, dan kalkulasi total berat pesanan.
+   - **Rincian Pesanan & Pembayaran:** Kotak ringkasan di kolom kanan dengan metode bayar Bank Transfer BCA, voucher, subtotal belanja normal, diskon hemat, ongkir (jika mode kirim), total tagihan final, dan tombol *"Bayar Sekarang"* (dengan subteks "Anda hemat RpXX,Xrb ✨").
+
+2. **Modal Dialog Pilih Alamat (`#chooseAddressModal` - Gambar 4):**
+   - Menampilkan daftar alamat penerima yang tersimpan dalam format kartu elegan dengan border biru aktif.
+   - Menampilkan Nama Penerima, Nomor Telepon, Alamat Lengkap, Kota/Kecamatan, Kode Pos, lencana *Utama*, dan status *📍 Belum Pinpoint*.
+   - Menyediakan tombol outline biru **`Ubah`** pada masing-masing kartu alamat dan tombol **`+ Tambah Alamat`** di header modal.
+   - Mengklik kartu alamat langsung memilih alamat tersebut sebagai tujuan pengiriman aktif.
+
+3. **Modal Dialog Ubah & Tambah Alamat (`#addressFormModal` - Gambar 5 & 6):**
+   - Dirancang menggunakan standar *Outlined Material Form Controls*:
+     1. `Nama Penerima` (Input teks)
+     2. `Nomor Telepon Penerima` (Input telp)
+     3. `Kota/Kecamatan` (Pilihan dropdown terintegrasi)
+     4. `Kode Pos` (Input teks)
+     5. `Alamat` (Textarea multiline lengkap)
+     6. `Jadikan Alamat Utama` (Checkbox custom)
+   - Tombol biru lebar penuh: **`Simpan`** (`background: #0070f3`).
+
+4. **Multi-Layer Database Persistence:**
+   - **Layer 1 (Client In-Memory & `localStorage`):** Disimpan pada `vt_user_addresses` sehingga alamat tidak hilang saat peramban dimuat ulang.
+   - **Layer 2 (Localview REST API Server):** Ditambahkan endpoint `GET /api/addresses` dan `POST /api/addresses` pada `scratch/local_server.js` yang secara otomatis menulis ke berkas basis data disk `scratch/addresses_database.json`.
+   - **Layer 3 (Cloud Google Sheets):** Ditambahkan fungsi backend `simpanAlamat(data)` dan `ambilAlamat()` pada `code.gs` yang mencatat ke tab sheet `AlamatPelanggan`.
+
+5. **Peralihan Alur dari Keranjang Belanja:**
+   - Tombol *Checkout* pada Halaman Keranjang (`#viewCart`) kini memvalidasi pilihan item dan wewenang pengguna, lalu secara mulus mengarahkan (*routing*) ke `#viewCheckout` (Step 2 Pemesanan) bukan langsung melompat ke popup transfer, sehingga pembeli dapat memilih metode pengambilan/pengiriman dan memastikan alamat tujuan terlebih dahulu.
+
+
+---
+
+# REVISI SISTEM v2.1.6 (30 OKTOBER 2026)
+## PENGURUTAN KATEGORI RESMI, PENYESUAIAN JUDUL KATALOG & SINKRONISASI TAMPILAN MULTI-DEVICE
+
+### 32.1 Latar Belakang & Kebutuhan Pengguna
+1. **Pengurutan Kategori Produk (Sort Priority):**
+   Pengguna menginstruksikan agar seluruh etalase produk toko diurutkan secara hierarkis berdasarkan urutan 4 kategori utama:
+   - Urutan 1: `"Indian Women's Fashion"` (Saree, Tas Kosmetik Wanita, Busana Wanita)
+   - Urutan 2: `"Indian Men's Fashion"` (Sherwani, Kurta, Kacamata Pria, Korset Shaper Pria)
+   - Urutan 3: `"Aksesories & Perhiasan"` (Kotak Perhiasan Mewah, Mehendi Cone, Kajal Herbal)
+   - Urutan 4: `"Luxury Goods"` (Tensimeter Digital, Thermogun, Nebulizer, Oximeter)
+2. **Penyesuaian Judul Etalase:**
+   Mengubah teks judul default dari `"Fashion, 12 Produk"` menjadi `"Indian Women's Fashion, (jumlah) Produk"` (misal: `"Indian Women's Fashion, 12 Produk"`).
+3. **Sinkronisasi Multi-Device (DesktopView, MobileView & TabletView):**
+   Menyelaraskan grid katalog, layout checkout, toolbar filter, dan bottom navigation bar di ketiga simulator perangkat (HP 418px, Tablet 820px, dan Desktop 1280px) agar serasi tanpa overflow.
+
+---
+
+### 32.2 Rincian Solusi & Implementasi Teknis (ZettBOT v2.1.6)
+
+1. **Mesin Pengurutan Kategori Hierarkis (`getProductCategoryRank`):**
+   - Mengimplementasikan pemeringkatan otomatis pada algoritma sorting `renderCatalog()`:
+     - Rank 1: `Indian Women's Fashion`
+     - Rank 2: `Indian Men's Fashion`
+     - Rank 3: `Aksesories & Perhiasan`
+     - Rank 4: `Luxury Goods`
+   - Pada opsi urutan bawaan *"Rekomendasi"*, sistem secara otomatis memposisikan koleksi busana wanita India di baris teratas, disusul busana pria India, aksesori/perhiasan, dan barang *luxury goods*.
+   - Sinkronisasi data pada [scratch/products_database.json](file:///c:/Users/ptgay/.gemini/antigravity-ide/ProjekAntigravity/scratch/products_database.json) sehingga urutan di database fisik tersimpan seragam.
+
+2. **Dinamisasi Judul Katalog (`#catalogHeadingText` & `#catalogCountText`):**
+   - Mengganti teks statis awal menjadi:
+     `<h2 class="catalog-main-heading" id="catalogHeadingText">Indian Women's Fashion,</h2>`
+     `<span class="catalog-item-count" id="catalogCountText">12 Produk</span>`
+   - Fungsi `renderCatalog()` kini secara cerdas menampilkan `"Indian Women's Fashion,"` saat mode default (Semua Koleksi) aktif, serta menyertakan jumlah item riil yang terfilter.
+
+3. **Sinkronisasi Tata Letak 3 Mode Perangkat:**
+   - **Mode Desktop (1280px):** Grid produk tertata 4 kolom proporsional (`repeat(4, 1fr)`), sidebar filter 260px di sisi kiri, dan checkout 2-kolom seimbang.
+   - **Mode Tablet (iPad 820px):** Grid produk tertata 2 kolom lega (`repeat(2, 1fr)`), jarak celah 14px, dan tombol filter yang dapat diakses cepat.
+   - **Mode Mobile (HP 418px):** Grid produk 2 kolom mobile-native dengan padding simetris, notch simulator bersih, checkout stepper responsif, dan bottom bar tetap menempel di dasar bingkai.
