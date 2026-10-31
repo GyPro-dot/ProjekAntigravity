@@ -740,3 +740,179 @@ function ambilAlamat() {
     return { success: false, message: err.toString() };
   }
 }
+
+// ----------------------------------------------------------------------------
+// 8. API CHECKOUT PESANAN KE SHEET PESANAN & AUTO PENGURANGAN STOK
+// ----------------------------------------------------------------------------
+function simpanPesanan(orderData) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
+
+    // Siapkan sheet PESANAN
+    var sheetPesanan = ss.getSheetByName("PESANAN") || ss.getSheetByName("DataPesanan");
+    var headers = [
+      "No_Pesanan",
+      "Tanggal_Waktu",
+      "Nama_Pelanggan",
+      "No_WhatsApp",
+      "Alamat_Catatan",
+      "Rincian_Item",
+      "Total_Item",
+      "Total_Belanja",
+      "Metode_Bayar",
+      "Status_Bayar",
+      "Status_Order",
+      "Petugas"
+    ];
+
+    if (!sheetPesanan) {
+      sheetPesanan = ss.insertSheet("PESANAN");
+      sheetPesanan.appendRow(headers);
+      var hr = sheetPesanan.getRange(1, 1, 1, headers.length);
+      hr.setBackground("#c2185b");
+      hr.setFontColor("#ffffff");
+      hr.setFontWeight("bold");
+    }
+
+    // Generate ID unik: ORD-YYYYMMDD-XXX
+    var now = new Date();
+    var ymd = Utilities.formatDate(now, "GMT+7", "yyyyMMdd");
+    var dateFormatted = Utilities.formatDate(now, "GMT+7", "yyyy-MM-dd HH:mm:ss");
+    var prefix = "ORD-" + ymd + "-";
+
+    var maxNum = 0;
+    if (sheetPesanan.getLastRow() > 1) {
+      var existingIds = sheetPesanan.getRange(2, 1, sheetPesanan.getLastRow() - 1, 1).getValues();
+      for (var k = 0; k < existingIds.length; k++) {
+        var curId = String(existingIds[k][0]).trim();
+        if (curId.indexOf(prefix) === 0) {
+          var numPart = parseInt(curId.substring(prefix.length), 10);
+          if (!isNaN(numPart) && numPart > maxNum) {
+            maxNum = numPart;
+          }
+        }
+      }
+    }
+    var nextOrderId = prefix + ("000" + (maxNum + 1)).slice(-3);
+
+    // Pengurangan stok fisik di sheet PRODUK / DataProduk
+    var sheetProduk = ss.getSheetByName("DataProduk") || ss.getSheetByName("PRODUK") || ss.getSheetByName("Produk");
+    var items = orderData.items || [];
+
+    if (sheetProduk && sheetProduk.getLastRow() > 1 && items.length > 0) {
+      var prodDataRange = sheetProduk.getRange(2, 1, sheetProduk.getLastRow() - 1, sheetProduk.getLastColumn());
+      var prodValues = prodDataRange.getValues();
+
+      for (var it = 0; it < items.length; it++) {
+        var itm = items[it];
+        var targetSku = String(itm.sku || itm.id || "").trim();
+        var buyQty = Number(itm.qty) || 1;
+
+        for (var r = 0; r < prodValues.length; r++) {
+          var pId = String(prodValues[r][COL_PRODUK.ID]).trim();
+          var pSku = String(prodValues[r][COL_PRODUK.SKU]).trim();
+          if (pSku === targetSku || pId === targetSku) {
+            var curStock = Number(prodValues[r][COL_PRODUK.STOK]) || 0;
+            prodValues[r][COL_PRODUK.STOK] = Math.max(0, curStock - buyQty);
+            break;
+          }
+        }
+      }
+      prodDataRange.setValues(prodValues);
+    }
+
+    // Format rincian item teks
+    var rincianArr = [];
+    var totalQty = 0;
+    for (var m = 0; m < items.length; m++) {
+      var itemObj = items[m];
+      var q = Number(itemObj.qty) || 1;
+      totalQty += q;
+      rincianArr.push(itemObj.nama + " (" + (itemObj.sku || itemObj.id || "-") + ") x" + q + " @Rp " + (Number(itemObj.hargaSatuan) || 0).toLocaleString("id-ID"));
+    }
+
+    var totalBelanja = Number(orderData.totalBelanja || orderData.grandTotal) || 0;
+    var rowPesanan = [
+      nextOrderId,
+      dateFormatted,
+      orderData.nama || orderData.namaPelanggan || "Pelanggan Umum",
+      orderData.wa || orderData.noWhatsApp || "-",
+      orderData.alamat || orderData.catatan || "-",
+      rincianArr.join("; "),
+      totalQty || Number(orderData.totalItem) || 1,
+      totalBelanja,
+      orderData.metodeBayar || "Transfer Bank BCA",
+      orderData.statusBayar || "Lunas",
+      orderData.statusOrder || "Diproses",
+      orderData.petugas || "Web Butik V&T"
+    ];
+
+    sheetPesanan.appendRow(rowPesanan);
+
+    return {
+      success: true,
+      orderId: nextOrderId,
+      data: orderData,
+      message: "Pesanan " + nextOrderId + " berhasil disimpan ke sheet PESANAN!"
+    };
+
+  } catch (err) {
+    Logger.log("Error simpanPesanan: " + err.toString());
+    return { success: false, message: err.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 9. API BACA DAFTAR PESANAN DARI SHEET PESANAN
+// ----------------------------------------------------------------------------
+function getDaftarPesanan() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return { success: false, message: "Spreadsheet tidak ditemukan." };
+
+    var sheetPesanan = ss.getSheetByName("PESANAN") || ss.getSheetByName("DataPesanan");
+    if (!sheetPesanan || sheetPesanan.getLastRow() <= 1) {
+      return { success: true, list: [] };
+    }
+
+    var rows = sheetPesanan.getRange(2, 1, sheetPesanan.getLastRow() - 1, sheetPesanan.getLastColumn()).getValues();
+    var list = [];
+
+    for (var i = rows.length - 1; i >= 0; i--) {
+      var r = rows[i];
+      var rincian = String(r[5] || "");
+      list.push({
+        orderId: String(r[0] || ""),
+        tanggal: String(r[1] || ""),
+        customerName: String(r[2] || ""),
+        nama: String(r[2] || ""),
+        customerPhone: String(r[3] || ""),
+        wa: String(r[3] || ""),
+        alamatKirim: String(r[4] || ""),
+        catatan: String(r[4] || ""),
+        rincianItem: rincian,
+        totalItem: Number(r[6]) || 1,
+        itemCount: Number(r[6]) || 1,
+        totalBayar: Number(r[7]) || 0,
+        grandTotal: Number(r[7]) || 0,
+        subtotal: Number(r[7]) || 0,
+        paymentMethod: String(r[8] || "Transfer Bank BCA"),
+        metodeBayar: String(r[8] || "Transfer Bank BCA"),
+        statusBayar: String(r[9] || "Lunas"),
+        status: String(r[10] || "DIPROSES"),
+        statusLabel: String(r[10] || "Diproses"),
+        petugas: String(r[11] || "Web Butik V&T")
+      });
+    }
+
+    return { success: true, list: list };
+  } catch (err) {
+    Logger.log("Error getDaftarPesanan: " + err.toString());
+    return { success: false, message: err.toString() };
+  }
+}

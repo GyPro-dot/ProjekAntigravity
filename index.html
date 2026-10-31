@@ -7605,14 +7605,17 @@
         <button class="icon-btn" onclick="closeCartModal()" style="border:none;">✕</button>
       </div>
       <div class="sheet-body" id="cartModalBody"></div>
-      <div class="sheet-footer" style="flex-direction: column;">
+      <div class="sheet-footer" style="flex-direction: column; gap: 8px;">
         <div
-          style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; margin-bottom: 6px;">
+          style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">
           <span>Total Belanja:</span>
           <span id="cartModalTotal" style="color: var(--primary);">Rp 0</span>
         </div>
-        <button class="btn-primary" style="background: #25D366;" onclick="checkoutToWhatsApp()">
-          Kirim Order Pesanan via WhatsApp
+        <button type="button" class="btn-primary" id="btnCartModalCheckout" style="background: #e11d48; width: 100%; font-weight: 700; font-size: 0.95rem; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="openCheckoutInputModal()">
+          🛍️ Checkout Pesanan (Input Data & Cetak Struk)
+        </button>
+        <button type="button" class="btn-secondary" style="border-color: #25D366; color: #15803d; width: 100%; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="checkoutToWhatsApp()">
+          📲 Kirim Pesanan via WhatsApp
         </button>
       </div>
     </div>
@@ -8253,6 +8256,87 @@
     </div>
   </div>
 
+
+    <!-- MODAL: FORM INPUT PEMESAN & CHECKOUT ORDER KE GOOGLE SHEETS SHEET PESANAN -->
+  <div class="modal-overlay" id="checkoutInputModal" onclick="if(event.target === this) closeCheckoutInputModal()" style="display: none; z-index: 99990;">
+    <div class="bottom-sheet" style="max-width: 500px; background: #ffffff;">
+      <div class="sheet-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 14px 18px; background: #fdfafb;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.3rem;">🛍️</span>
+          <div>
+            <span class="sheet-title" style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">Form Checkout Pemesanan</span>
+            <div style="font-size: 0.72rem; color: #64748b;">Lengkapi data pemesan untuk konfirmasi pesanan & cetak struk</div>
+          </div>
+        </div>
+        <button type="button" class="icon-btn" onclick="closeCheckoutInputModal()" style="border:none; font-size: 1.35rem; cursor: pointer;">✕</button>
+      </div>
+
+      <div class="sheet-body" style="padding: 16px 18px; max-height: 75vh; overflow-y: auto;">
+        <!-- Ringkasan Singkat Keranjang -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px;">
+            <span style="color: #64748b;">Jumlah Item:</span>
+            <b id="checkoutModalItemCount" style="color: #0f172a;">0 Barang</b>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: 800;">
+            <span style="color: #0f172a;">Total Belanja:</span>
+            <span id="checkoutModalGrandTotal" style="color: #e11d48;">Rp 0</span>
+          </div>
+          <div id="checkoutModalItemList" style="margin-top: 8px; font-size: 0.75rem; color: #64748b; max-height: 90px; overflow-y: auto; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+          </div>
+        </div>
+
+        <form id="formCheckoutInput" onsubmit="event.preventDefault(); submitCheckoutOrder();">
+          <!-- 1. Nama Pelanggan -->
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              Nama Lengkap Pemesan <span style="color: #ef4444;">*</span>
+            </label>
+            <input type="text" id="checkoutCustName" class="form-input" placeholder="Contoh: Gaya Murty" required style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 0.88rem; box-sizing: border-box;">
+          </div>
+
+          <!-- 2. No WhatsApp -->
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              No. WhatsApp / Telepon <span style="color: #ef4444;">*</span>
+            </label>
+            <input type="tel" id="checkoutCustPhone" class="form-input" placeholder="Contoh: 08116072491" required style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 0.88rem; box-sizing: border-box;">
+          </div>
+
+          <!-- 3. Alamat Kirim / Catatan -->
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              Alamat Pengiriman / Catatan Khusus
+            </label>
+            <textarea id="checkoutCustAddress" class="form-input" rows="3" placeholder="Alamat lengkap pengiriman atau catatan khusus ukuran/warna..." style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
+          </div>
+
+          <!-- 4. Pilihan Pembayaran -->
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              Metode Pembayaran <span style="color: #ef4444;">*</span>
+            </label>
+            <select id="checkoutPaymentMethod" class="form-input" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; background: #ffffff; box-sizing: border-box;">
+              <option value="Transfer Bank BCA (Ac. 0223142807 a/n Vicky Gaya Galani)">Transfer Bank BCA (Ac. 0223142807 a/n Vicky Gaya Galani)</option>
+              <option value="QRIS / E-Wallet (GoPay, OVO, ShopeePay, DANA)">QRIS / E-Wallet Instant</option>
+              <option value="Bayar Tunai di Butik V&T (Kasir)">Bayar Tunai di Butik V&T (Kasir)</option>
+              <option value="COD / Bayar di Tempat">COD / Bayar di Tempat</option>
+            </select>
+          </div>
+
+          <!-- Tombol Aksi -->
+          <div style="display: flex; gap: 8px; margin-top: 18px;">
+            <button type="button" class="btn-secondary" onclick="closeCheckoutInputModal()" style="flex: 1; padding: 10px; font-weight: 600;">
+              Batal
+            </button>
+            <button type="submit" id="btnSubmitCheckoutOrder" class="btn-primary" style="flex: 2; padding: 10px; font-weight: 700; background: #e11d48; border-color: #e11d48;">
+              ✅ Konfirmasi Pesanan & Cetak Struk
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <div class="modal-overlay" id="customerReceiptModal" onclick="if(event.target === this) closeCustomerReceiptModal()">
     <div class="bottom-sheet" style="max-width: 520px; background: #ffffff;">
@@ -9110,6 +9194,7 @@
         }
         try { if (typeof renderOrdersTabs === "function") renderOrdersTabs(); } catch (e) { console.error(e); }
         try { if (typeof renderOrdersView === "function") renderOrdersView(); } catch (e) { console.error(e); }
+        try { if (typeof fetchOrdersFromBackend === "function") fetchOrdersFromBackend(); } catch (e) { }
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else if (tab === "checkout") {
         const vco = document.getElementById("viewCheckout");
@@ -11945,6 +12030,35 @@
 
     function openCustomerReceiptModal(orderData) {
       let order = orderData;
+      if (order && (!Array.isArray(order.items) || order.items.length === 0)) {
+        if (order.rincianItem) {
+          order.items = String(order.rincianItem).split(";").map(str => {
+            const trimmed = str.trim();
+            const qtyMatch = trimmed.match(/x\s*(\d+)/i);
+            const qty = qtyMatch ? parseInt(qtyMatch[1], 10) : 1;
+            const priceMatch = trimmed.match(/@Rp\s*([0-9.,]+)/i);
+            const price = priceMatch ? parseInt(priceMatch[1].replace(/[.,]/g, ""), 10) : 0;
+            const namePart = trimmed.split(/\sx\d+/i)[0].trim();
+            return {
+              nama: namePart || "Produk Butik V&T",
+              sku: "SKU-VT",
+              varian: "All Size",
+              qty: qty,
+              hargaSatuan: price || Math.round((order.totalBayar || order.grandTotal || 0) / qty),
+              subtotal: (price ? price * qty : (order.totalBayar || order.grandTotal)) || 0
+            };
+          });
+        } else {
+          order.items = [{
+            nama: "Pesanan " + (order.orderId || "V&T"),
+            sku: "SKU-VT",
+            varian: "Standard",
+            qty: order.totalItem || 1,
+            hargaSatuan: order.totalBayar || order.grandTotal || 0,
+            subtotal: order.totalBayar || order.grandTotal || 0
+          }];
+        }
+      }
       if (!order) {
         // Jika tidak ada data spesifik, bangun struk dari item keranjang yang dicentang
         if (state.cart && state.cart.length > 0) {
@@ -12436,8 +12550,11 @@
                   <div class="order-meta-label">Total Bayar</div>
                   <div class="order-total-price">Rp${total.toLocaleString('id-ID')}</div>
                 </div>
-                <div>
-                  <a class="order-detail-link" onclick="openOrderDetailModal('${order.orderId}')">Lihat Detail</a>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; align-items: center; margin-top: 6px;">
+                  <button type="button" class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #0284c7; border-color: #bae6fd; background: #f0f9ff; display: inline-flex; align-items: center; gap: 4px; border-radius: 4px; cursor: pointer;" onclick="printOrderReceiptById('${order.orderId}')" title="Cetak Struk Pesanan">
+                    🧾 Cetak Struk
+                  </button>
+                  <a class="order-detail-link" onclick="openOrderDetailModal('${order.orderId}')" style="cursor: pointer;">Lihat Detail</a>
                 </div>
               </div>
             </div>
@@ -12556,6 +12673,9 @@
               💳 Bayar BCA Sekarang
             </button>
           ` : ''}
+          <button class="btn-primary" style="background: #0284c7; border-color: #0284c7; padding: 8px 14px; font-size: 0.85rem;" onclick="printOrderReceiptById('${order.orderId}')">
+            🧾 Cetak Struk Pelanggan
+          </button>
           <button class="btn-secondary" style="padding: 8px 14px; font-size: 0.85rem;" onclick="openPoModal(${orderJson})">
             📑 Buka Purchase Order (PO)
           </button>
@@ -12919,22 +13039,252 @@
       }
     }
 
+    function openCheckoutInputModal() {
+      if (!state.cart || state.cart.length === 0) {
+        showToast("⚠️ Keranjang belanja masih kosong!");
+        return;
+      }
+
+      // Hitung ringkasan item & total
+      const checkedItems = (state.cart || []).filter(it => it.checked !== false);
+      const itemsToUse = checkedItems.length > 0 ? checkedItems : state.cart;
+      let totalQty = 0;
+      let grandTotal = 0;
+
+      const itemListHtml = itemsToUse.map((it, idx) => {
+        const qty = Number(it.qty) || 1;
+        const price = getCartItemPrice(it);
+        const sub = price * qty;
+        totalQty += qty;
+        grandTotal += sub;
+        return `<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+          <span>${idx + 1}. ${it.nama} (x${qty})</span>
+          <b>Rp${formatRupiah(sub)}</b>
+        </div>`;
+      }).join("");
+
+      const countEl = document.getElementById("checkoutModalItemCount");
+      const totalEl = document.getElementById("checkoutModalGrandTotal");
+      const listEl = document.getElementById("checkoutModalItemList");
+
+      if (countEl) countEl.innerText = `${totalQty} Barang (${itemsToUse.length} Item)`;
+      if (totalEl) totalEl.innerText = `Rp${formatRupiah(grandTotal)}`;
+      if (listEl) listEl.innerHTML = itemListHtml;
+
+      // Pre-fill user data if available
+      const nameInput = document.getElementById("checkoutCustName");
+      const phoneInput = document.getElementById("checkoutCustPhone");
+      const addrInput = document.getElementById("checkoutCustAddress");
+
+      if (nameInput && !nameInput.value) {
+        if (state.currentUser && state.currentUser.name && state.currentUser.name !== "Masuk" && state.currentUser.name !== "PELANGGAN:TAMU") {
+          nameInput.value = state.currentUser.name;
+        } else {
+          nameInput.value = "Gaya Murty";
+        }
+      }
+      if (phoneInput && !phoneInput.value) {
+        if (state.currentUser && state.currentUser.phone) {
+          phoneInput.value = state.currentUser.phone;
+        } else {
+          phoneInput.value = "08116072491";
+        }
+      }
+      if (addrInput && !addrInput.value) {
+        if (Array.isArray(state.userAddresses) && state.userAddresses.length > 0) {
+          const a = state.userAddresses[0];
+          addrInput.value = `${a.alamat || ''}, ${a.kotaKecamatan || ''} - ${a.kodePos || ''}`.trim();
+        } else {
+          addrInput.value = "Jl. Jenggala No.71, Kel. Madras Hulu, Medan Polonia";
+        }
+      }
+
+      const modal = document.getElementById("checkoutInputModal");
+      if (modal) {
+        modal.style.setProperty("display", "flex", "important");
+        modal.style.zIndex = "99990";
+      }
+    }
+
+    function closeCheckoutInputModal() {
+      const modal = document.getElementById("checkoutInputModal");
+      if (modal) modal.style.display = "none";
+    }
+
+    function submitCheckoutOrder() {
+      const nameInput = document.getElementById("checkoutCustName");
+      const phoneInput = document.getElementById("checkoutCustPhone");
+      const addrInput = document.getElementById("checkoutCustAddress");
+      const paySelect = document.getElementById("checkoutPaymentMethod");
+
+      const custName = (nameInput ? nameInput.value : "").trim();
+      const custPhone = (phoneInput ? phoneInput.value : "").trim();
+      const custAddr = (addrInput ? addrInput.value : "").trim();
+      const payMethod = paySelect ? paySelect.value : "Transfer Bank BCA (Ac. 0223142807 a/n Vicky Gaya Galani)";
+
+      if (!custName) {
+        showToast("⚠️ Mohon isi Nama Lengkap Pemesan!");
+        if (nameInput) nameInput.focus();
+        return;
+      }
+      if (!custPhone) {
+        showToast("⚠️ Mohon isi No. WhatsApp Pemesan!");
+        if (phoneInput) phoneInput.focus();
+        return;
+      }
+
+      const checkedItems = (state.cart || []).filter(it => it.checked !== false);
+      const itemsToUse = checkedItems.length > 0 ? checkedItems : state.cart;
+      if (!itemsToUse || itemsToUse.length === 0) {
+        showToast("⚠️ Keranjang belanja masih kosong!");
+        return;
+      }
+
+      const now = new Date();
+      const ymd = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+      const randNum = Math.floor(100 + Math.random() * 900);
+      const tempOrderId = "ORD-" + ymd + "-" + randNum;
+      const dateFormatted = now.toLocaleDateString("id-ID") + ", " + now.toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' }) + " WIB";
+
+      let totalBelanja = 0;
+      let totalQty = 0;
+      const orderItems = itemsToUse.map(it => {
+        const p = getCartItemPrice(it);
+        const q = Number(it.qty) || 1;
+        const sub = p * q;
+        totalQty += q;
+        totalBelanja += sub;
+        return {
+          id: it.id || it.idProduk || it.sku,
+          sku: it.sku || it.id || "SKU-VT",
+          nama: it.nama,
+          varian: `${it.ukuran || 'All Size'} / ${it.warna || 'Standard'}`,
+          hargaSatuan: p,
+          qty: q,
+          subtotal: sub,
+          fotoUrl: it.fotoUrl || 'assets/card1_website.jpg'
+        };
+      });
+
+      const orderData = {
+        orderId: tempOrderId,
+        tanggal: dateFormatted,
+        customerName: custName,
+        nama: custName,
+        namaPelanggan: custName,
+        customerPhone: custPhone,
+        noWhatsApp: custPhone,
+        wa: custPhone,
+        alamatKirim: custAddr || "Ambil di Butik / Dikirim",
+        catatan: custAddr || "-",
+        alamat: custAddr || "-",
+        paymentMethod: payMethod,
+        metodeBayar: payMethod,
+        status: "DIPROSES",
+        statusLabel: "Diproses",
+        statusBayar: "Lunas / Konfirmasi",
+        statusOrder: "Diproses",
+        items: orderItems,
+        itemCount: totalQty,
+        totalItem: totalQty,
+        subtotal: totalBelanja,
+        grandTotal: totalBelanja,
+        totalBayar: totalBelanja,
+        totalBelanja: totalBelanja,
+        petugas: (state.currentUser && state.currentUser.name && state.currentUser.name !== "Masuk") ? state.currentUser.name : "Web Butik V&T",
+        storeName: "Butik V&T PAC Medan"
+      };
+
+      // Simpan ke Google Sheets via GAS
+      if (typeof google !== "undefined" && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res && res.success) {
+              if (res.orderId) {
+                orderData.orderId = res.orderId;
+                const numEl = document.getElementById("custReceiptOrderNum");
+                if (numEl) numEl.innerText = res.orderId;
+              }
+              showToast("✅ Pesanan " + orderData.orderId + " berhasil dicatat di sheet PESANAN!");
+              fetchOrdersFromBackend();
+            } else {
+              console.warn("GAS simpanPesanan response:", res);
+            }
+          })
+          .withFailureHandler(function (err) {
+            console.warn("GAS simpanPesanan error:", err);
+          })
+          .simpanPesanan(orderData);
+      }
+
+      // Kosongkan keranjang belanja
+      state.cart = [];
+      try { if (typeof saveCartToStorage === "function") saveCartToStorage(); } catch (e) { }
+      try { if (typeof updateCartBadge === "function") updateCartBadge(); } catch (e) { }
+      try { if (typeof renderCartView === "function") renderCartView(); } catch (e) { }
+
+      // Tambahkan ke state.orders lokal
+      if (!Array.isArray(state.orders)) state.orders = [];
+      state.orders.unshift(orderData);
+      try { if (typeof renderOrdersTabs === "function") renderOrdersTabs(); } catch (e) { }
+      try { if (typeof renderOrdersView === "function") renderOrdersView(); } catch (e) { }
+
+      // Tutup modal checkout & buka struk resmi customer
+      closeCheckoutInputModal();
+      closeCartModal();
+      openCustomerReceiptModal(orderData);
+      showToast("🎉 Pesanan berhasil dikonfirmasi! Struk pembelian siap dicetak.");
+    }
+
+    function printOrderReceiptById(orderId) {
+      const order = (state.orders || []).find(o => o.orderId === orderId);
+      if (!order) {
+        showToast("⚠️ Pesanan tidak ditemukan!");
+        return;
+      }
+      openCustomerReceiptModal(order);
+    }
+
+    function fetchOrdersFromBackend() {
+      if (typeof google !== "undefined" && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res && res.success && Array.isArray(res.list) && res.list.length > 0) {
+              const existingIds = new Set((state.orders || []).map(o => o.orderId));
+              const newOrders = [];
+              res.list.forEach(item => {
+                if (!existingIds.has(item.orderId)) {
+                  newOrders.push(item);
+                } else {
+                  const target = state.orders.find(o => o.orderId === item.orderId);
+                  if (target) {
+                    target.status = item.status || target.status;
+                    target.statusLabel = item.statusLabel || target.statusLabel;
+                    target.statusBayar = item.statusBayar || target.statusBayar;
+                  }
+                }
+              });
+              if (newOrders.length > 0) {
+                state.orders = [...newOrders, ...state.orders];
+              }
+              if (typeof renderOrdersTabs === "function") renderOrdersTabs();
+              if (typeof renderOrdersView === "function") renderOrdersView();
+            }
+          })
+          .withFailureHandler(function (err) {
+            console.warn("GAS getDaftarPesanan error:", err);
+          })
+          .getDaftarPesanan();
+      }
+    }
+
     function handleCartCheckoutAction() {
-      const checkedItems = (state.cart || []).filter(it => it.checked === true);
-      if (checkedItems.length === 0) {
+      const checkedItems = (state.cart || []).filter(it => it.checked !== false);
+      if (!checkedItems || checkedItems.length === 0) {
         showCartWarningBanner("Produk wajib dipilih");
         return;
       }
-
-      // Jika produk sudah dipilih dan user belum login (customer baru / guest)
-      if (!state.currentUser || state.currentUser.role === "GUEST" || state.currentUser.name === "Masuk") {
-        showToast("Silakan Masuk atau Daftar akun untuk melanjutkan checkout.");
-        openAuthModal('login');
-        return;
-      }
-
-      // BUKA HALAMAN CHECKOUT / PEMESANAN (GAMBAR 2 & 3)
-      switchTab('checkout');
+      openCheckoutInputModal();
     }
 
 
@@ -15185,6 +15535,11 @@
       w.closeCustomerReceiptModal = typeof closeCustomerReceiptModal === 'function' ? closeCustomerReceiptModal : function () { };
       w.printCustomerReceipt = typeof printCustomerReceipt === 'function' ? printCustomerReceipt : function () { };
       w.sendCustomerReceiptToWhatsApp = typeof sendCustomerReceiptToWhatsApp === 'function' ? sendCustomerReceiptToWhatsApp : function () { };
+      w.openCheckoutInputModal = typeof openCheckoutInputModal === 'function' ? openCheckoutInputModal : function () { };
+      w.closeCheckoutInputModal = typeof closeCheckoutInputModal === 'function' ? closeCheckoutInputModal : function () { };
+      w.submitCheckoutOrder = typeof submitCheckoutOrder === 'function' ? submitCheckoutOrder : function () { };
+      w.printOrderReceiptById = typeof printOrderReceiptById === 'function' ? printOrderReceiptById : function () { };
+      w.fetchOrdersFromBackend = typeof fetchOrdersFromBackend === 'function' ? fetchOrdersFromBackend : function () { };
       w.openCustomerInvoiceModal = typeof openCustomerInvoiceModal === 'function' ? openCustomerInvoiceModal : function () { };
       w.closeCustomerInvoiceModal = typeof closeCustomerInvoiceModal === 'function' ? closeCustomerInvoiceModal : function () { };
       w.selectInvoice = typeof selectInvoice === 'function' ? selectInvoice : function () { };
