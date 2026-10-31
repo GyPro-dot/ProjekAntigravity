@@ -6992,7 +6992,7 @@
             👑 Hak Akses Eksklusif: SUPER ADMIN (ADMIN-G / PINKY)
           </div>
         </div>
-        <button type="button" class="icon-btn" onclick="closeKelolaPetugasModal()" style="border:none; font-size: 1.25rem; cursor: pointer;">✕</button>
+        <button type="button" class="icon-btn" onclick="window.handleDirectCloseModal(this, event)" style="border:none; font-size: 1.25rem; cursor: pointer;">✕</button>
       </div>
       <div class="sheet-body" style="padding: 16px; max-height: 75vh; overflow-y: auto;">
         <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
@@ -7049,7 +7049,7 @@
         </div>
       </div>
       <div class="sheet-footer" style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--border); background: #fdfafb;">
-        <button type="button" class="btn-secondary" onclick="closeKelolaPetugasModal()" style="cursor: pointer;">Tutup</button>
+        <button type="button" class="btn-secondary" onclick="window.handleDirectCloseModal(this, event)" style="cursor: pointer;">Tutup</button>
         <button type="button" class="btn-primary" onclick="submitTambahPetugas()" style="cursor: pointer;">💾 Simpan Akun Petugas</button>
       </div>
     </div>
@@ -7067,7 +7067,7 @@
             🛡️ Otoritas: SUPER ADMIN, ADMIN & OPERATOR (ADMIN-G)
           </div>
         </div>
-        <button type="button" class="icon-btn" onclick="window.forceCloseAllModals()" style="border:none; font-size: 1.25rem; cursor: pointer;">✕</button>
+        <button type="button" class="icon-btn" onclick="window.handleDirectCloseModal(this, event)" style="border:none; font-size: 1.25rem; cursor: pointer;">✕</button>
       </div>
       <div class="sheet-body" style="padding: 16px; max-height: 75vh; overflow-y: auto;">
         <input type="hidden" id="prodModalId">
@@ -7158,7 +7158,7 @@
           🗑️ Hapus Produk
         </button>
         <div style="display: flex; gap: 8px; margin-left: auto;">
-          <button type="button" class="btn-secondary" onclick="window.forceCloseAllModals()" style="cursor: pointer;">Batal</button>
+          <button type="button" class="btn-secondary" onclick="window.handleDirectCloseModal(this, event)" style="cursor: pointer;">Batal</button>
           <button type="button" class="btn-primary" id="btnSimpanProduk" data-action="save-product" onclick="window.handleDirectSaveProduct(this, event)" style="cursor: pointer; background: var(--primary); border-color: var(--primary); font-weight: 700; padding: 8px 16px;">💾 Simpan Produk</button>
         </div>
       </div>
@@ -7170,7 +7170,7 @@
     <div class="bottom-sheet" style="max-width: 520px;">
       <div class="sheet-header">
         <span class="sheet-title">Input Stock Barang Baru (Operator / Admin)</span>
-        <button class="icon-btn" onclick="closeOperatorInputModal()" style="border:none;">✕</button>
+        <button type="button" class="icon-btn" onclick="window.handleDirectCloseModal(this, event)" style="border:none; font-size: 1.25rem; cursor: pointer;">✕</button>
       </div>
       <div class="sheet-body">
 
@@ -7316,7 +7316,7 @@
             🛡️ Wewenang: ADMIN & OPERATOR
           </div>
         </div>
-        <button class="icon-btn" onclick="closeEditProductModal()" style="border:none; font-size: 1.25rem;">✕</button>
+        <button type="button" class="icon-btn" onclick="window.handleDirectCloseModal(this, event)" style="border:none; font-size: 1.25rem; cursor: pointer;">✕</button>
       </div>
       <div class="sheet-body">
         <input type="hidden" id="editProdId">
@@ -7415,7 +7415,7 @@
           🗑️ Hapus Produk
         </button>
         <div style="display: flex; gap: 8px;">
-          <button class="btn-secondary" onclick="closeEditProductModal()">Batal</button>
+          <button type="button" class="btn-secondary" onclick="window.handleDirectCloseModal(this, event)" style="cursor: pointer;">Batal</button>
           <button class="btn-primary" onclick="saveProductEdit()">💾 Simpan Perubahan Foto & Data</button>
         </div>
       </div>
@@ -8268,7 +8268,7 @@
             <div style="font-size: 0.72rem; color: #64748b;">Lengkapi data pemesan untuk konfirmasi pesanan & cetak struk</div>
           </div>
         </div>
-        <button type="button" class="icon-btn" onclick="closeCheckoutInputModal()" style="border:none; font-size: 1.35rem; cursor: pointer;">✕</button>
+        <button type="button" class="icon-btn" onclick="window.handleDirectCloseModal(this, event)" style="border:none; font-size: 1.35rem; cursor: pointer;">✕</button>
       </div>
 
       <div class="sheet-body" style="padding: 16px 18px; max-height: 75vh; overflow-y: auto;">
@@ -8326,7 +8326,7 @@
 
           <!-- Tombol Aksi -->
           <div style="display: flex; gap: 8px; margin-top: 18px;">
-            <button type="button" class="btn-secondary" onclick="closeCheckoutInputModal()" style="flex: 1; padding: 10px; font-weight: 600;">
+            <button type="button" class="btn-secondary" onclick="window.handleDirectCloseModal(this, event)" style="flex: 1; padding: 10px; font-weight: 600;">
               Batal
             </button>
             <button type="submit" id="btnSubmitCheckoutOrder" class="btn-primary" style="flex: 2; padding: 10px; font-weight: 700; background: #e11d48; border-color: #e11d48;">
@@ -15722,6 +15722,7 @@
       w.saveProductFromModal = typeof saveProductFromModal === 'function' ? saveProductFromModal : function () { };
       w.executeSaveProduct = typeof executeSaveProduct === 'function' ? executeSaveProduct : function () { };
       w.forceCloseAllModals = typeof forceCloseAllModals === 'function' ? forceCloseAllModals : function () { };
+      w.handleDirectCloseModal = typeof handleDirectCloseModal === 'function' ? handleDirectCloseModal : function () { };
       w.loadDaftarProduk = typeof loadDaftarProduk === 'function' ? loadDaftarProduk : function () { };
       w.handleProductModalUpload = typeof handleProductModalUpload === 'function' ? handleProductModalUpload : function () { };
       w.handleDeleteProductAction = typeof handleDeleteProductAction === 'function' ? handleDeleteProductAction : function () { };
@@ -15776,6 +15777,77 @@
     if (typeof Assistant === "undefined") {
       var Assistant = typeof window !== "undefined" ? window.Assistant : {};
     }
+
+    // ==========================================================
+    // GLOBAL DIRECT HANDLER UNTUK TOMBOL "BATAL" & "✕" CLOSE MODAL
+    // ==========================================================
+    window.handleDirectCloseModal = function (btnEl, event) {
+      if (event) {
+        if (typeof event.preventDefault === "function") event.preventDefault();
+        if (typeof event.stopPropagation === "function") event.stopPropagation();
+        if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+      }
+
+      // 1. Telusuri elemen ke atas dari btnEl untuk menemukan pembungkus modal terluar
+      if (btnEl && typeof btnEl.closest === "function") {
+        const directOverlay = btnEl.closest('.modal-overlay, .modal-backdrop, [id*="Modal"], [id*="modal"], [class*="overlay"]');
+        if (directOverlay) {
+          directOverlay.style.setProperty('display', 'none', 'important');
+          directOverlay.style.setProperty('visibility', 'hidden', 'important');
+          directOverlay.style.setProperty('opacity', '0', 'important');
+          directOverlay.style.setProperty('pointer-events', 'none', 'important');
+        }
+      }
+
+      // 2. Cari semua elemen overlay/backdrop modal di seluruh dokumen dan sembunyikan pembungkus terluar
+      const allModals = document.querySelectorAll('[id*="Modal"], [id*="modal"], .modal-overlay, .modal-backdrop, [class*="overlay"]');
+      allModals.forEach(overlay => {
+        if (overlay.classList.contains("modal-overlay") || 
+            overlay.classList.contains("modal-backdrop") || 
+            (overlay.id && overlay.id.toLowerCase().includes("modal"))) {
+          overlay.style.setProperty('display', 'none', 'important');
+          overlay.style.setProperty('visibility', 'hidden', 'important');
+          overlay.style.setProperty('opacity', '0', 'important');
+          overlay.style.setProperty('pointer-events', 'none', 'important');
+
+          // Reset elemen kartu putih di dalamnya TANPA merusak display agar modal tetap bisa dibuka kembali
+          const innerCards = overlay.querySelectorAll('.bottom-sheet, .modal-content, .modal-card, .detail-dialog-wrap, form');
+          innerCards.forEach(card => {
+            card.style.removeProperty('display');
+            card.style.setProperty('opacity', '1', 'important');
+            card.style.setProperty('visibility', 'visible', 'important');
+            card.style.setProperty('pointer-events', 'auto', 'important');
+          });
+        }
+      });
+
+      // 3. Bersihkan seluruh efek blur dan penguncian layar pada body & documentElement
+      if (document.body) {
+        document.body.classList.remove('modal-open', 'blur', 'overflow-hidden', 'has-modal-open');
+        document.body.style.setProperty('filter', 'none', 'important');
+        document.body.style.setProperty('backdrop-filter', 'none', 'important');
+        document.body.style.setProperty('overflow', 'auto', 'important');
+        document.body.style.setProperty('pointer-events', 'auto', 'important');
+      }
+      if (document.documentElement) {
+        document.documentElement.classList.remove('modal-open', 'blur', 'overflow-hidden', 'has-modal-open');
+        document.documentElement.style.setProperty('filter', 'none', 'important');
+        document.documentElement.style.setProperty('backdrop-filter', 'none', 'important');
+        document.documentElement.style.setProperty('overflow', 'auto', 'important');
+        document.documentElement.style.setProperty('pointer-events', 'auto', 'important');
+      }
+
+      // 4. Bersihkan kontainer utama dan bingkai preview
+      const mainWrappers = document.querySelectorAll('#app, .app-container, .main-layout, .device-screen, .preview-frame');
+      mainWrappers.forEach(el => {
+        el.style.setProperty('filter', 'none', 'important');
+        el.style.setProperty('backdrop-filter', 'none', 'important');
+        el.style.setProperty('pointer-events', 'auto', 'important');
+      });
+    };
+
+    window.forceCloseAllModals = window.handleDirectCloseModal;
+    window.closeProductModal = window.handleDirectCloseModal;
 
     // ==========================================================
     // GLOBAL DIRECT HANDLER UNTUK TOMBOL "SIMPAN PRODUK"
@@ -16028,16 +16100,25 @@
         const target = e.target;
         if (!target || !(target instanceof Element)) return;
 
-        // A. Deteksi tombol X, Batal, atau tombol close modal
-        const isCloseBtn = target.closest("button.icon-btn, button.close-btn, [data-close-modal], [onclick*='closeProductModal'], [onclick*='forceCloseAllModals']") ||
-                           (target.tagName === "BUTTON" && (target.textContent.trim() === "✕" || target.textContent.trim() === "Batal"));
-        if (isCloseBtn) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof window.forceCloseAllModals === "function") {
-            window.forceCloseAllModals();
+        // A. Deteksi tombol X, Batal, atau tombol close modal (dengan teks Batal, ✕, ×, X, atau aria-label="Close")
+        const targetCloseBtn = target.closest('button, [role="button"], .close, .icon-btn, .close-btn, [data-close-modal], [onclick*="handleDirectCloseModal"], [onclick*="forceCloseAllModals"], [onclick*="closeProductModal"]');
+        if (targetCloseBtn) {
+          const txt = (targetCloseBtn.textContent || "").trim();
+          const ariaLabel = (targetCloseBtn.getAttribute("aria-label") || "").toLowerCase();
+          const isCloseMatch = txt === "Batal" || txt === "✕" || txt === "×" || txt === "X" ||
+                               ariaLabel === "close" ||
+                               targetCloseBtn.matches("[data-close-modal], [onclick*='handleDirectCloseModal'], [onclick*='forceCloseAllModals'], .icon-btn, .close-btn");
+          if (isCloseMatch) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+            if (typeof window.handleDirectCloseModal === "function") {
+              window.handleDirectCloseModal(targetCloseBtn, e);
+            } else if (typeof window.forceCloseAllModals === "function") {
+              window.forceCloseAllModals();
+            }
+            return;
           }
-          return;
         }
 
         // B. Deteksi klik tepat pada area luar backdrop overlay (efek blur)
