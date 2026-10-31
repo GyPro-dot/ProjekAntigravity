@@ -1,3 +1,8 @@
+// Safe guard for Google Apps Script GitHub Assistant
+if (typeof Assistant === 'undefined') {
+  var Assistant = {};
+}
+
 /**
  * ============================================================================
  * PAC (Pink ACcessories) - Indian Fashion & Accessories

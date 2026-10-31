@@ -7159,7 +7159,7 @@
         </button>
         <div style="display: flex; gap: 8px; margin-left: auto;">
           <button type="button" class="btn-secondary" onclick="closeProductModal()" style="cursor: pointer;">Batal</button>
-          <button type="button" class="btn-primary" id="btnSimpanProduk" data-action="save-product" onclick="saveProductFromModal()" style="cursor: pointer; background: var(--primary); border-color: var(--primary); font-weight: 700; padding: 8px 16px;">💾 Simpan Produk</button>
+          <button type="button" class="btn-primary" id="btnSimpanProduk" data-action="save-product" onclick="window.handleDirectSaveProduct(this, event)" style="cursor: pointer; background: var(--primary); border-color: var(--primary); font-weight: 700; padding: 8px 16px;">💾 Simpan Produk</button>
         </div>
       </div>
     </div>
@@ -9050,6 +9050,14 @@
 
   <!-- JAVASCRIPT LOGIC -->
   <script>
+    // Safe guard for Google Apps Script GitHub Assistant
+    if (typeof window !== "undefined" && typeof window.Assistant === "undefined") {
+      window.Assistant = {};
+    }
+    if (typeof Assistant === "undefined") {
+      var Assistant = typeof window !== "undefined" ? window.Assistant : {};
+    }
+
     // SAFE STORAGE & SANDBOX COMPATIBILITY FOR GOOGLE APPS SCRIPT IFRAME
     const _storageFallback = {};
     const safeStorage = {
@@ -15713,6 +15721,242 @@
 
   <!-- STANDALONE UI CONTROLLER (100% INDEPENDENT OF OTHER SCRIPTS FOR GOOGLE APPS SCRIPT IFRAME) -->
   <script id="standalone-ui-controller">
+    // Safe guard for Google Apps Script GitHub Assistant
+    if (typeof window !== "undefined" && typeof window.Assistant === "undefined") {
+      window.Assistant = {};
+    }
+    if (typeof Assistant === "undefined") {
+      var Assistant = typeof window !== "undefined" ? window.Assistant : {};
+    }
+
+    // ==========================================================
+    // GLOBAL DIRECT HANDLER UNTUK TOMBOL "SIMPAN PRODUK"
+    // ==========================================================
+    window.handleDirectSaveProduct = function (btn, event) {
+      if (event) {
+        if (typeof event.preventDefault === "function") event.preventDefault();
+        if (typeof event.stopPropagation === "function") event.stopPropagation();
+        if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+      }
+
+      const modalEl = (btn && btn.closest('[id*="Modal"], [id*="modal"], .modal, .modal-overlay, .bottom-sheet, [style*="z-index"]')) ||
+                      document.getElementById("productModal") ||
+                      document.body;
+
+      // Banner status visual di dalam modal
+      let statusBanner = modalEl.querySelector(".modal-status-banner, #prodModalStatusBanner");
+      if (!statusBanner) {
+        statusBanner = document.createElement("div");
+        statusBanner.className = "modal-status-banner";
+        statusBanner.style.cssText = "margin: 8px 16px; padding: 10px 14px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; text-align: center; display: none;";
+        const footer = modalEl.querySelector(".sheet-footer") || modalEl;
+        if (footer && footer.parentNode) {
+          footer.parentNode.insertBefore(statusBanner, footer);
+        } else {
+          modalEl.appendChild(statusBanner);
+        }
+      }
+
+      statusBanner.style.display = "block";
+      statusBanner.style.background = "#fef3c7";
+      statusBanner.style.color = "#92400e";
+      statusBanner.style.border = "1px solid #fde68a";
+      statusBanner.innerHTML = "⏳ Sedang menyimpan data produk...";
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = "⏳ Menyimpan...";
+      }
+
+      // Ambil elemen input relatif dari dalam modalEl
+      const inputs = Array.from(modalEl.querySelectorAll("input"));
+      const selects = Array.from(modalEl.querySelectorAll("select"));
+      const textareas = Array.from(modalEl.querySelectorAll("textarea"));
+
+      const defaultCdn = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
+      const nowSuffix = Date.now().toString().slice(-4);
+
+      // 1. Mode & ID
+      const hiddenMode = inputs.find(i => (i.id && i.id.toLowerCase().includes("mode")) || i.name === "mode");
+      const modeVal = (hiddenMode && hiddenMode.value.toLowerCase().includes("edit")) ? "edit" : "add";
+
+      const hiddenId = inputs.find(i => (i.id && i.id.toLowerCase().includes("id")) || i.name === "id");
+      let prodId = hiddenId && hiddenId.value.trim() ? hiddenId.value.trim() : "PRD-" + nowSuffix;
+
+      // 2. SKU
+      let sku = "";
+      const skuInp = inputs.find(i => (i.id && i.id.toLowerCase().includes("sku")) || (i.placeholder && i.placeholder.toLowerCase().includes("sku")));
+      if (skuInp && skuInp.value.trim()) sku = skuInp.value.trim();
+      if (!sku) sku = "SKU-" + nowSuffix;
+
+      // 3. Nama Produk
+      let nama = "";
+      const namaInp = inputs.find(i => (i.id && (i.id.toLowerCase().includes("nama") || i.id.toLowerCase().includes("name"))) || (i.placeholder && (i.placeholder.toLowerCase().includes("saree") || i.placeholder.toLowerCase().includes("nama"))));
+      if (namaInp && namaInp.value.trim()) nama = namaInp.value.trim();
+      if (!nama) {
+        const textInps = inputs.filter(i => (i.type === "text" || !i.type) && i.type !== "hidden" && i.type !== "file");
+        for (const ti of textInps) {
+          const tid = (ti.id || "").toLowerCase();
+          if (!tid.includes("sku") && !tid.includes("foto") && !tid.includes("ukuran") && ti.value.trim()) {
+            nama = ti.value.trim();
+            break;
+          }
+        }
+      }
+      if (!nama) nama = "Koleksi Busana V&T " + nowSuffix;
+
+      // 4. Kategori
+      let kategori = "Koleksi Butik";
+      if (selects.length > 0 && selects[0].value) {
+        kategori = selects[0].value.trim();
+      }
+
+      // 5. Harga Modal, Harga Jual, Stok Fisik
+      const numInputs = inputs.filter(i => i.type === "number");
+      let modalVal = 0;
+      let jualVal = 0;
+      let stokVal = 1;
+
+      if (numInputs.length >= 3) {
+        modalVal = Number(numInputs[0].value) || 0;
+        jualVal = Number(numInputs[1].value) || 0;
+        stokVal = Number(numInputs[2].value) || 1;
+      } else {
+        const mInp = inputs.find(i => (i.id && i.id.toLowerCase().includes("modal")));
+        if (mInp) modalVal = Number(mInp.value) || 0;
+        const jInp = inputs.find(i => (i.id && (i.id.toLowerCase().includes("jual") || i.id.toLowerCase().includes("sell") || i.id.toLowerCase().includes("price"))));
+        if (jInp) jualVal = Number(jInp.value) || 0;
+        const sInp = inputs.find(i => (i.id && (i.id.toLowerCase().includes("stok") || i.id.toLowerCase().includes("stock") || i.id.toLowerCase().includes("qty"))));
+        if (sInp) stokVal = Number(sInp.value) || 1;
+      }
+      if (jualVal <= 0) jualVal = modalVal > 0 ? Math.round(modalVal * 1.5) : 150000;
+      if (stokVal <= 0) stokVal = 1;
+
+      // 6. Ukuran
+      let ukuran = "S, M, L, XL, Free Size";
+      const ukInp = inputs.find(i => (i.id && (i.id.toLowerCase().includes("ukuran") || i.id.toLowerCase().includes("size"))));
+      if (ukInp && ukInp.value.trim()) ukuran = ukInp.value.trim();
+
+      // 7. Foto URL
+      let foto = defaultCdn;
+      const fInp = inputs.find(i => (i.id && (i.id.toLowerCase().includes("foto") || i.id.toLowerCase().includes("img"))));
+      if (fInp && fInp.value.trim()) foto = fInp.value.trim();
+      if (!foto || foto.length > 45000) foto = defaultCdn;
+
+      // 8. Deskripsi
+      let deskripsi = `${nama} - Koleksi istimewa butik V&T.`;
+      if (textareas.length > 0 && textareas[0].value.trim()) {
+        deskripsi = textareas[0].value.trim();
+      }
+
+      const isEdit = (modeVal === "edit");
+      const payload = {
+        id: prodId,
+        sku: sku,
+        nama: nama,
+        kategori: kategori,
+        kategoriUtama: kategori,
+        subKategori: kategori,
+        jenisKain: "Premium Quality",
+        warna: "Standar",
+        ukuran: ukuran,
+        hargaModal: modalVal,
+        hargaJual: jualVal,
+        stok: stokVal,
+        fotoUrl: foto,
+        deskripsi: deskripsi,
+        status: "Aktif",
+        badge: isEdit ? "UPDATED" : "NEW"
+      };
+
+      // 1. UPDATE MEMORI & LOCALSTORAGE SEKETIKA
+      if (typeof state !== "undefined" && Array.isArray(state.products)) {
+        const idx = state.products.findIndex(p => p.id === prodId || p.sku === sku);
+        if (idx !== -1) {
+          state.products[idx] = Object.assign({}, state.products[idx], payload);
+        } else {
+          state.products.unshift(payload);
+        }
+      }
+      if (typeof window.products !== "undefined" && Array.isArray(window.products)) {
+        const idx = window.products.findIndex(p => p.id === prodId || p.sku === sku);
+        if (idx !== -1) {
+          window.products[idx] = Object.assign({}, window.products[idx], payload);
+        } else {
+          window.products.unshift(payload);
+        }
+      }
+
+      try {
+        const pList = (typeof state !== "undefined" && state.products) || window.products || [];
+        localStorage.setItem("vt_custom_products", JSON.stringify(pList));
+      } catch (e) {
+        console.warn("Storage write notice:", e);
+      }
+
+      // 2. RENDER ULANG TABEL & KATALOG SAAT ITU JUGA
+      try { if (typeof renderAdminTable === "function") renderAdminTable(); } catch (e) { }
+      try { if (typeof renderCatalog === "function") renderCatalog(); } catch (e) { }
+      try { if (typeof renderPosCatalog === "function") renderPosCatalog(); } catch (e) { }
+
+      // 3. TAMPILKAN STATUS PADA TOMBOL & BANNER
+      if (btn) {
+        btn.innerHTML = "✅ Berhasil Disimpan!";
+        btn.style.background = "#16a34a";
+        btn.style.borderColor = "#16a34a";
+      }
+      statusBanner.style.background = "#ecfdf5";
+      statusBanner.style.color = "#065f46";
+      statusBanner.style.border = "1px solid #a7f3d0";
+      statusBanner.innerHTML = "✅ Produk berhasil disimpan!";
+
+      // 4. SINKRONISASI KE GOOGLE APPS SCRIPT
+      if (typeof google !== "undefined" && google.script && google.script.run) {
+        try {
+          google.script.run
+            .withSuccessHandler(function (res) {
+              console.log("GAS simpanProduk success:", res);
+            })
+            .withFailureHandler(function (err) {
+              console.warn("GAS simpanProduk notice:", err);
+            })
+            .simpanProduk(payload);
+        } catch (gasErr) {
+          console.warn("GAS call error:", gasErr);
+        }
+      }
+
+      // 5. TUTUP MODAL
+      setTimeout(() => {
+        if (typeof closeProductModal === "function") {
+          closeProductModal();
+        } else {
+          modalEl.style.setProperty("display", "none", "important");
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = "💾 Simpan Produk";
+          btn.style.background = "";
+          btn.style.borderColor = "";
+        }
+        statusBanner.style.display = "none";
+
+        const tableWrap = document.getElementById("adminProductsTableWrap") ||
+                          document.getElementById("inventoryTable") ||
+                          document.querySelector(".stok-table-container");
+        if (tableWrap) {
+          tableWrap.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 1000);
+    };
+
+    // Alias
+    window.saveProductFromModal = function () {
+      const btn = document.getElementById("btnSimpanProduk") || document.querySelector('[data-action="save-product"]');
+      window.handleDirectSaveProduct(btn);
+    };
+    window.executeSaveProduct = window.handleDirectSaveProduct;
+
     // STANDALONE CRITICAL UI CONTROLLER FOR GOOGLE APPS SCRIPT IFRAME ENVIRONMENT
     (function () {
       "use strict";

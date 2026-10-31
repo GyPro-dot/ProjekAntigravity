@@ -6,6 +6,9 @@ env/
 
 # Scratch & Temporary Testing Files
 scratch/
+*.js
+*.py
+*.md
 *.log
 *.tmp
 *.temp
