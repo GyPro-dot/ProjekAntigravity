@@ -19,6 +19,7 @@ const COL_PRODUK = {
   SKU: 1,            // Kolom B: SkuBarcode
   NAMA: 2,           // Kolom C: NamaProduk
   KATEGORI_UTAMA: 3, // Kolom D: KategoriUtama (Wanita/Pria/Aksesoris/Wedding)
+  KATEGORI: 3,       // Kolom D: Kategori (Alias)
   SUB_KATEGORI: 4,   // Kolom E: SubKategori (Saree/Kurta/Sherwani/Anting/dll)
   JENIS_KAIN: 5,     // Kolom F: JenisKain (Sutra/Brokat/Chiffon/dll)
   WARNA: 6,          // Kolom G: VarianWarna
@@ -99,17 +100,28 @@ function getInitData() {
         var r = rowsProduk[i];
         var status = r[COL_PRODUK.STATUS] ? String(r[COL_PRODUK.STATUS]).trim() : "Aktif";
         if (status === "Aktif" || status === "") {
+          var rawFoto = String(r[COL_PRODUK.FOTO] || "").trim();
+          var fotoFinal = rawFoto;
+          if (!fotoFinal || fotoFinal.indexOf("googleusercontent.com") !== -1 || fotoFinal.indexOf("drive.google.com") !== -1) {
+            fotoFinal = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
+          } else if (fotoFinal.indexOf("assets/") === 0) {
+            fotoFinal = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/" + fotoFinal;
+          }
+
           var p = {
             id: String(r[COL_PRODUK.ID] || ""),
             sku: String(r[COL_PRODUK.SKU] || ""),
             nama: String(r[COL_PRODUK.NAMA] || ""),
-            kategori: String(r[COL_PRODUK.KATEGORI] || "Lainnya"),
+            kategori: String(r[COL_PRODUK.KATEGORI_UTAMA] || "Wanita"),
+            kategoriUtama: String(r[COL_PRODUK.KATEGORI_UTAMA] || "Wanita"),
+            subKategori: String(r[COL_PRODUK.SUB_KATEGORI] || "Koleksi Fashion"),
+            jenisKain: String(r[COL_PRODUK.JENIS_KAIN] || "Premium Quality"),
             warna: String(r[COL_PRODUK.WARNA] || ""),
             ukuran: String(r[COL_PRODUK.UKURAN] || ""),
             hargaModal: Number(r[COL_PRODUK.MODAL]) || 0,
             hargaJual: Number(r[COL_PRODUK.JUAL]) || 0,
             stok: Number(r[COL_PRODUK.STOK]) || 0,
-            fotoUrl: String(r[COL_PRODUK.FOTO] || ""),
+            fotoUrl: fotoFinal,
             deskripsi: String(r[COL_PRODUK.DESKRIPSI] || ""),
             status: status
           };
@@ -167,6 +179,7 @@ function getInitData() {
     return {
       success: true,
       produk: listProduk,
+      listProduk: listProduk,
       kategori: Object.keys(setKategori),
       pengaturan: settings,
       transaksiTerakhir: listTrx
@@ -330,17 +343,24 @@ function simpanProduk(data) {
   try {
     lock.waitLock(10000);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
     var sheet = ss.getSheetByName("DataProduk");
     if (!sheet) return { success: false, message: "Tab DataProduk tidak ditemukan." };
 
+    if (!data) return { success: false, message: "Data produk tidak boleh kosong." };
+
     var id = data.id ? String(data.id).trim() : "";
+    var sku = data.sku ? String(data.sku).trim() : "";
     var isEdit = false;
     var targetRow = -1;
 
-    if (id && sheet.getLastRow() > 1) {
-      var ids = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
-      for (var i = 0; i < ids.length; i++) {
-        if (String(ids[i][0]).trim() === id) {
+    // Cari baris berdasarkan ID atau SKU (Kolom A & B)
+    if (sheet.getLastRow() > 1) {
+      var range = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues();
+      for (var i = 0; i < range.length; i++) {
+        var rowId = String(range[i][0]).trim();
+        var rowSku = String(range[i][1]).trim();
+        if ((id && rowId === id) || (sku && rowSku === sku) || (id && rowSku === id) || (sku && rowId === sku)) {
           isEdit = true;
           targetRow = i + 2;
           break;
@@ -350,24 +370,45 @@ function simpanProduk(data) {
 
     // Pastikan fotoUrl menggunakan tautan CDN jsDelivr dari repo GyPro-dot/ProjekAntigravity@main/assets/ alih-alih googleusercontent
     var defaultCdnFoto = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
-    var finalFotoUrl = data.fotoUrl || defaultCdnFoto;
-    if (finalFotoUrl.indexOf("googleusercontent.com") !== -1 || finalFotoUrl.indexOf("drive.google.com") !== -1) {
+    var finalFotoUrl = String(data.fotoUrl || "").trim();
+    if (!finalFotoUrl || finalFotoUrl.indexOf("googleusercontent.com") !== -1 || finalFotoUrl.indexOf("drive.google.com") !== -1) {
       finalFotoUrl = defaultCdnFoto;
+    } else if (finalFotoUrl.indexOf("assets/") === 0) {
+      finalFotoUrl = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/" + finalFotoUrl;
     }
 
-    if (isEdit) {
-      // Update produk eksisting
-      sheet.getRange(targetRow, COL_PRODUK.SKU + 1).setValue(data.sku || "");
-      sheet.getRange(targetRow, COL_PRODUK.NAMA + 1).setValue(data.nama || "");
-      sheet.getRange(targetRow, COL_PRODUK.KATEGORI + 1).setValue(data.kategori || "Lainnya");
-      sheet.getRange(targetRow, COL_PRODUK.WARNA + 1).setValue(data.warna || "");
-      sheet.getRange(targetRow, COL_PRODUK.UKURAN + 1).setValue(data.ukuran || "");
-      sheet.getRange(targetRow, COL_PRODUK.MODAL + 1).setValue(Number(data.hargaModal) || 0);
-      sheet.getRange(targetRow, COL_PRODUK.JUAL + 1).setValue(Number(data.hargaJual) || 0);
-      sheet.getRange(targetRow, COL_PRODUK.STOK + 1).setValue(Number(data.stok) || 0);
+    var katUtama = data.kategoriUtama || data.kategori || "Wanita";
+    var subKat = data.subKategori || data.kategori || "Koleksi Fashion";
+    var jenisKain = data.jenisKain || "Premium Quality";
+    var warna = data.warna || "Standar";
+    var ukuran = data.ukuran || "All Size";
+    var hargaModal = Number(data.hargaModal) || 0;
+    var hargaJual = Number(data.hargaJual) || 0;
+    var stok = Number(data.stok) || 0;
+    var deskripsi = data.deskripsi || "";
+    var nama = data.nama || "";
+
+    if (isEdit && targetRow > 1) {
+      // Update produk eksisting sesuai Index Kolom COL_PRODUK
+      if (sku) sheet.getRange(targetRow, COL_PRODUK.SKU + 1).setValue(sku);
+      sheet.getRange(targetRow, COL_PRODUK.NAMA + 1).setValue(nama);
+      sheet.getRange(targetRow, COL_PRODUK.KATEGORI_UTAMA + 1).setValue(katUtama);
+      sheet.getRange(targetRow, COL_PRODUK.SUB_KATEGORI + 1).setValue(subKat);
+      sheet.getRange(targetRow, COL_PRODUK.JENIS_KAIN + 1).setValue(jenisKain);
+      sheet.getRange(targetRow, COL_PRODUK.WARNA + 1).setValue(warna);
+      sheet.getRange(targetRow, COL_PRODUK.UKURAN + 1).setValue(ukuran);
+      sheet.getRange(targetRow, COL_PRODUK.MODAL + 1).setValue(hargaModal);
+      sheet.getRange(targetRow, COL_PRODUK.JUAL + 1).setValue(hargaJual);
+      sheet.getRange(targetRow, COL_PRODUK.STOK + 1).setValue(stok);
       sheet.getRange(targetRow, COL_PRODUK.FOTO + 1).setValue(finalFotoUrl);
-      sheet.getRange(targetRow, COL_PRODUK.DESKRIPSI + 1).setValue(data.deskripsi || "");
-      return { success: true, message: "Produk " + id + " berhasil diperbarui!" };
+      sheet.getRange(targetRow, COL_PRODUK.DESKRIPSI + 1).setValue(deskripsi);
+      return {
+        success: true,
+        isEdit: true,
+        id: id || sku,
+        sku: sku,
+        message: "Produk '" + (nama || sku) + "' berhasil diperbarui!"
+      };
     } else {
       // Buat Produk Baru dengan ID Sekuensial PRD-XXX
       var maxP = 0;
@@ -381,25 +422,34 @@ function simpanProduk(data) {
           }
         }
       }
-      var newId = "PRD-" + ("000" + (maxP + 1)).slice(-3);
-      var skuBaru = data.sku || ("SKU-PAC-" + ("000" + (maxP + 1)).slice(-3));
+      var newId = id || ("PRD-" + ("000" + (maxP + 1)).slice(-3));
+      var skuBaru = sku || ("SKU-PAC-" + ("000" + (maxP + 1)).slice(-3));
 
+      // 14 Kolom Standar DataProduk
       var newRow = [
         newId,
         skuBaru,
-        data.nama || "",
-        data.kategori || "Lainnya",
-        data.warna || "",
-        data.ukuran || "",
-        Number(data.hargaModal) || 0,
-        Number(data.hargaJual) || 0,
-        Number(data.stok) || 0,
+        nama,
+        katUtama,
+        subKat,
+        jenisKain,
+        warna,
+        ukuran,
+        hargaModal,
+        hargaJual,
+        stok,
         finalFotoUrl,
-        data.deskripsi || "",
+        deskripsi,
         "Aktif"
       ];
       sheet.appendRow(newRow);
-      return { success: true, id: newId, message: "Produk baru " + newId + " berhasil ditambahkan!" };
+      return {
+        success: true,
+        isEdit: false,
+        id: newId,
+        sku: skuBaru,
+        message: "Produk baru '" + (nama || skuBaru) + "' (" + newId + ") berhasil ditambahkan!"
+      };
     }
   } catch (err) {
     Logger.log("Error simpanProduk: " + err.toString());
@@ -412,25 +462,33 @@ function simpanProduk(data) {
 // ----------------------------------------------------------------------------
 // 5B. API HAPUS PRODUK DARI DATABASE
 // ----------------------------------------------------------------------------
-function hapusProduk(id) {
+function hapusProduk(skuOrId) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
     var sheet = ss.getSheetByName("DataProduk");
     if (!sheet) return { success: false, message: "Tab DataProduk tidak ditemukan." };
 
-    var idStr = String(id || "").trim();
-    if (idStr && sheet.getLastRow() > 1) {
-      var ids = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
-      for (var i = 0; i < ids.length; i++) {
-        if (String(ids[i][0]).trim() === idStr) {
+    var query = String(skuOrId || "").trim();
+    if (query && sheet.getLastRow() > 1) {
+      // Periksa Kolom A (IdProduk) dan Kolom B (SkuBarcode)
+      var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues();
+      for (var i = 0; i < rows.length; i++) {
+        var rowId = String(rows[i][0]).trim();
+        var rowSku = String(rows[i][1]).trim();
+        if (rowId === query || rowSku === query) {
           sheet.deleteRow(i + 2);
-          return { success: true, message: "Produk " + idStr + " berhasil dihapus dari database!" };
+          return {
+            success: true,
+            sku: query,
+            message: "Produk '" + query + "' berhasil dihapus dari database!"
+          };
         }
       }
     }
-    return { success: false, message: "Produk dengan ID " + idStr + " tidak ditemukan." };
+    return { success: false, message: "Produk dengan SKU/ID '" + query + "' tidak ditemukan." };
   } catch (err) {
     Logger.log("Error hapusProduk: " + err.toString());
     return { success: false, message: err.toString() };
