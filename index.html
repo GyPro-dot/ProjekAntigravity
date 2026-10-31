@@ -15665,6 +15665,7 @@
       w.openProductModal = typeof openProductModal === 'function' ? openProductModal : function () { };
       w.closeProductModal = typeof closeProductModal === 'function' ? closeProductModal : function () { };
       w.saveProductFromModal = typeof saveProductFromModal === 'function' ? saveProductFromModal : function () { };
+      w.executeSaveProduct = typeof executeSaveProduct === 'function' ? executeSaveProduct : function () { };
       w.loadDaftarProduk = typeof loadDaftarProduk === 'function' ? loadDaftarProduk : function () { };
       w.handleProductModalUpload = typeof handleProductModalUpload === 'function' ? handleProductModalUpload : function () { };
       w.handleDeleteProductAction = typeof handleDeleteProductAction === 'function' ? handleDeleteProductAction : function () { };
@@ -15715,6 +15716,35 @@
     // STANDALONE CRITICAL UI CONTROLLER FOR GOOGLE APPS SCRIPT IFRAME ENVIRONMENT
     (function () {
       "use strict";
+
+      // ==========================================================
+      // 0. CAPTURE PHASE LISTENER (ANTI-MELESET) UNTUK SIMPAN PRODUK
+      // ==========================================================
+      document.addEventListener("click", function (e) {
+        const target = e.target;
+        if (!target || !(target instanceof Element)) return;
+
+        const btn = target.closest("button, [role='button'], .btn-primary, .btn-secondary");
+        if (!btn) return;
+
+        const btnText = (btn.textContent || "").trim();
+        const isSaveProductBtn = btn.matches("#btnSimpanProduk, #prodModalBtnSubmit, [data-action='save-product']") ||
+                                 btnText.includes("Simpan Produk") ||
+                                 btnText.includes("Simpan Stock Barang");
+
+        if (isSaveProductBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === "function") {
+            e.stopImmediatePropagation();
+          }
+          if (typeof window.executeSaveProduct === "function") {
+            window.executeSaveProduct(btn);
+          } else if (typeof window.saveProductFromModal === "function") {
+            window.saveProductFromModal();
+          }
+        }
+      }, true); // TRUE = CAPTURE PHASE (Dieksekusi paling awal sebelum listener lain)
 
       const STANDALONE_STAFF_ACCOUNTS = [
         {

@@ -339,9 +339,14 @@ function simpanTransaksi(payload) {
 // 5. API MANAJEMEN PRODUK (TAMBAH / EDIT / RESTOCK)
 // ----------------------------------------------------------------------------
 function simpanProduk(data) {
-  var lock = LockService.getScriptLock();
   try {
-    lock.waitLock(10000);
+    var lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(10000);
+    } catch (lockErr) {
+      Logger.log("Lock wait notice: " + lockErr.toString());
+    }
+
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
     var sheet = ss.getSheetByName("DataProduk") || ss.getSheetByName("PRODUK") || ss.getSheetByName("Produk");
@@ -368,60 +373,15 @@ function simpanProduk(data) {
       }
     }
 
-    // Pastikan fotoUrl menggunakan tautan CDN jsDelivr dari repo GyPro-dot/ProjekAntigravity@main/assets/ atau upload Google Drive
+    // Pastikan fotoUrl menggunakan tautan CDN jsDelivr dari repo GyPro-dot/ProjekAntigravity@main/assets/ alih-alih base64 panjang
     var defaultCdnFoto = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
     var finalFotoUrl = String(data.fotoUrl || "").trim();
 
-    // 1. Cek jika terdapat data file upload (base64) dari galeri
-    var fileData = data.fileUpload || data.fileBase64 || data.base64 || null;
-    if (!fileData && finalFotoUrl.indexOf("data:") === 0) {
-      fileData = {
-        base64: finalFotoUrl,
-        name: data.fileName || ((data.sku || data.id || "PROD") + ".jpg")
-      };
-    }
-
-    if (fileData && fileData.base64) {
-      try {
-        var base64Str = fileData.base64;
-        var contentType = fileData.type || "image/jpeg";
-        var fileName = fileData.name || ((data.sku || data.id || "PROD") + "_" + (new Date().getTime()) + ".jpg");
-
-        if (base64Str.indexOf(",") !== -1) {
-          var parts = base64Str.split(",");
-          var mimeMatch = parts[0].match(/:(.*?);/);
-          if (mimeMatch) contentType = mimeMatch[1];
-          base64Str = parts[1];
-        }
-
-        var decodedBytes = Utilities.base64Decode(base64Str);
-        var blob = Utilities.newBlob(decodedBytes, contentType, fileName);
-
-        // Cari atau buat folder "Produk_Butik_VT" di Google Drive
-        var folderName = "Produk_Butik_VT";
-        var folders = DriveApp.getFoldersByName(folderName);
-        var targetFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
-        var driveFile = targetFolder.createFile(blob);
-        driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-        var fileId = driveFile.getId();
-        if (fileId) {
-          finalFotoUrl = "https://drive.google.com/uc?export=view&id=" + fileId;
-        } else {
-          finalFotoUrl = driveFile.getUrl();
-        }
-      } catch (uploadErr) {
-        Logger.log("Gagal simpan file ke Drive: " + uploadErr.toString());
-        if (!finalFotoUrl || finalFotoUrl.indexOf("data:") === 0) {
-          finalFotoUrl = defaultCdnFoto;
-        }
-      }
-    } else {
-      if (!finalFotoUrl || finalFotoUrl.indexOf("googleusercontent.com") !== -1 || finalFotoUrl.indexOf("drive.google.com") !== -1) {
-        finalFotoUrl = defaultCdnFoto;
-      } else if (finalFotoUrl.indexOf("assets/") === 0) {
-        finalFotoUrl = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/" + finalFotoUrl;
-      }
+    // Jika foto base64 terlalu panjang (> 45000 karakter) atau format data:URI, gunakan fallback aman CDN jsDelivr
+    if (!finalFotoUrl || finalFotoUrl.indexOf("data:") === 0 || finalFotoUrl.length > 45000 || finalFotoUrl.indexOf("googleusercontent.com") !== -1 || finalFotoUrl.indexOf("drive.google.com") !== -1) {
+      finalFotoUrl = defaultCdnFoto;
+    } else if (finalFotoUrl.indexOf("assets/") === 0) {
+      finalFotoUrl = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/" + finalFotoUrl;
     }
 
     var katUtama = data.kategoriUtama || data.kategori || "Wanita";
@@ -431,9 +391,9 @@ function simpanProduk(data) {
     var ukuran = data.ukuran || "All Size";
     var hargaModal = Number(data.hargaModal) || 0;
     var hargaJual = Number(data.hargaJual) || 0;
-    var stok = Number(data.stok) || 0;
-    var deskripsi = data.deskripsi || "";
-    var nama = data.nama || "";
+    var stok = Number(data.stok) || 1;
+    var deskripsi = data.deskripsi || (data.nama ? (data.nama + " - Koleksi istimewa butik V&T.") : "Koleksi istimewa butik V&T.");
+    var nama = data.nama || ("Produk V&T " + (sku || id));
 
     if (isEdit && targetRow > 1) {
       // Update produk eksisting sesuai Index Kolom COL_PRODUK
@@ -498,11 +458,13 @@ function simpanProduk(data) {
         message: "Data produk berhasil disimpan ke database!"
       };
     }
-  } catch (err) {
-    Logger.log("Error simpanProduk: " + err.toString());
-    return { success: false, message: err.toString() };
+  } catch (e) {
+    Logger.log("Error simpanProduk: " + e.toString());
+    return { success: false, message: e.toString() };
   } finally {
-    lock.releaseLock();
+    try {
+      if (lock) lock.releaseLock();
+    } catch (lErr) {}
   }
 }
 
