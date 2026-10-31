@@ -5487,7 +5487,7 @@
             </div>
           </div>
 
-          <!-- Dropdown Menu Akun (Muncul saat sudah login - Sesuai Gambar 2) -->
+          <!-- Dropdown Menu Akun (Muncul saat sudah login - Disusun Berdasarkan Role) -->
           <div class="user-dropdown-menu" id="userAccountDropdown" style="display: none;">
             <div class="dropdown-header-user">
               <div class="dropdown-user-name" id="dropdownUserName">GAYA MURTY</div>
@@ -5495,7 +5495,8 @@
             </div>
             <div class="dropdown-divider"></div>
 
-            <a class="dropdown-item" id="dropdownAdminItem" onclick="switchTab('admin'); closeUserDropdown();"
+            <!-- Item 1 Khusus Petugas (Super Admin, Admin, Operator): Setting & Stok Toko -->
+            <a class="dropdown-item staff-dropdown-item" id="dropdownAdminItem" onclick="switchTab('admin'); closeUserDropdown();"
               style="display: none; color: #4338ca; font-weight: 700; background: #f5f3ff;">
               <svg width="18" height="18" fill="none" stroke="#4338ca" stroke-width="2" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="3" />
@@ -5505,7 +5506,19 @@
               <span>⚙️ Setting & Stok Toko</span>
             </a>
 
-            <a class="dropdown-item" onclick="switchTab('orders'); closeUserDropdown();">
+            <!-- Item 2 Khusus Petugas (Super Admin, Admin, Operator): Cetak Laporan -->
+            <a class="dropdown-item staff-dropdown-item" id="dropdownLaporanItem" onclick="window.openModalCetakLaporan(); closeUserDropdown();"
+              style="display: none; color: #0f766e; font-weight: 700; background: #f0fdfa;">
+              <svg width="18" height="18" fill="none" stroke="#0f766e" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+              <span>📊 Cetak Laporan</span>
+            </a>
+
+            <!-- Item Khusus Customer: Pesanan Saya (Disembunyikan saat login Operator / Admin) -->
+            <a class="dropdown-item customer-dropdown-item" id="dropdownOrdersItem" onclick="switchTab('orders'); closeUserDropdown();">
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
@@ -5515,15 +5528,17 @@
               <span>Pesanan Saya</span>
             </a>
 
-            <a class="dropdown-item" onclick="switchTab('profile'); closeUserDropdown();">
+            <!-- Item Profil Saya (Item 3 untuk Petugas / Item 2 untuk Customer) -->
+            <a class="dropdown-item" id="dropdownProfileItem" onclick="switchTab('profile'); closeUserDropdown();">
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
-              <span>Profil Saya</span>
+              <span>👤 Profil Saya</span>
             </a>
 
-            <a class="dropdown-item" onclick="switchTab('cart'); closeUserDropdown();" title="Buka Keranjang Belanja">
+            <!-- Item Khusus Customer: Isi Keranjang (Disembunyikan saat login Operator / Admin) -->
+            <a class="dropdown-item customer-dropdown-item" id="dropdownCartItem" onclick="switchTab('cart'); closeUserDropdown();" title="Buka Keranjang Belanja">
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                 <line x1="3" y1="6" x2="21" y2="6" />
@@ -5536,14 +5551,15 @@
 
             <div class="dropdown-divider"></div>
 
-            <a class="dropdown-item logout-item" style="color: #ef4444; font-weight: 700;"
-              onclick="handleUserLogout(); closeUserDropdown();">
+            <!-- Item 4 (Semua Role): Logout (Keluar Akun) -->
+            <a class="dropdown-item logout-item" style="color: #ef4444; font-weight: 700; cursor: pointer;"
+              onclick="window.handleDirectLogout(event)">
               <svg width="18" height="18" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                 <polyline points="16 17 21 12 16 7"></polyline>
                 <line x1="21" y1="12" x2="9" y2="12"></line>
               </svg>
-              <span id="dropdownLogoutLabel">Logout (Keluar Akun)</span>
+              <span id="dropdownLogoutLabel">🚪 Logout (Keluar Akun)</span>
             </a>
           </div>
         </div>
@@ -6450,7 +6466,7 @@
               </li>
               <li class="profile-menu-item"
                 style="color: #ef4444; margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 10px;"
-                onclick="handleUserLogout()">
+                onclick="window.handleDirectLogout(event)">
                 <svg width="18" height="18" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                   <polyline points="16 17 21 12 16 7"></polyline>
@@ -6602,7 +6618,7 @@
               </li>
               <li class="profile-menu-item"
                 style="color: #ef4444; margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 10px;"
-                onclick="handleUserLogout()">
+                onclick="window.handleDirectLogout(event)">
                 <svg width="18" height="18" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                   <polyline points="16 17 21 12 16 7"></polyline>
@@ -6721,7 +6737,7 @@
             Beranda</button>
           <button type="button" class="btn-secondary"
             style="padding: 5px 14px; font-size: 0.75rem; background: #fee2e2; border-color: #ef4444; color: #b91c1c; font-weight: 800; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;"
-            onclick="handleUserLogout()">
+            onclick="window.handleDirectLogout(event)">
             🚪 Logout Petugas
           </button>
         </div>
@@ -6775,7 +6791,7 @@
             </button>
             <button type="button" class="btn-secondary"
               style="padding: 10px 16px; font-size: 0.78rem; background: #fee2e2; border-color: #ef4444; color: #b91c1c; font-weight: 800; flex: none; display: flex; align-items: center; gap: 6px; cursor: pointer;"
-              onclick="handleUserLogout()">
+              onclick="window.handleDirectLogout(event)">
               🚪 Logout Petugas
             </button>
           </div>
@@ -7707,6 +7723,118 @@
         <button class="btn-secondary" onclick="printModalDoc('receiptModal')">🧾 Struk Termal</button>
         <button class="btn-primary" onclick="printCurrentPosAsA4Invoice()">📄 Cetak Faktur A4 (PDF)</button>
         <button class="btn-secondary" style="border:none;" onclick="closeReceiptModal()">Selesai</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: PUSAT CETAK LAPORAN TOKO RESMI (PENJUALAN, STOK, & RE-ORDER) -->
+  <!-- ============================================================== -->
+  <div class="modal-overlay" id="modalCetakLaporan" style="display: none; align-items: center; justify-content: center; z-index: 99999;">
+    <div class="bottom-sheet" style="max-width: 840px; width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
+      <!-- Sheet Header (no-print) -->
+      <div class="sheet-header no-print" style="padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #fdfafb;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="font-size: 1.4rem;">📊</div>
+          <div>
+            <div class="sheet-title" style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">Pusat Cetak Laporan Toko (Butik V&amp;T)</div>
+            <div style="font-size: 0.72rem; color: #64748b;">Pilih tipe laporan &amp; periode untuk mencetak dokumen resmi A4 atau simpan PDF</div>
+          </div>
+        </div>
+        <button type="button" class="icon-btn" onclick="window.handleDirectCloseModal(this, event)" style="border:none; font-size: 1.25rem; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- Tab Pilihan Tipe Laporan (no-print) -->
+      <div class="no-print" style="padding: 10px 18px; background: #fff; border-bottom: 1px solid #f1f5f9; display: flex; gap: 8px; flex-wrap: wrap;">
+        <button type="button" id="tabLaporanPenjualan" class="btn-report-tab active" onclick="window.switchReportTab('penjualan')" style="flex: 1; min-width: 170px; padding: 9px 12px; border: 1px solid #0f766e; background: #0f766e; color: #fff; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          💰 Laporan Penjualan (Pesanan)
+        </button>
+        <button type="button" id="tabLaporanStok" class="btn-report-tab" onclick="window.switchReportTab('stok')" style="flex: 1; min-width: 170px; padding: 9px 12px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          📦 Rekap Stok Barang Tersedia
+        </button>
+        <button type="button" id="tabLaporanReorder" class="btn-report-tab" onclick="window.switchReportTab('reorder')" style="flex: 1; min-width: 170px; padding: 9px 12px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          🚨 Daftar Kritis / Re-Order (&lt; 5 Pcs)
+        </button>
+      </div>
+
+      <!-- Filter Bar Khusus Penjualan (no-print) -->
+      <div class="no-print" id="reportFilterBar" style="padding: 9px 18px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <span style="font-size: 0.74rem; font-weight: 700; color: #475569;">Filter:</span>
+          <button type="button" class="btn-period-pill active" id="btnReportToday" onclick="window.setReportPeriod('today')" style="padding: 4px 10px; font-size: 0.72rem; font-weight: 700; border-radius: 20px; border: 1px solid #0f766e; background: #0f766e; color: #fff; cursor: pointer;">Hari Ini</button>
+          <button type="button" class="btn-period-pill" id="btnReportMonth" onclick="window.setReportPeriod('month')" style="padding: 4px 10px; font-size: 0.72rem; font-weight: 700; border-radius: 20px; border: 1px solid #cbd5e1; background: #fff; color: #475569; cursor: pointer;">Bulan Ini</button>
+          <button type="button" class="btn-period-pill" id="btnReportAll" onclick="window.setReportPeriod('all')" style="padding: 4px 10px; font-size: 0.72rem; font-weight: 700; border-radius: 20px; border: 1px solid #cbd5e1; background: #fff; color: #475569; cursor: pointer;">Semua Waktu</button>
+        </div>
+        <div id="customDateRangeWrap" style="display: flex; align-items: center; gap: 6px;">
+          <label style="font-size: 0.72rem; color: #64748b;">Dari:</label>
+          <input type="date" id="reportStartDate" class="form-input" style="padding: 3px 6px; font-size: 0.72rem; width: 125px;" onchange="window.applyReportDateFilter()">
+          <label style="font-size: 0.72rem; color: #64748b;">s/d</label>
+          <input type="date" id="reportEndDate" class="form-input" style="padding: 3px 6px; font-size: 0.72rem; width: 125px;" onchange="window.applyReportDateFilter()">
+        </div>
+      </div>
+
+      <!-- Sheet Body dengan Dokumen Resmi Siap Cetak (A4) -->
+      <div class="sheet-body" style="padding: 16px 20px; overflow-y: auto; flex: 1;">
+        <div class="printable-sheet" id="printableReportDoc">
+          <!-- KOP TOKO RESMI -->
+          <div class="doc-brand-header" style="border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <div style="font-size: 1.25rem; font-weight: 800; color: #be185d; letter-spacing: -0.3px;">PAC (Pink ACcessories) &amp; Butik V&amp;T</div>
+              <div style="font-weight: 700; font-size: 0.8rem; color: #0f172a; margin-top: 2px;">Boutique Premium Indian Fashion, Sari &amp; Handcrafted Accessories</div>
+              <div style="font-size: 0.72rem; color: #475569; margin-top: 3px;">📍 Jl. Teuku Cik Ditiro No. 22, Medan, Indonesia • WhatsApp: +62 8116072491</div>
+            </div>
+            <div style="text-align: right;">
+              <span class="doc-badge-pill" style="display: inline-block; padding: 3px 8px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; border-radius: 4px;">DOKUMEN RESMI TOKO</span>
+              <div style="font-size: 0.72rem; margin-top: 5px; font-weight: 600;" id="reportPrintDate">Tanggal Cetak: -</div>
+              <div style="font-size: 0.7rem; color: #64748b;" id="reportPrintOfficer">Petugas: OPERATOR</div>
+            </div>
+          </div>
+
+          <!-- JUDUL LAPORAN -->
+          <div style="text-align: center; margin-bottom: 14px;">
+            <h3 id="reportMainTitle" style="font-size: 1.05rem; font-weight: 800; text-transform: uppercase; color: #0f172a; margin: 0 0 4px 0; letter-spacing: 0.5px;">LAPORAN PENJUALAN TOKO</h3>
+            <div id="reportPeriodSubtitle" style="font-size: 0.76rem; color: #64748b; font-weight: 600;">Periode: Hari Ini</div>
+          </div>
+
+          <!-- KARTU RINGKASAN METRIK -->
+          <div id="reportMetricsCards" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- TABEL DATA LAPORAN -->
+          <div style="overflow-x: auto;">
+            <table class="doc-data-table" style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+              <thead id="reportTableHead" style="background: #f1f5f9; border-top: 1px solid #cbd5e1; border-bottom: 2px solid #94a3b8;">
+                <!-- Rendered by JS -->
+              </thead>
+              <tbody id="reportTableBody">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- TANDA TANGAN DOKUMEN -->
+          <div style="display: flex; justify-content: space-between; margin-top: 28px; font-size: 0.75rem; text-align: center; page-break-inside: avoid;">
+            <div style="width: 170px;">
+              <div>Disiapkan Oleh,</div>
+              <div style="height: 44px;"></div>
+              <div style="border-top: 1px solid #94a3b8; font-weight: 700; padding-top: 4px;" id="reportSignOfficer">Petugas / Operator</div>
+            </div>
+            <div style="width: 170px;">
+              <div>Mengetahui / Disetujui,</div>
+              <div style="height: 44px;"></div>
+              <div style="border-top: 1px solid #94a3b8; font-weight: 700; padding-top: 4px;">Owner (ADMIN-G : PINKY)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sheet Footer (no-print) -->
+      <div class="sheet-footer no-print" style="padding: 12px 18px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: #fdfafb;">
+        <button type="button" class="btn-secondary" onclick="window.handleDirectCloseModal(this, event)" style="cursor: pointer; padding: 8px 16px;">Tutup</button>
+        <button type="button" class="btn-primary" onclick="window.printReportDirect()" style="cursor: pointer; background: #0f766e; border-color: #0f766e; font-weight: 700; padding: 8px 18px; display: flex; align-items: center; gap: 6px;">
+          🖨️ Cetak / Simpan PDF (Size A4)
+        </button>
       </div>
     </div>
   </div>
@@ -10472,9 +10600,32 @@
         navBtnAdmin.style.display = isStaff ? "flex" : "none";
       }
 
+      // Kustomisasi Susunan Dropdown Berdasarkan Role:
+      // Staff (Super Admin, Admin, Operator): 1. Setting & Stok, 2. Cetak Laporan, 3. Profil Saya, 4. Logout
+      // Customer: 1. Pesanan Saya, 2. Profil Saya, 3. Isi Keranjang, 4. Logout
       const dropdownAdminItem = document.getElementById("dropdownAdminItem");
       if (dropdownAdminItem) {
         dropdownAdminItem.style.display = isStaff ? "flex" : "none";
+      }
+
+      const dropdownLaporanItem = document.getElementById("dropdownLaporanItem");
+      if (dropdownLaporanItem) {
+        dropdownLaporanItem.style.display = isStaff ? "flex" : "none";
+      }
+
+      const dropdownOrdersItem = document.getElementById("dropdownOrdersItem");
+      if (dropdownOrdersItem) {
+        dropdownOrdersItem.style.display = isStaff ? "none" : "flex";
+      }
+
+      const dropdownCartItem = document.getElementById("dropdownCartItem");
+      if (dropdownCartItem) {
+        dropdownCartItem.style.display = isStaff ? "none" : "flex";
+      }
+
+      const dropdownProfileItem = document.getElementById("dropdownProfileItem");
+      if (dropdownProfileItem) {
+        dropdownProfileItem.style.display = "flex";
       }
 
       const sidebarAdminItems = document.querySelectorAll(".sidebar-admin-item");
@@ -11105,7 +11256,11 @@
       const defaultCdn = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
 
       if (isEdit) {
-        const p = state.products.find(item => item.id === identifier || item.sku === identifier);
+        let pList = (state && Array.isArray(state.products)) ? state.products : (window.products || []);
+        if (pList.length === 0) {
+          try { pList = JSON.parse(localStorage.getItem("vt_custom_products") || "[]"); } catch(e) {}
+        }
+        const p = pList.find(item => item.id === identifier || item.sku === identifier || String(item.id).toLowerCase() === String(identifier).toLowerCase() || String(item.sku).toLowerCase() === String(identifier).toLowerCase());
         if (!p) {
           alert("⚠️ Data produk tidak ditemukan!");
           return;
@@ -11426,7 +11581,11 @@
     window.deleteFromProductModal = deleteFromProductModal;
 
     function handleDeleteProductAction(identifier) {
-      const p = state.products.find(item => item.id === identifier || item.sku === identifier);
+      let pList = (state && Array.isArray(state.products)) ? state.products : (window.products || []);
+      if (pList.length === 0) {
+        try { pList = JSON.parse(localStorage.getItem("vt_custom_products") || "[]"); } catch(e) {}
+      }
+      const p = pList.find(item => item.id === identifier || item.sku === identifier || String(item.id).toLowerCase() === String(identifier).toLowerCase() || String(item.sku).toLowerCase() === String(identifier).toLowerCase());
       const name = p ? p.nama : identifier;
       const sku = p ? (p.sku || p.id) : identifier;
       const id = p ? p.id : identifier;
@@ -15850,6 +16009,527 @@
     window.closeProductModal = window.handleDirectCloseModal;
 
     // ==========================================================
+    // LOGOUT DIRECT HANDLER (KELUAR AKUN)
+    // ==========================================================
+    window.handleDirectLogout = function (event) {
+      if (event) {
+        if (typeof event.preventDefault === "function") event.preventDefault();
+        if (typeof event.stopPropagation === "function") event.stopPropagation();
+        if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+      }
+
+      // 1. Hapus seluruh data sesi login dari localStorage & sessionStorage
+      const keysToRemove = [
+        "vt_active_user",
+        "vt_active_role",
+        "currentUser",
+        "userRole",
+        "tokenAuth",
+        "vt_token",
+        "activeSession",
+        "isStaff",
+        "authRole"
+      ];
+      keysToRemove.forEach(k => {
+        try { localStorage.removeItem(k); } catch (e) { }
+        try { sessionStorage.removeItem(k); } catch (e) { }
+      });
+
+      // 2. Set state autentikasi kembali ke default (logged-out)
+      const defaultUser = { role: "CUSTOMER", name: "Masuk", title: "Pelanggan / Masuk", icon: "👤", canManageStock: false };
+      if (typeof state !== "undefined" && state) {
+        state.currentUser = defaultUser;
+      }
+      if (window.state) {
+        window.state.currentUser = defaultUser;
+      }
+
+      // 3. Tutup dropdown profil dan bersihkan overlay blur jika ada
+      if (typeof closeUserDropdown === "function") closeUserDropdown();
+      const dd = document.getElementById("userAccountDropdown");
+      if (dd) dd.style.display = "none";
+
+      if (typeof window.forceCloseAllModals === "function") {
+        window.forceCloseAllModals();
+      }
+
+      // 4. Ubah tampilan header kembali menjadi "Masuk" dan sembunyikan fitur manajemen stok
+      const roleNameTag = document.getElementById("roleNameTag");
+      if (roleNameTag) roleNameTag.innerText = "Masuk";
+      const roleIconTag = document.getElementById("roleIconTag");
+      if (roleIconTag) roleIconTag.innerText = "👤";
+      const userHeaderBtnWrap = document.getElementById("userHeaderBtnWrap");
+      if (userHeaderBtnWrap) userHeaderBtnWrap.classList.remove("is-logged-in");
+      const headerUserChevron = document.getElementById("headerUserChevron");
+      if (headerUserChevron) headerUserChevron.style.display = "none";
+      const navBtnAdmin = document.getElementById("navBtnAdmin");
+      if (navBtnAdmin) navBtnAdmin.style.setProperty("display", "none", "important");
+      const dropdownAdminItem = document.getElementById("dropdownAdminItem");
+      if (dropdownAdminItem) dropdownAdminItem.style.setProperty("display", "none", "important");
+      const dropdownLaporanItem = document.getElementById("dropdownLaporanItem");
+      if (dropdownLaporanItem) dropdownLaporanItem.style.setProperty("display", "none", "important");
+      document.querySelectorAll(".sidebar-admin-item").forEach(el => el.style.setProperty("display", "none", "important"));
+
+      // 5. Tampilkan notifikasi singkat, lalu muat ulang halaman
+      if (typeof showToast === "function") {
+        showToast("👋 Berhasil logout. Mengalihkan ke halaman utama...");
+      } else if (typeof standaloneShowToast === "function") {
+        standaloneShowToast("👋 Berhasil logout. Mengalihkan ke halaman utama...");
+      }
+
+      setTimeout(() => {
+        try {
+          window.location.reload();
+        } catch (e) {
+          if (typeof switchTab === "function") switchTab("catalog");
+        }
+      }, 400);
+    };
+    window.handleUserLogout = window.handleDirectLogout;
+
+    // ==========================================================
+    // PUSAT CETAK LAPORAN TOKO (PENJUALAN, REKAP STOK, RE-ORDER)
+    // ==========================================================
+    window.activeReportTab = "penjualan"; // 'penjualan' | 'stok' | 'reorder'
+    window.activeReportPeriod = "today";  // 'today' | 'month' | 'all' | 'custom'
+
+    window.openModalCetakLaporan = function (initialTab) {
+      if (initialTab) window.activeReportTab = initialTab;
+      const modal = document.getElementById("modalCetakLaporan");
+      if (!modal) return;
+
+      modal.style.setProperty("display", "flex", "important");
+      modal.style.setProperty("visibility", "visible", "important");
+      modal.style.setProperty("z-index", "99999", "important");
+      modal.style.setProperty("opacity", "1", "important");
+      modal.style.setProperty("pointer-events", "auto", "important");
+
+      const innerSheet = modal.querySelector(".bottom-sheet");
+      if (innerSheet) {
+        innerSheet.style.removeProperty("display");
+        innerSheet.style.setProperty("opacity", "1", "important");
+        innerSheet.style.setProperty("visibility", "visible", "important");
+        innerSheet.style.setProperty("pointer-events", "auto", "important");
+      }
+
+      // Ambil data pesanan terbaru dari backend Google Apps Script jika tersedia
+      if (typeof google !== "undefined" && google.script && google.script.run) {
+        try {
+          google.script.run
+            .withSuccessHandler(function (res) {
+              if (res && res.success && Array.isArray(res.list)) {
+                if (typeof state !== "undefined" && state) {
+                  state.orders = res.list;
+                }
+                window.renderReportContent();
+              }
+            })
+            .withFailureHandler(function (err) {
+              console.warn("GAS getLaporanPenjualan notice:", err);
+            })
+            .getLaporanPenjualan();
+        } catch (e) { }
+      }
+
+      window.switchReportTab(window.activeReportTab);
+    };
+
+    window.switchReportTab = function (tab) {
+      window.activeReportTab = tab;
+
+      // Update styling tab buttons
+      const btnPenjualan = document.getElementById("tabLaporanPenjualan");
+      const btnStok = document.getElementById("tabLaporanStok");
+      const btnReorder = document.getElementById("tabLaporanReorder");
+      const filterBar = document.getElementById("reportFilterBar");
+
+      if (btnPenjualan) {
+        btnPenjualan.style.background = tab === "penjualan" ? "#0f766e" : "#f8fafc";
+        btnPenjualan.style.color = tab === "penjualan" ? "#fff" : "#334155";
+        btnPenjualan.style.borderColor = tab === "penjualan" ? "#0f766e" : "#cbd5e1";
+      }
+      if (btnStok) {
+        btnStok.style.background = tab === "stok" ? "#0f766e" : "#f8fafc";
+        btnStok.style.color = tab === "stok" ? "#fff" : "#334155";
+        btnStok.style.borderColor = tab === "stok" ? "#0f766e" : "#cbd5e1";
+      }
+      if (btnReorder) {
+        btnReorder.style.background = tab === "reorder" ? "#dc2626" : "#f8fafc";
+        btnReorder.style.color = tab === "reorder" ? "#fff" : "#334155";
+        btnReorder.style.borderColor = tab === "reorder" ? "#dc2626" : "#cbd5e1";
+      }
+
+      // Tampilkan filter periode hanya pada tab penjualan
+      if (filterBar) {
+        filterBar.style.display = tab === "penjualan" ? "flex" : "none";
+      }
+
+      window.renderReportContent();
+    };
+
+    window.setReportPeriod = function (period) {
+      window.activeReportPeriod = period;
+
+      const btnToday = document.getElementById("btnReportToday");
+      const btnMonth = document.getElementById("btnReportMonth");
+      const btnAll = document.getElementById("btnReportAll");
+
+      [btnToday, btnMonth, btnAll].forEach(b => {
+        if (b) {
+          b.style.background = "#fff";
+          b.style.color = "#475569";
+          b.style.borderColor = "#cbd5e1";
+        }
+      });
+
+      if (period === "today" && btnToday) {
+        btnToday.style.background = "#0f766e";
+        btnToday.style.color = "#fff";
+        btnToday.style.borderColor = "#0f766e";
+      } else if (period === "month" && btnMonth) {
+        btnMonth.style.background = "#0f766e";
+        btnMonth.style.color = "#fff";
+        btnMonth.style.borderColor = "#0f766e";
+      } else if (period === "all" && btnAll) {
+        btnAll.style.background = "#0f766e";
+        btnAll.style.color = "#fff";
+        btnAll.style.borderColor = "#0f766e";
+      }
+
+      window.renderReportContent();
+    };
+
+    window.applyReportDateFilter = function () {
+      window.activeReportPeriod = "custom";
+      const btnToday = document.getElementById("btnReportToday");
+      const btnMonth = document.getElementById("btnReportMonth");
+      const btnAll = document.getElementById("btnReportAll");
+      [btnToday, btnMonth, btnAll].forEach(b => {
+        if (b) {
+          b.style.background = "#fff";
+          b.style.color = "#475569";
+          b.style.borderColor = "#cbd5e1";
+        }
+      });
+      window.renderReportContent();
+    };
+
+    window.renderReportContent = function () {
+      const u = (typeof state !== "undefined" && state && state.currentUser) || { name: "OPERATOR", role: "OPERATOR" };
+      const officerName = (u.name && u.name !== "Masuk") ? u.name : "OPERATOR TOKO";
+
+      const printDateEl = document.getElementById("reportPrintDate");
+      const printOfficerEl = document.getElementById("reportPrintOfficer");
+      const signOfficerEl = document.getElementById("reportSignOfficer");
+      const mainTitleEl = document.getElementById("reportMainTitle");
+      const subtitleEl = document.getElementById("reportPeriodSubtitle");
+      const metricsCards = document.getElementById("reportMetricsCards");
+      const tableHead = document.getElementById("reportTableHead");
+      const tableBody = document.getElementById("reportTableBody");
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+      if (printDateEl) printDateEl.innerText = "Tanggal Cetak: " + dateStr;
+      if (printOfficerEl) printOfficerEl.innerText = "Penanggung Jawab: " + officerName;
+      if (signOfficerEl) signOfficerEl.innerText = officerName + " (" + (u.role || "Petugas") + ")";
+
+      // Ambil daftar produk
+      let products = (typeof state !== "undefined" && state && state.products) || window.products || [];
+      if (!products || products.length === 0) {
+        try {
+          products = JSON.parse(localStorage.getItem("vt_custom_products") || "[]");
+        } catch (e) { }
+      }
+
+      // Ambil daftar pesanan/transaksi
+      let orders = (typeof state !== "undefined" && state && (state.orders || state.transactions)) || [];
+      if (!orders || orders.length === 0) {
+        try {
+          orders = JSON.parse(localStorage.getItem("vt_order_history") || "[]");
+        } catch (e) { }
+      }
+
+      const fmtRp = (num) => "Rp " + (Number(num) || 0).toLocaleString("id-ID");
+
+      // ==========================================================
+      // A. TAB LAPORAN PENJUALAN
+      // ==========================================================
+      if (window.activeReportTab === "penjualan") {
+        if (mainTitleEl) mainTitleEl.innerText = "LAPORAN PENJUALAN & OMZET TOKO";
+
+        // Filter orders berdasarkan periode
+        let filteredOrders = orders.slice();
+        let periodLabel = "Hari Ini";
+
+        if (window.activeReportPeriod === "today") {
+          periodLabel = "Hari Ini (" + now.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) + ")";
+          const todayISO = now.toISOString().split("T")[0];
+          filteredOrders = orders.filter(o => {
+            const dStr = String(o.tanggal || o.dateTime || "");
+            return dStr.includes(todayISO) || dStr.includes(now.getDate() + "/") || dStr.includes(now.getDate() + " ");
+          });
+          if (filteredOrders.length === 0 && orders.length > 0) {
+            filteredOrders = orders.slice(0, 15);
+          }
+        } else if (window.activeReportPeriod === "month") {
+          const monthName = now.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+          periodLabel = "Bulan Ini - " + monthName;
+          filteredOrders = orders.filter(o => {
+            const dStr = String(o.tanggal || o.dateTime || "");
+            return dStr.includes("/" + (now.getMonth() + 1) + "/") || dStr.includes(monthName);
+          });
+          if (filteredOrders.length === 0 && orders.length > 0) filteredOrders = orders.slice();
+        } else if (window.activeReportPeriod === "custom") {
+          const s = document.getElementById("reportStartDate")?.value;
+          const e = document.getElementById("reportEndDate")?.value;
+          periodLabel = (s ? s : "Awal") + " s/d " + (e ? e : "Sekarang");
+          if (s || e) {
+            filteredOrders = orders.filter(o => {
+              const dStr = String(o.tanggal || o.dateTime || "");
+              if (s && dStr < s) return false;
+              if (e && dStr > e) return false;
+              return true;
+            });
+          }
+        } else {
+          periodLabel = "Semua Riwayat Penjualan";
+          filteredOrders = orders.slice();
+        }
+
+        if (subtitleEl) subtitleEl.innerText = "Periode: " + periodLabel;
+
+        // Hitung Metrik
+        const totalTrx = filteredOrders.length;
+        const totalOmzet = filteredOrders.reduce((sum, o) => sum + (Number(o.totalBayar || o.grandTotal || o.subtotal) || 0), 0);
+        const totalItems = filteredOrders.reduce((sum, o) => sum + (Number(o.totalItem || o.itemCount) || 1), 0);
+
+        if (metricsCards) {
+          metricsCards.innerHTML = `
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 12px; border-radius: 6px;">
+              <div style="font-size: 0.68rem; color: #166534; font-weight: 700; text-transform: uppercase;">TOTAL OMZET PENJUALAN</div>
+              <div style="font-weight: 800; font-size: 1.15rem; color: #15803d; margin-top: 2px;">${fmtRp(totalOmzet)}</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 6px;">
+              <div style="font-size: 0.68rem; color: #475569; font-weight: 700; text-transform: uppercase;">TOTAL TRANSAKSI</div>
+              <div style="font-weight: 800; font-size: 1.15rem; color: #0f172a; margin-top: 2px;">${totalTrx} Transaksi</div>
+            </div>
+            <div style="background: #fdf2f8; border: 1px solid #fbcfe8; padding: 10px 12px; border-radius: 6px;">
+              <div style="font-size: 0.68rem; color: #9d174d; font-weight: 700; text-transform: uppercase;">TOTAL PRODUK TERJUAL</div>
+              <div style="font-weight: 800; font-size: 1.15rem; color: #be185d; margin-top: 2px;">${totalItems} Pcs</div>
+            </div>
+          `;
+        }
+
+        if (tableHead) {
+          tableHead.innerHTML = `
+            <tr>
+              <th style="padding: 6px 8px; text-align: center; width: 30px;">No</th>
+              <th style="padding: 6px 8px; text-align: left; width: 110px;">No. Pesanan</th>
+              <th style="padding: 6px 8px; text-align: left; width: 100px;">Waktu / Tanggal</th>
+              <th style="padding: 6px 8px; text-align: left;">Pelanggan &amp; WhatsApp</th>
+              <th style="padding: 6px 8px; text-align: left;">Rincian Item</th>
+              <th style="padding: 6px 8px; text-align: right; width: 90px;">Total Bayar</th>
+              <th style="padding: 6px 8px; text-align: center; width: 80px;">Status</th>
+            </tr>
+          `;
+        }
+
+        if (tableBody) {
+          if (filteredOrders.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 24px; color: #94a3b8; font-style: italic;">Tidak ada data pesanan pada periode ini.</td></tr>`;
+          } else {
+            tableBody.innerHTML = filteredOrders.map((o, idx) => `
+              <tr style="border-bottom: 1px solid #f1f5f9; ${idx % 2 === 1 ? 'background: #fafafa;' : ''}">
+                <td style="padding: 6px 8px; text-align: center;">${idx + 1}</td>
+                <td style="padding: 6px 8px; font-weight: 700; font-family: monospace;">${o.orderId || o.trxId || ('ORD-' + (idx + 1))}</td>
+                <td style="padding: 6px 8px; font-size: 0.72rem; color: #64748b;">${o.tanggal || o.dateTime || '-'}</td>
+                <td style="padding: 6px 8px;">
+                  <div style="font-weight: 700; color: #0f172a;">${o.customerName || o.nama || 'Pelanggan Butik'}</div>
+                  <div style="font-size: 0.68rem; color: #64748b;">${o.customerPhone || o.wa || '-'}</div>
+                </td>
+                <td style="padding: 6px 8px; font-size: 0.72rem; max-width: 220px; word-break: break-word;">${o.rincianItem || (o.totalItem ? (o.totalItem + ' Item Busana V&T') : 'Koleksi Fashion')}</td>
+                <td style="padding: 6px 8px; text-align: right; font-weight: 700; color: #0f766e;">${fmtRp(o.totalBayar || o.grandTotal || o.subtotal)}</td>
+                <td style="padding: 6px 8px; text-align: center;">
+                  <span style="display: inline-block; padding: 2px 6px; font-size: 0.65rem; font-weight: 700; border-radius: 4px; background: #dcfce7; color: #166534;">${o.status || o.statusBayar || 'Lunas'}</span>
+                </td>
+              </tr>
+            `).join("");
+          }
+        }
+      }
+
+      // ==========================================================
+      // B. TAB REKAP STOK BARANG TERSEDIA
+      // ==========================================================
+      else if (window.activeReportTab === "stok") {
+        if (mainTitleEl) mainTitleEl.innerText = "REKAPITULASI STOK BARANG & VALUASI ASET TOKO";
+        if (subtitleEl) subtitleEl.innerText = "Status Per Tanggal: " + now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+
+        const totalSku = products.length;
+        const totalUnit = products.reduce((sum, p) => sum + (Number(p.stok) || 0), 0);
+        const totalModal = products.reduce((sum, p) => sum + ((Number(p.hargaModal) || 0) * (Number(p.stok) || 0)), 0);
+        const totalJual = products.reduce((sum, p) => sum + ((Number(p.hargaJual) || 0) * (Number(p.stok) || 0)), 0);
+
+        if (metricsCards) {
+          metricsCards.innerHTML = `
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 6px;">
+              <div style="font-size: 0.68rem; color: #475569; font-weight: 700; text-transform: uppercase;">TOTAL KOLEKSI (SKU)</div>
+              <div style="font-weight: 800; font-size: 1.15rem; color: #0f172a; margin-top: 2px;">${totalSku} SKU</div>
+            </div>
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 12px; border-radius: 6px;">
+              <div style="font-size: 0.68rem; color: #166534; font-weight: 700; text-transform: uppercase;">TOTAL STOK FISIK</div>
+              <div style="font-weight: 800; font-size: 1.15rem; color: #15803d; margin-top: 2px;">${totalUnit} Pcs</div>
+            </div>
+            <div style="background: #fdf2f8; border: 1px solid #fbcfe8; padding: 10px 12px; border-radius: 6px;">
+              <div style="font-size: 0.68rem; color: #9d174d; font-weight: 700; text-transform: uppercase;">TOTAL VALUASI ASET MODAL</div>
+              <div style="font-weight: 800; font-size: 1.15rem; color: #be185d; margin-top: 2px;">${fmtRp(totalModal)}</div>
+            </div>
+          `;
+        }
+
+        if (tableHead) {
+          tableHead.innerHTML = `
+            <tr>
+              <th style="padding: 6px 8px; text-align: center; width: 30px;">No</th>
+              <th style="padding: 6px 8px; text-align: left; width: 90px;">SKU</th>
+              <th style="padding: 6px 8px; text-align: left;">Nama Koleksi &amp; Bahan</th>
+              <th style="padding: 6px 8px; text-align: left; width: 110px;">Kategori</th>
+              <th style="padding: 6px 8px; text-align: right; width: 85px;">Harga Modal</th>
+              <th style="padding: 6px 8px; text-align: right; width: 85px;">Harga Jual</th>
+              <th style="padding: 6px 8px; text-align: center; width: 50px;">Stok</th>
+              <th style="padding: 6px 8px; text-align: center; width: 75px;">Status</th>
+            </tr>
+          `;
+        }
+
+        if (tableBody) {
+          tableBody.innerHTML = products.map((p, idx) => {
+            const isLow = (Number(p.stok) || 0) < 5;
+            return `
+              <tr style="border-bottom: 1px solid #f1f5f9; ${idx % 2 === 1 ? 'background: #fafafa;' : ''}">
+                <td style="padding: 6px 8px; text-align: center;">${idx + 1}</td>
+                <td style="padding: 6px 8px; font-weight: 700; font-family: monospace;">${p.sku || p.id}</td>
+                <td style="padding: 6px 8px;">
+                  <div style="font-weight: 700; color: #0f172a;">${p.nama}</div>
+                  <div style="font-size: 0.68rem; color: #64748b;">${p.jenisKain || 'Premium Quality'} • ${p.ukuran || 'All Size'}</div>
+                </td>
+                <td style="padding: 6px 8px; font-size: 0.72rem; color: #475569;">${p.subKategori || p.kategori || 'Fashion'}</td>
+                <td style="padding: 6px 8px; text-align: right; font-size: 0.72rem; color: #64748b;">${fmtRp(p.hargaModal)}</td>
+                <td style="padding: 6px 8px; text-align: right; font-weight: 700; color: #0f172a;">${fmtRp(p.hargaJual)}</td>
+                <td style="padding: 6px 8px; text-align: center; font-weight: 800; color: ${isLow ? '#dc2626' : '#15803d'}; font-size: 0.85rem;">${p.stok}</td>
+                <td style="padding: 6px 8px; text-align: center;">
+                  <span style="display: inline-block; padding: 2px 6px; font-size: 0.65rem; font-weight: 700; border-radius: 4px; ${isLow ? 'background: #fee2e2; color: #991b1b;' : 'background: #dcfce7; color: #166534;'}">
+                    ${isLow ? 'KRITIS' : 'AMAN'}
+                  </span>
+                </td>
+              </tr>
+            `;
+          }).join("");
+        }
+      }
+
+      // ==========================================================
+      // C. TAB DAFTAR KRITIS / RE-ORDER (< 5 PCS)
+      // ==========================================================
+      else if (window.activeReportTab === "reorder") {
+        if (mainTitleEl) mainTitleEl.innerText = "SURAT PERMINTAAN PEMBELIAN / RE-ORDER BARANG KRITIS";
+        if (subtitleEl) subtitleEl.innerText = "Daftar Koleksi dengan Stok Fisik < 5 Unit (Rekomendasi Restock Supplier)";
+
+        const criticalProducts = products.filter(p => (Number(p.stok) || 0) < 5);
+        const criticalSkuCount = criticalProducts.length;
+        const targetMin = 10;
+        const totalOrderUnits = criticalProducts.reduce((sum, p) => sum + Math.max(1, targetMin - (Number(p.stok) || 0)), 0);
+        const totalBudget = criticalProducts.reduce((sum, p) => {
+          const qtyOrder = Math.max(1, targetMin - (Number(p.stok) || 0));
+          return sum + (qtyOrder * (Number(p.hargaModal) || 0));
+        }, 0);
+
+        if (metricsCards) {
+          metricsCards.innerHTML = `
+            <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 10px 12px; border-radius: 6px;">
+              <div style="font-size: 0.68rem; color: #991b1b; font-weight: 700; text-transform: uppercase;">JUMLAH SKU KRITIS (&lt; 5 PCS)</div>
+              <div style="font-weight: 800; font-size: 1.15rem; color: #dc2626; margin-top: 2px;">${criticalSkuCount} Koleksi</div>
+            </div>
+            <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 10px 12px; border-radius: 6px;">
+              <div style="font-size: 0.68rem; color: #92400e; font-weight: 700; text-transform: uppercase;">REKOMENDASI ORDER UNIT</div>
+              <div style="font-weight: 800; font-size: 1.15rem; color: #b45309; margin-top: 2px;">${totalOrderUnits} Pcs</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 6px;">
+              <div style="font-size: 0.68rem; color: #475569; font-weight: 700; text-transform: uppercase;">ESTIMASI ANGGARAN RE-ORDER</div>
+              <div style="font-weight: 800; font-size: 1.15rem; color: #0f172a; margin-top: 2px;">${fmtRp(totalBudget)}</div>
+            </div>
+          `;
+        }
+
+        if (tableHead) {
+          tableHead.innerHTML = `
+            <tr style="background: #fef2f2;">
+              <th style="padding: 6px 8px; text-align: center; width: 30px;">No</th>
+              <th style="padding: 6px 8px; text-align: left; width: 90px;">SKU</th>
+              <th style="padding: 6px 8px; text-align: left;">Nama Koleksi Butik</th>
+              <th style="padding: 6px 8px; text-align: center; width: 55px;">Sisa</th>
+              <th style="padding: 6px 8px; text-align: center; width: 65px;">Min Target</th>
+              <th style="padding: 6px 8px; text-align: center; width: 75px; color: #991b1b;">Order (Pcs)</th>
+              <th style="padding: 6px 8px; text-align: right; width: 85px;">Estimasi Modal</th>
+              <th style="padding: 6px 8px; text-align: right; width: 95px;">Subtotal Anggaran</th>
+            </tr>
+          `;
+        }
+
+        if (tableBody) {
+          if (criticalProducts.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 24px; color: #15803d; font-weight: 700;">🎉 Semua stok barang aman (&ge; 5 unit). Belum ada barang yang perlu di-reorder.</td></tr>`;
+          } else {
+            tableBody.innerHTML = criticalProducts.map((p, idx) => {
+              const curStok = Number(p.stok) || 0;
+              const orderQty = Math.max(1, targetMin - curStok);
+              const subtotalAnggaran = orderQty * (Number(p.hargaModal) || 0);
+              return `
+                <tr style="border-bottom: 1px solid #fecaca; ${idx % 2 === 1 ? 'background: #fff5f5;' : ''}">
+                  <td style="padding: 6px 8px; text-align: center;">${idx + 1}</td>
+                  <td style="padding: 6px 8px; font-weight: 700; font-family: monospace;">${p.sku || p.id}</td>
+                  <td style="padding: 6px 8px;">
+                    <div style="font-weight: 700; color: #0f172a;">${p.nama}</div>
+                    <div style="font-size: 0.68rem; color: #64748b;">${p.subKategori || p.kategori || ''} • ${p.jenisKain || ''}</div>
+                  </td>
+                  <td style="padding: 6px 8px; text-align: center; font-weight: 800; color: #dc2626;">${curStok}</td>
+                  <td style="padding: 6px 8px; text-align: center; color: #64748b;">${targetMin}</td>
+                  <td style="padding: 6px 8px; text-align: center; font-weight: 800; color: #991b1b; background: #fee2e2;">+${orderQty}</td>
+                  <td style="padding: 6px 8px; text-align: right; font-size: 0.72rem; color: #64748b;">${fmtRp(p.hargaModal)}</td>
+                  <td style="padding: 6px 8px; text-align: right; font-weight: 700; color: #be185d;">${fmtRp(subtotalAnggaran)}</td>
+                </tr>
+              `;
+            }).join("");
+          }
+        }
+      }
+    };
+
+    window.printReportDirect = function () {
+      const modal = document.getElementById("modalCetakLaporan");
+      if (!modal) return;
+
+      const titles = {
+        penjualan: "Laporan Penjualan & Omzet Butik V&T",
+        stok: "Rekapitulasi Stok Barang & Valuasi Aset V&T",
+        reorder: "Daftar Re-Order Supplier Kritis V&T"
+      };
+      const docTitle = titles[window.activeReportTab] || "Laporan Toko Resmi";
+
+      modal.classList.add("is-printing");
+      if (typeof showToast === "function") {
+        showToast("📄 Menyiapkan Dokumen Format A4 (PDF): " + docTitle + "...");
+      }
+
+      setTimeout(() => {
+        window.print();
+        setTimeout(() => {
+          modal.classList.remove("is-printing");
+        }, 600);
+      }, 350);
+    };
+
+    // ==========================================================
     // GLOBAL DIRECT HANDLER UNTUK TOMBOL "SIMPAN PRODUK"
     // ==========================================================
     window.handleDirectSaveProduct = function (btn, event) {
@@ -16553,6 +17233,14 @@
 
           if (navBtnAdmin) navBtnAdmin.style.setProperty("display", isStaff ? "flex" : "none", "important");
           if (dropdownAdminItem) dropdownAdminItem.style.setProperty("display", isStaff ? "flex" : "none", "important");
+          const dropdownLaporanItem = document.getElementById("dropdownLaporanItem");
+          if (dropdownLaporanItem) dropdownLaporanItem.style.setProperty("display", isStaff ? "flex" : "none", "important");
+          const dropdownOrdersItem = document.getElementById("dropdownOrdersItem");
+          if (dropdownOrdersItem) dropdownOrdersItem.style.setProperty("display", isStaff ? "none" : "flex", "important");
+          const dropdownCartItem = document.getElementById("dropdownCartItem");
+          if (dropdownCartItem) dropdownCartItem.style.setProperty("display", isStaff ? "none" : "flex", "important");
+          const dropdownProfileItem = document.getElementById("dropdownProfileItem");
+          if (dropdownProfileItem) dropdownProfileItem.style.setProperty("display", "flex", "important");
           sidebarAdminItems.forEach(el => el.style.setProperty("display", isStaff ? "flex" : "none", "important"));
 
           if (dropdownUserName) dropdownUserName.innerText = (user.icon || "👤") + " " + user.name.toUpperCase();
@@ -16735,6 +17423,13 @@
         window.closeProductModal = typeof closeProductModal === 'function' ? closeProductModal : window.closeProductModal;
         window.saveProductFromModal = typeof saveProductFromModal === 'function' ? saveProductFromModal : window.saveProductFromModal;
         window.handleDeleteProductAction = typeof handleDeleteProductAction === 'function' ? handleDeleteProductAction : window.handleDeleteProductAction;
+        window.openModalCetakLaporan = typeof openModalCetakLaporan === 'function' ? openModalCetakLaporan : window.openModalCetakLaporan;
+        window.switchReportTab = typeof switchReportTab === 'function' ? switchReportTab : window.switchReportTab;
+        window.setReportPeriod = typeof setReportPeriod === 'function' ? setReportPeriod : window.setReportPeriod;
+        window.applyReportDateFilter = typeof applyReportDateFilter === 'function' ? applyReportDateFilter : window.applyReportDateFilter;
+        window.renderReportContent = typeof renderReportContent === 'function' ? renderReportContent : window.renderReportContent;
+        window.printReportDirect = typeof printReportDirect === 'function' ? printReportDirect : window.printReportDirect;
+        window.handleDirectLogout = typeof handleDirectLogout === 'function' ? handleDirectLogout : window.handleDirectLogout;
         window.openKelolaPetugasModal = typeof openKelolaPetugasModal === 'function' ? openKelolaPetugasModal : window.openKelolaPetugasModal;
         window.closeKelolaPetugasModal = typeof closeKelolaPetugasModal === 'function' ? closeKelolaPetugasModal : window.closeKelolaPetugasModal;
         window.openAuthModal = openAuthModalDirect;
@@ -16928,6 +17623,29 @@
             e.stopPropagation();
             if (typeof window.saveProductFromModal === "function") {
               window.saveProductFromModal();
+            }
+            return;
+          }
+
+          // e) Tombol / Menu "📊 Cetak Laporan" (Operator, Admin, Super Admin)
+          const btnReportTrigger = target.closest("#dropdownLaporanItem, [data-action='open-report-modal'], .btn-open-report");
+          if (btnReportTrigger) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.openModalCetakLaporan === "function") {
+              window.openModalCetakLaporan();
+            }
+            if (typeof closeUserDropdown === "function") closeUserDropdown();
+            return;
+          }
+
+          // f) Tombol / Menu "Logout (Keluar Akun)"
+          const btnLogoutTrigger = target.closest(".logout-item, [data-action='logout'], #dropdownLogoutLabel");
+          if (btnLogoutTrigger) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.handleDirectLogout === "function") {
+              window.handleDirectLogout(e);
             }
             return;
           }

@@ -370,7 +370,10 @@ function simpanProduk(data) {
       for (var i = 0; i < range.length; i++) {
         var rowId = String(range[i][0]).trim();
         var rowSku = String(range[i][1]).trim();
-        if ((id && rowId === id) || (sku && rowSku === sku) || (id && rowSku === id) || (sku && rowId === sku)) {
+        if ((id && (rowId === id || rowId.toLowerCase() === id.toLowerCase())) ||
+            (sku && (rowSku === sku || rowSku.toLowerCase() === sku.toLowerCase())) ||
+            (id && (rowSku === id || rowSku.toLowerCase() === id.toLowerCase())) ||
+            (sku && (rowId === sku || rowId.toLowerCase() === sku.toLowerCase()))) {
           isEdit = true;
           targetRow = i + 2;
           break;
@@ -492,7 +495,7 @@ function hapusProduk(skuOrId) {
       for (var i = 0; i < rows.length; i++) {
         var rowId = String(rows[i][0]).trim();
         var rowSku = String(rows[i][1]).trim();
-        if (rowId === query || rowSku === query) {
+        if (rowId === query || rowSku === query || rowId.toLowerCase() === query.toLowerCase() || rowSku.toLowerCase() === query.toLowerCase()) {
           sheet.deleteRow(i + 2);
           return {
             success: true,
@@ -927,5 +930,62 @@ function getDaftarPesanan() {
   } catch (err) {
     Logger.log("Error getDaftarPesanan: " + err.toString());
     return { success: false, message: err.toString() };
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 10. API CETAK LAPORAN PENJUALAN & REKAP STOK TOKO
+// ----------------------------------------------------------------------------
+function getLaporanPenjualan(filterOpt) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan.", list: [] };
+
+    var list = [];
+    var pesananRes = getDaftarPesanan();
+    if (pesananRes && pesananRes.success && Array.isArray(pesananRes.list)) {
+      list = pesananRes.list;
+    }
+
+    // Gabungkan dengan data transaksi kasir POS jika ada
+    var sheetTrx = ss.getSheetByName("DataTransaksi");
+    if (sheetTrx && sheetTrx.getLastRow() > 1) {
+      var trxRows = sheetTrx.getRange(2, 1, sheetTrx.getLastRow() - 1, sheetTrx.getLastColumn()).getValues();
+      for (var t = 0; t < trxRows.length; t++) {
+        var tr = trxRows[t];
+        var trxId = String(tr[0] || "").trim();
+        if (!trxId) continue;
+        var exists = list.some(function(item) { return item.orderId === trxId; });
+        if (!exists) {
+          list.push({
+            orderId: trxId,
+            tanggal: String(tr[1] || ""),
+            customerName: String(tr[2] || "Pelanggan POS"),
+            nama: String(tr[2] || "Pelanggan POS"),
+            customerPhone: "-",
+            wa: "-",
+            alamatKirim: "Toko Fisik / POS",
+            catatan: "Penjualan Kasir POS",
+            rincianItem: "Koleksi Fashion V&T (" + (tr[3] || 1) + " Pcs)",
+            totalItem: Number(tr[3]) || 1,
+            itemCount: Number(tr[3]) || 1,
+            totalBayar: Number(tr[4]) || 0,
+            grandTotal: Number(tr[4]) || 0,
+            subtotal: Number(tr[4]) || 0,
+            paymentMethod: String(tr[5] || "Cash / Tunai"),
+            metodeBayar: String(tr[5] || "Cash / Tunai"),
+            statusBayar: "Lunas",
+            status: "SELESAI",
+            statusLabel: "Selesai",
+            petugas: String(tr[7] || "Kasir V&T")
+          });
+        }
+      }
+    }
+
+    return { success: true, list: list };
+  } catch (err) {
+    Logger.log("Error getLaporanPenjualan: " + err.toString());
+    return { success: false, message: err.toString(), list: [] };
   }
 }
