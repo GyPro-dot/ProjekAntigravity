@@ -7129,23 +7129,23 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Foto URL Produk (CDN jsDelivr Default):</label>
+          <label class="form-label">Foto / Media Produk:</label>
           <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
-            <input type="file" id="prodModalFileInput" accept="image/*" style="display: none;" onchange="handleProductModalUpload(event)">
-            <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; border-color: var(--gold); cursor: pointer;"
-              onclick="document.getElementById('prodModalFileInput').click()">
+            <input type="file" id="inputMediaGaleri" accept="image/*,video/*" style="display: none;" onchange="handleProductModalUpload(event)">
+            <input type="file" id="prodModalFileInput" accept="image/*,video/*" style="display: none;" onchange="handleProductModalUpload(event)">
+            <button type="button" class="btn-secondary" id="btnUploadGaleri" style="padding: 7px 14px; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; border-color: var(--gold); background: #fff8f0; color: #831843; cursor: pointer;"
+              onclick="document.getElementById('inputMediaGaleri').click()">
               📁 Upload dari Galeri
             </button>
-            <span id="prodModalFileLabel" style="font-size: 0.72rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;">Pilih file lokal atau gunakan URL</span>
+            <span id="prodModalFileLabel" style="font-size: 0.74rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px;">Pilih file galeri atau gunakan URL default CDN</span>
+          </div>
+          <!-- Pratinjau info file terpilih -->
+          <div id="prodGalleryFilePreview" style="display: none; font-size: 0.72rem; color: #059669; font-weight: 600; margin-bottom: 6px; padding: 4px 8px; background: #ecfdf5; border-radius: 4px; border: 1px solid #a7f3d0;">
+            ✓ File Terpilih: <span id="prodGalleryFileName"></span> (<span id="prodGalleryFileSize"></span>)
           </div>
           <input type="text" id="prodModalFoto" class="form-input" oninput="updateProductModalPreview(this.value)"
             placeholder="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/..."
             value="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Video URL Produk (Opsional - YouTube / Video MP4):</label>
-          <input type="text" id="prodModalVideo" class="form-input" placeholder="Contoh: https://youtube.com/shorts/... atau https://cdn.jsdelivr.net/.../video.mp4">
         </div>
 
         <div class="form-group">
@@ -7159,7 +7159,7 @@
         </button>
         <div style="display: flex; gap: 8px; margin-left: auto;">
           <button type="button" class="btn-secondary" onclick="closeProductModal()" style="cursor: pointer;">Batal</button>
-          <button type="button" class="btn-primary" id="prodModalBtnSubmit" onclick="saveProductFromModal()" style="cursor: pointer;">💾 Simpan Produk</button>
+          <button type="button" class="btn-primary" id="btnSimpanProduk" data-action="save-product" onclick="saveProductFromModal()" style="cursor: pointer; background: var(--primary); border-color: var(--primary); font-weight: 700; padding: 8px 16px;">💾 Simpan Produk</button>
         </div>
       </div>
     </div>
@@ -11051,9 +11051,21 @@
     // -------------------------------------------------------------
     // FITUR MASTER PRODUK & STOK (INPUT, EDIT, HAPUS - ADMIN & OPERATOR)
     // -------------------------------------------------------------
+    let selectedProductGalleryFile = null;
+
     function openProductModal(mode, identifier) {
       const modal = document.getElementById("productModal");
       if (!modal) return;
+
+      selectedProductGalleryFile = null;
+      const filePreviewWrap = document.getElementById("prodGalleryFilePreview");
+      if (filePreviewWrap) filePreviewWrap.style.display = "none";
+
+      const btnSave = document.getElementById("btnSimpanProduk") || document.getElementById("prodModalBtnSubmit");
+      if (btnSave) {
+        btnSave.disabled = false;
+        btnSave.innerHTML = "💾 Simpan Produk";
+      }
 
       const isEdit = (mode === "edit");
       const idEl = document.getElementById("prodModalId");
@@ -11072,6 +11084,11 @@
       const previewEl = document.getElementById("prodModalPreviewImg");
       const fileLabel = document.getElementById("prodModalFileLabel");
 
+      // Reset border error
+      if (namaEl) namaEl.style.borderColor = "";
+      if (jualEl) jualEl.style.borderColor = "";
+      if (stokEl) stokEl.style.borderColor = "";
+
       if (modeEl) modeEl.value = isEdit ? "edit" : "add";
       if (titleEl) titleEl.innerText = isEdit ? "✏️ Edit Master Produk & Stok" : "📦 Input Stock Barang Baru (Operator / Admin)";
       if (btnDelete) btnDelete.style.display = isEdit ? "inline-flex" : "none";
@@ -11082,7 +11099,7 @@
       if (isEdit) {
         const p = state.products.find(item => item.id === identifier || item.sku === identifier);
         if (!p) {
-          showToast("⚠️ Data produk tidak ditemukan!");
+          alert("⚠️ Data produk tidak ditemukan!");
           return;
         }
         if (idEl) idEl.value = p.id || "";
@@ -11147,34 +11164,106 @@
     function handleProductModalUpload(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
+
       const reader = new FileReader();
       reader.onload = function (e) {
         const dataUrl = e.target.result;
+        selectedProductGalleryFile = {
+          name: file.name,
+          type: file.type || "image/jpeg",
+          size: file.size,
+          base64: dataUrl
+        };
+
         const fotoInput = document.getElementById("prodModalFoto");
         if (fotoInput) fotoInput.value = dataUrl;
         updateProductModalPreview(dataUrl);
+
         const label = document.getElementById("prodModalFileLabel");
         if (label) label.innerText = file.name;
+
+        const previewWrap = document.getElementById("prodGalleryFilePreview");
+        const nameSpan = document.getElementById("prodGalleryFileName");
+        const sizeSpan = document.getElementById("prodGalleryFileSize");
+        if (previewWrap) previewWrap.style.display = "block";
+        if (nameSpan) nameSpan.innerText = file.name;
+        if (sizeSpan) sizeSpan.innerText = (file.size / 1024).toFixed(1) + " KB";
       };
       reader.readAsDataURL(file);
     }
     window.handleProductModalUpload = handleProductModalUpload;
 
+    function loadDaftarProduk() {
+      if (typeof renderAdminTable === "function") renderAdminTable();
+      if (typeof renderCatalog === "function") renderCatalog();
+      if (typeof google !== "undefined" && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            const list = (res && res.success) ? (res.produk || res.listProduk) : null;
+            if (list && Array.isArray(list) && list.length > 0) {
+              state.products = list;
+              saveProductsToStorage();
+              renderCatalog();
+              if (typeof renderAdminTable === "function") renderAdminTable();
+            }
+          })
+          .getInitData();
+      }
+    }
+    window.loadDaftarProduk = loadDaftarProduk;
+
     function saveProductFromModal() {
+      const btn = document.getElementById("btnSimpanProduk") || document.getElementById("prodModalBtnSubmit");
       const namaInput = document.getElementById("prodModalNama");
+      const jualInput = document.getElementById("prodModalJual");
+      const stokInput = document.getElementById("prodModalStok");
+
+      if (namaInput) namaInput.style.borderColor = "";
+      if (jualInput) jualInput.style.borderColor = "";
+      if (stokInput) stokInput.style.borderColor = "";
+
       const nama = namaInput ? namaInput.value.trim() : "";
+      const jualVal = jualInput ? jualInput.value.trim() : "";
+      const jual = Number(jualVal) || 0;
+      const stokVal = stokInput ? stokInput.value.trim() : "";
+      const stok = Number(stokVal);
+
+      // Validasi field wajib
       if (!nama) {
-        showToast("⚠️ Mohon ketikkan Nama Lengkap Produk!");
-        if (namaInput) namaInput.focus();
+        if (namaInput) {
+          namaInput.style.borderColor = "#ef4444";
+          namaInput.focus();
+        }
+        alert("⚠️ Nama Produk wajib diisi!");
         return;
+      }
+      if (!jualVal || isNaN(jual) || jual <= 0) {
+        if (jualInput) {
+          jualInput.style.borderColor = "#ef4444";
+          jualInput.focus();
+        }
+        alert("⚠️ Harga Jual wajib diisi dengan nominal angka yang valid!");
+        return;
+      }
+      if (!stokVal || isNaN(stok) || stok < 0) {
+        if (stokInput) {
+          stokInput.style.borderColor = "#ef4444";
+          stokInput.focus();
+        }
+        alert("⚠️ Stok Fisik wajib diisi dengan angka jumlah stok!");
+        return;
+      }
+
+      // Ubah status tombol menjadi "Menyimpan..." dan disabled sementara
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = "⏳ Menyimpan...";
       }
 
       const id = (document.getElementById("prodModalId")?.value.trim()) || ("PRD-" + ("000" + (state.products.length + 1)).slice(-3));
       const sku = (document.getElementById("prodModalSku")?.value.trim()) || ("SKU-PAC-" + ("000" + (state.products.length + 1)).slice(-3));
       const kategori = (document.getElementById("prodModalKategori")?.value.trim()) || "Indian Woman Fashion";
       const modal = Number(document.getElementById("prodModalModal")?.value) || 0;
-      const jual = Number(document.getElementById("prodModalJual")?.value) || 0;
-      const stok = Number(document.getElementById("prodModalStok")?.value) || 0;
       const ukuran = (document.getElementById("prodModalUkuran")?.value.trim()) || "All Size";
       const deskripsi = (document.getElementById("prodModalDeskripsi")?.value.trim()) || `${nama} - Koleksi istimewa butik PAC V&T.`;
       const defaultCdn = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
@@ -11198,6 +11287,8 @@
         hargaJual: jual,
         stok: stok,
         fotoUrl: foto,
+        fileUpload: selectedProductGalleryFile,
+        fileName: selectedProductGalleryFile ? selectedProductGalleryFile.name : "",
         deskripsi: deskripsi,
         status: "Aktif",
         badge: isEdit ? "UPDATED" : "NEW"
@@ -11236,28 +11327,37 @@
       }
 
       saveProductsToStorage();
-      closeProductModal();
-      renderAdminTable();
       renderCatalog();
-      if (typeof renderPosCatalog === "function") renderPosCatalog();
-      showToast(isEdit ? `✅ Produk '${nama}' berhasil diperbarui!` : `✅ Produk baru '${nama}' berhasil disimpan!`);
+      if (typeof renderAdminTable === "function") renderAdminTable();
 
       // Sinkronisasi ke backend Google Apps Script
       if (typeof google !== "undefined" && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function (res) {
-            if (res && res.success) {
-              showToast("☁️ Database Sheets: " + (res.message || "Tersimpan sukses!"));
-              renderAdminTable();
-            } else {
-              showToast("⚠️ Sheets Notice: " + (res && res.message ? res.message : "Gagal simpan"));
+            alert(res && res.message ? res.message : "Produk berhasil disimpan!");
+            if (btn) {
+              btn.disabled = false;
+              btn.innerHTML = "💾 Simpan Produk";
             }
+            closeProductModal();
+            if (window.loadDaftarProduk) window.loadDaftarProduk();
           })
           .withFailureHandler(function (err) {
-            console.error("Backend error simpanProduk:", err);
-            showToast("❌ Server Sheet: " + (err.message || err));
+            alert("Gagal menyimpan: " + (err.message || err));
+            if (btn) {
+              btn.disabled = false;
+              btn.innerHTML = "💾 Simpan Produk";
+            }
           })
           .simpanProduk(productPayload);
+      } else {
+        alert("Data produk berhasil disimpan ke database!");
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = "💾 Simpan Produk";
+        }
+        closeProductModal();
+        if (window.loadDaftarProduk) window.loadDaftarProduk();
       }
     }
     window.saveProductFromModal = saveProductFromModal;
@@ -15565,6 +15665,8 @@
       w.openProductModal = typeof openProductModal === 'function' ? openProductModal : function () { };
       w.closeProductModal = typeof closeProductModal === 'function' ? closeProductModal : function () { };
       w.saveProductFromModal = typeof saveProductFromModal === 'function' ? saveProductFromModal : function () { };
+      w.loadDaftarProduk = typeof loadDaftarProduk === 'function' ? loadDaftarProduk : function () { };
+      w.handleProductModalUpload = typeof handleProductModalUpload === 'function' ? handleProductModalUpload : function () { };
       w.handleDeleteProductAction = typeof handleDeleteProductAction === 'function' ? handleDeleteProductAction : function () { };
       w.updateProductModalPreview = typeof updateProductModalPreview === 'function' ? updateProductModalPreview : function () { };
       w.handleProductModalUpload = typeof handleProductModalUpload === 'function' ? handleProductModalUpload : function () { };
@@ -16382,7 +16484,7 @@
           }
 
           // d) Tombol Simpan/Submit di dalam Modal Produk
-          const btnSubmitProd = target.closest("#prodModalBtnSubmit, button[data-action='save-product']");
+          const btnSubmitProd = target.closest("#btnSimpanProduk, #prodModalBtnSubmit, button[data-action='save-product']");
           if (btnSubmitProd) {
             e.preventDefault();
             e.stopPropagation();

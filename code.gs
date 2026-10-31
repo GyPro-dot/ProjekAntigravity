@@ -368,16 +368,62 @@ function simpanProduk(data) {
       }
     }
 
-    // Pastikan fotoUrl menggunakan tautan CDN jsDelivr dari repo GyPro-dot/ProjekAntigravity@main/assets/ alih-alih googleusercontent
+    // Pastikan fotoUrl menggunakan tautan CDN jsDelivr dari repo GyPro-dot/ProjekAntigravity@main/assets/ atau upload Google Drive
     var defaultCdnFoto = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
     var finalFotoUrl = String(data.fotoUrl || "").trim();
-    if (!finalFotoUrl || finalFotoUrl.indexOf("googleusercontent.com") !== -1 || finalFotoUrl.indexOf("drive.google.com") !== -1) {
-      finalFotoUrl = defaultCdnFoto;
-    } else if (finalFotoUrl.indexOf("assets/") === 0) {
-      finalFotoUrl = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/" + finalFotoUrl;
+
+    // 1. Cek jika terdapat data file upload (base64) dari galeri
+    var fileData = data.fileUpload || data.fileBase64 || data.base64 || null;
+    if (!fileData && finalFotoUrl.indexOf("data:") === 0) {
+      fileData = {
+        base64: finalFotoUrl,
+        name: data.fileName || ((data.sku || data.id || "PROD") + ".jpg")
+      };
     }
 
-    var finalVideoUrl = String(data.videoUrl || "").trim();
+    if (fileData && fileData.base64) {
+      try {
+        var base64Str = fileData.base64;
+        var contentType = fileData.type || "image/jpeg";
+        var fileName = fileData.name || ((data.sku || data.id || "PROD") + "_" + (new Date().getTime()) + ".jpg");
+
+        if (base64Str.indexOf(",") !== -1) {
+          var parts = base64Str.split(",");
+          var mimeMatch = parts[0].match(/:(.*?);/);
+          if (mimeMatch) contentType = mimeMatch[1];
+          base64Str = parts[1];
+        }
+
+        var decodedBytes = Utilities.base64Decode(base64Str);
+        var blob = Utilities.newBlob(decodedBytes, contentType, fileName);
+
+        // Cari atau buat folder "Produk_Butik_VT" di Google Drive
+        var folderName = "Produk_Butik_VT";
+        var folders = DriveApp.getFoldersByName(folderName);
+        var targetFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+        var driveFile = targetFolder.createFile(blob);
+        driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+        var fileId = driveFile.getId();
+        if (fileId) {
+          finalFotoUrl = "https://drive.google.com/uc?export=view&id=" + fileId;
+        } else {
+          finalFotoUrl = driveFile.getUrl();
+        }
+      } catch (uploadErr) {
+        Logger.log("Gagal simpan file ke Drive: " + uploadErr.toString());
+        if (!finalFotoUrl || finalFotoUrl.indexOf("data:") === 0) {
+          finalFotoUrl = defaultCdnFoto;
+        }
+      }
+    } else {
+      if (!finalFotoUrl || finalFotoUrl.indexOf("googleusercontent.com") !== -1 || finalFotoUrl.indexOf("drive.google.com") !== -1) {
+        finalFotoUrl = defaultCdnFoto;
+      } else if (finalFotoUrl.indexOf("assets/") === 0) {
+        finalFotoUrl = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/" + finalFotoUrl;
+      }
+    }
+
     var katUtama = data.kategoriUtama || data.kategori || "Wanita";
     var subKat = data.subKategori || data.kategori || "Koleksi Fashion";
     var jenisKain = data.jenisKain || "Premium Quality";
@@ -408,7 +454,7 @@ function simpanProduk(data) {
         isEdit: true,
         id: id || sku,
         sku: sku,
-        message: "Produk '" + (nama || sku) + "' berhasil diperbarui!"
+        message: "Data produk berhasil disimpan ke database!"
       };
     } else {
       // Buat Produk Baru dengan ID Sekuensial PRD-XXX
@@ -449,7 +495,7 @@ function simpanProduk(data) {
         isEdit: false,
         id: newId,
         sku: skuBaru,
-        message: "Produk baru '" + (nama || skuBaru) + "' (" + newId + ") berhasil ditambahkan!"
+        message: "Data produk berhasil disimpan ke database!"
       };
     }
   } catch (err) {
