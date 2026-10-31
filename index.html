@@ -6779,6 +6779,23 @@
               🚪 Logout Petugas
             </button>
           </div>
+
+          <!-- Modul Kelola Petugas (Khusus SUPER ADMIN / ADMIN-G) -->
+          <div id="superAdminKelolaPetugasWrap" style="display: none; margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed var(--gold);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <span style="font-size: 0.78rem; font-weight: 800; color: var(--secondary);">👑 MODUL SUPER ADMIN: KELOLA AKUN PETUGAS</span>
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin: 2px 0 0 0;">
+                  Tambah akun baru ADMIN & OPERATOR dengan Email Aktif & Password (Sheet USERS).
+                </p>
+              </div>
+              <button type="button" class="btn-primary" id="btnBukaKelolaPetugas"
+                style="padding: 7px 16px; font-size: 0.78rem; background: var(--secondary); border: 1.5px solid var(--gold); color: var(--gold-light); font-weight: 800; cursor: pointer; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;"
+                onclick="openKelolaPetugasModal()">
+                👥 Kelola Petugas (Admin & Operator)
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -6845,7 +6862,7 @@
           <button class="btn-secondary"
             style="flex: 1; min-width: 130px; padding: 8px 10px; font-size: 0.75rem; font-weight: 700; border-color: var(--danger); color: var(--danger);"
             onclick="openReorderSupplierModal()">
-            🚨 Re-Order (< 10 Pcs) </button>
+            🚨 Re-Order (< 5 Pcs) </button>
         </div>
       </div>
 
@@ -6859,7 +6876,7 @@
             <span style="font-size: 1.3rem;">⚠️</span>
             <div>
               <div style="font-weight: 800; font-size: 0.82rem; color: #991b1b;" id="lowStockAlertTitle">
-                Peringatan: 4 Produk Stok Menipis (< 10 Item) </div>
+                Peringatan: Produk Stok Menipis (< 5 Item) </div>
                   <div style="font-size: 0.7rem; color: #7f1d1d;">
                     Item ini perlu segera di-reorder ke supplier agar display butik tidak kehabisan stok.
                   </div>
@@ -6868,7 +6885,7 @@
             <button class="btn-secondary"
               style="padding: 4px 10px; font-size: 0.72rem; background: #fee2e2; color: #991b1b; border-color: #f87171; font-weight: 700; white-space: nowrap; flex: none;"
               onclick="setStockFilterTab('LOW_STOCK')">
-              Filter < 10 </button>
+              Filter < 5 </button>
           </div>
 
           <!-- Filter Tab Tabel Stok: Semua vs Kritis < 10 -->
@@ -6879,7 +6896,7 @@
               </button>
               <button class="btn-period" id="tabStockLow" style="color: var(--danger);"
                 onclick="setStockFilterTab('LOW_STOCK')">
-                🚨 Kritis / Re-Order (< 10 Pcs) (<span id="countTabLow">4</span>)
+                🚨 Kritis / Re-Order (< 5 Pcs) (<span id="countTabLow">0</span>)
               </button>
             </div>
             <span style="font-size: 0.7rem; color: var(--text-muted);" id="stockTableCountText">Total 15 Produk</span>
@@ -6961,6 +6978,81 @@
       </button>
     </nav>
 
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: KELOLA AKUN PETUGAS TOKO (KHUSUS SUPER ADMIN)          -->
+  <!-- ============================================================== -->
+  <div class="modal-overlay" id="kelolaPetugasModal" style="display: none; z-index: 99999;">
+    <div class="bottom-sheet" style="max-width: 520px; border-top: 4px solid var(--primary); pointer-events: auto;">
+      <div class="sheet-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border); background: #fdfafb;">
+        <div>
+          <span class="sheet-title" style="font-size: 1.05rem; font-weight: 800; color: var(--secondary);">👥 Kelola Akun Petugas Toko</span>
+          <div style="font-size: 0.72rem; color: #b45309; font-weight: 700; margin-top: 2px;">
+            👑 Hak Akses Eksklusif: SUPER ADMIN (ADMIN-G / PINKY)
+          </div>
+        </div>
+        <button type="button" class="icon-btn" onclick="closeKelolaPetugasModal()" style="border:none; font-size: 1.25rem; cursor: pointer;">✕</button>
+      </div>
+      <div class="sheet-body" style="padding: 16px; max-height: 75vh; overflow-y: auto;">
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
+          Daftarkan akun <b>Email Aktif</b> dan <b>Password</b> untuk petugas baru dengan role <b>ADMIN</b> atau <b>OPERATOR</b>. Akun yang ditambahkan akan tersinkronisasi ke sheet <b>USERS</b>.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Email Aktif Petugas:</label>
+          <input type="email" id="petugasEmail" class="form-input" placeholder="contoh: petugas@pinkaccessories.com">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap Petugas:</label>
+          <input type="text" id="petugasNama" class="form-input" placeholder="contoh: SITI NURHALIZA">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password / PIN Akses:</label>
+          <input type="password" id="petugasPassword" class="form-input" placeholder="Ketik Password / PIN (contoh: 1234 atau password123)">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Pilih Level Role Petugas:</label>
+          <select id="petugasRole" class="form-select">
+            <option value="ADMIN">💎 ADMIN TOKO (Wewenang Penuh: Stok, Kasir, Laporan)</option>
+            <option value="OPERATOR" selected>🏷️ OPERATOR TOKO (Wewenang Penuh: Stok, Kasir, Laporan)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Status Akun:</label>
+          <select id="petugasStatus" class="form-select">
+            <option value="Aktif" selected>Aktif</option>
+            <option value="Nonaktif">Nonaktif</option>
+          </select>
+        </div>
+
+        <!-- Tabel Daftar Petugas Terdaftar -->
+        <div style="margin-top: 16px;">
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--secondary); text-transform: uppercase;">Daftar Petugas Terdaftar:</span>
+          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.72rem;">
+              <thead>
+                <tr style="background: #f1f5f9; border-bottom: 1px solid var(--border); text-align: left;">
+                  <th style="padding: 6px 8px;">Nama</th>
+                  <th style="padding: 6px 8px;">Role</th>
+                  <th style="padding: 6px 8px;">Email</th>
+                  <th style="padding: 6px 8px;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="petugasTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="sheet-footer" style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--border); background: #fdfafb;">
+        <button type="button" class="btn-secondary" onclick="closeKelolaPetugasModal()" style="cursor: pointer;">Tutup</button>
+        <button type="button" class="btn-primary" onclick="submitTambahPetugas()" style="cursor: pointer;">💾 Simpan Akun Petugas</button>
+      </div>
+    </div>
   </div>
 
   <!-- ============================================================== -->
@@ -7049,6 +7141,11 @@
           <input type="text" id="prodModalFoto" class="form-input" oninput="updateProductModalPreview(this.value)"
             placeholder="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/..."
             value="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Video URL Produk (Opsional - YouTube / Video MP4):</label>
+          <input type="text" id="prodModalVideo" class="form-input" placeholder="Contoh: https://youtube.com/shorts/... atau https://cdn.jsdelivr.net/.../video.mp4">
         </div>
 
         <div class="form-group">
@@ -7707,7 +7804,7 @@
   <div class="modal-overlay" id="reorderSupplierModal">
     <div class="bottom-sheet" style="max-width: 650px;">
       <div class="sheet-header no-print">
-        <span class="sheet-title">🚨 Surat Rekomendasi Re-Order Supplier (< 10 Pcs)</span>
+        <span class="sheet-title">🚨 Surat Rekomendasi Re-Order Supplier (< 5 Pcs)</span>
             <button class="icon-btn" onclick="closeReorderSupplierModal()" style="border:none;">✕</button>
       </div>
       <div class="sheet-body" style="padding: 10px;">
@@ -7722,7 +7819,7 @@
             </div>
             <div style="text-align: right;">
               <span class="doc-badge-pill" style="background: #fee2e2; color: #991b1b; border: 1px solid #f87171;">STOK
-                KRITIS < 10 PCS</span>
+                KRITIS < 5 PCS</span>
                   <div style="font-size: 0.72rem; margin-top: 4px;" id="reorderDocDate">Tanggal: 21/10/2026</div>
                   <div style="font-size: 0.7rem; color: var(--text-muted);" id="reorderDocOfficer">Petugas: PINKY</div>
             </div>
@@ -9766,7 +9863,7 @@
       chosenColor: "",
       chosenQty: 1,
       selectedPaymentMethod: "Tunai",
-      stockFilterTab: "ALL", // "ALL" atau "LOW_STOCK" (< 10 pcs)
+      stockFilterTab: "ALL", // "ALL" atau "LOW_STOCK" (< 5 pcs)
       stockPeriod: "DAILY",  // "DAILY", "WEEKLY", "MONTHLY"
       selectedInvoiceId: "TRX-202610-001",
       transactions: [
@@ -10260,11 +10357,19 @@
 
       const metrics = document.getElementById("adminMetricsSection");
       if (metrics) {
-        if (u.role === "OPERATOR" || u.role === "CUSTOMER") {
+        // OPERATOR dan ADMIN memiliki wewenang operasional yang sama persis melihat metrik stok & omzet
+        if (u.role === "CUSTOMER") {
           metrics.style.display = "none";
         } else {
           metrics.style.display = "block";
         }
+      }
+
+      // Hak Akses Eksklusif SUPER ADMIN (Modul Kelola Petugas)
+      const isSuperAdmin = (u && (u.role === "SUPER_ADMIN" || String(u.name).toUpperCase().includes("PINKY") || String(u.title).toUpperCase().includes("ADMIN-G")));
+      const superAdminWrap = document.getElementById("superAdminKelolaPetugasWrap");
+      if (superAdminWrap) {
+        superAdminWrap.style.display = isSuperAdmin ? "block" : "none";
       }
 
       // KONTROL VISIBILITAS FITUR "SETTING & STOK" (Hanya SUPER ADMIN, ADMIN TOKO, dan OPERATOR TOKO)
@@ -11128,6 +11233,167 @@
       }
     }
     window.handleDeleteProductAction = handleDeleteProductAction;
+
+    // -------------------------------------------------------------
+    // FITUR KELOLA PETUGAS (EKSKLUSIF SUPER ADMIN / ADMIN-G)
+    // -------------------------------------------------------------
+    function openKelolaPetugasModal() {
+      const u = state?.currentUser;
+      const isSuperAdmin = (u && (u.role === "SUPER_ADMIN" || String(u.name).toUpperCase().includes("PINKY") || String(u.title).toUpperCase().includes("ADMIN-G")));
+      if (!isSuperAdmin) {
+        showToast("🔒 Fitur ini eksklusif hanya untuk SUPER ADMIN!");
+        return;
+      }
+
+      const modal = document.getElementById("kelolaPetugasModal");
+      if (modal) {
+        modal.style.setProperty("display", "flex", "important");
+        modal.style.setProperty("visibility", "visible", "important");
+        modal.style.setProperty("z-index", "99999", "important");
+        modal.style.setProperty("pointer-events", "auto", "important");
+      }
+      renderPetugasTable();
+    }
+    window.openKelolaPetugasModal = openKelolaPetugasModal;
+
+    function closeKelolaPetugasModal() {
+      const modal = document.getElementById("kelolaPetugasModal");
+      if (modal) modal.style.setProperty("display", "none", "important");
+    }
+    window.closeKelolaPetugasModal = closeKelolaPetugasModal;
+
+    function renderPetugasTable() {
+      const tbody = document.getElementById("petugasTableBody");
+      if (!tbody) return;
+
+      let staffList = [];
+      try {
+        staffList = JSON.parse(localStorage.getItem("vt_registered_staff") || "[]");
+      } catch (e) { }
+
+      if (staffList.length === 0) {
+        staffList = [
+          { nama: "PINKY", role: "SUPER_ADMIN", email: "pinky@pinkaccessories.com", status: "Aktif" },
+          { nama: "VICKY", role: "ADMIN", email: "vicky@pinkaccessories.com", status: "Aktif" },
+          { nama: "TISH", role: "ADMIN", email: "tish@pinkaccessories.com", status: "Aktif" },
+          { nama: "WIDYA", role: "OPERATOR", email: "widya@pinkaccessories.com", status: "Aktif" },
+          { nama: "MILA", role: "OPERATOR", email: "mila@pinkaccessories.com", status: "Aktif" },
+          { nama: "ROSSI", role: "OPERATOR", email: "rossi@pinkaccessories.com", status: "Aktif" }
+        ];
+      }
+
+      tbody.innerHTML = staffList.map(s => `
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 6px 8px; font-weight: 700; color: var(--secondary);">${s.nama}</td>
+          <td style="padding: 6px 8px;"><span style="background: #ecfdf5; color: #047857; font-weight: 700; padding: 2px 6px; border-radius: 4px;">${s.role}</span></td>
+          <td style="padding: 6px 8px; color: var(--text-muted);">${s.email}</td>
+          <td style="padding: 6px 8px;"><span style="color: #16a34a; font-weight: 700;">${s.status || 'Aktif'}</span></td>
+        </tr>
+      `).join("");
+    }
+    window.renderPetugasTable = renderPetugasTable;
+
+    function submitTambahPetugas() {
+      const emailInput = document.getElementById("petugasEmail");
+      const namaInput = document.getElementById("petugasNama");
+      const passInput = document.getElementById("petugasPassword");
+      const roleSelect = document.getElementById("petugasRole");
+      const statusSelect = document.getElementById("petugasStatus");
+
+      const email = emailInput ? emailInput.value.trim() : "";
+      const nama = namaInput ? namaInput.value.trim().toUpperCase() : "";
+      const pass = passInput ? passInput.value.trim() : "";
+      const role = roleSelect ? roleSelect.value : "OPERATOR";
+      const status = statusSelect ? statusSelect.value : "Aktif";
+
+      if (!email || !email.includes("@")) {
+        showToast("⚠️ Masukkan alamat Email yang valid!");
+        if (emailInput) emailInput.focus();
+        return;
+      }
+      if (!nama) {
+        showToast("⚠️ Masukkan Nama Lengkap Petugas!");
+        if (namaInput) namaInput.focus();
+        return;
+      }
+      if (!pass || pass.length < 3) {
+        showToast("⚠️ Masukkan Password minimal 3 karakter!");
+        if (passInput) passInput.focus();
+        return;
+      }
+
+      const newStaff = {
+        email: email,
+        nama: nama,
+        pass: pass,
+        role: role,
+        status: status,
+        tanggalDaftar: new Date().toISOString().split("T")[0]
+      };
+
+      // Daftarkan ke USER_ROLES lokal
+      const roleKey = `${role}:${nama}`;
+      USER_ROLES[roleKey] = {
+        role: role,
+        name: nama,
+        title: `${role} : ${nama}`,
+        icon: role === "ADMIN" ? "💎" : "🏷️",
+        canManageStock: true
+      };
+
+      // Simpan ke localStorage
+      let staffList = [];
+      try {
+        staffList = JSON.parse(localStorage.getItem("vt_registered_staff") || "[]");
+      } catch (e) { }
+      staffList.push(newStaff);
+      try {
+        localStorage.setItem("vt_registered_staff", JSON.stringify(staffList));
+      } catch (e) { }
+
+      // Tambahkan opsi ke settingRoleSelect
+      const settingSelect = document.getElementById("settingRoleSelect");
+      if (settingSelect) {
+        const opt = document.createElement("option");
+        opt.value = roleKey;
+        opt.text = `${role === 'ADMIN' ? '💎' : '🏷️'} ${role} : ${nama}`;
+        settingSelect.appendChild(opt);
+      }
+
+      // Reset form
+      if (emailInput) emailInput.value = "";
+      if (namaInput) namaInput.value = "";
+      if (passInput) passInput.value = "";
+
+      renderPetugasTable();
+      showToast(`✅ Akun Petugas ${nama} (${role}) berhasil didaftarkan!`);
+
+      // Sinkronisasi ke Google Apps Script backend
+      if (typeof google !== "undefined" && google.script && google.script.run) {
+        const u = state?.currentUser;
+        google.script.run
+          .withSuccessHandler(res => {
+            if (res && res.success) {
+              showToast("☁️ " + (res.message || "Tercatat di sheet USERS!"));
+            } else {
+              showToast("⚠️ " + (res && res.message ? res.message : "Gagal catat di sheet"));
+            }
+          })
+          .withFailureHandler(err => {
+            console.error("Backend error tambahPetugas:", err);
+          })
+          .tambahPetugas({
+            email: email,
+            nama: nama,
+            password: pass,
+            role: role,
+            status: status,
+            callerRole: u ? u.role : "SUPER_ADMIN",
+            callerName: u ? u.name : "PINKY"
+          });
+      }
+    }
+    window.submitTambahPetugas = submitTambahPetugas;
 
     // EVENT DELEGATION KHUSUS TABEL STOK & TOMBOL INPUT STOK (ANTI-GAGAL)
     document.addEventListener("click", function (event) {
@@ -13988,7 +14254,7 @@
     // ADMIN TABLE DENGAN FOTO, STATUS RE-ORDER & QUICK RESTOCK
     function renderAdminTable() {
       const tbody = document.getElementById("adminStockTableBody");
-      const lowStockCount = state.products.filter(p => p.stok < 10).length;
+      const lowStockCount = state.products.filter(p => p.stok < 5).length;
 
       // Update badge count tabs
       const countAll = document.getElementById("countTabAll");
@@ -14000,13 +14266,13 @@
       if (alertBanner) {
         alertBanner.style.display = lowStockCount > 0 ? "flex" : "none";
         const titleEl = document.getElementById("lowStockAlertTitle");
-        if (titleEl) titleEl.innerText = `Peringatan: ${lowStockCount} Produk Stok Menipis (< 10 Item)`;
+        if (titleEl) titleEl.innerText = `Peringatan: ${lowStockCount} Produk Stok Menipis (< 5 Item)`;
       }
 
       // Filter daftar produk
       let list = state.products;
       if (state.stockFilterTab === "LOW_STOCK") {
-        list = state.products.filter(p => p.stok < 10);
+        list = state.products.filter(p => p.stok < 5);
       }
 
       const countText = document.getElementById("stockTableCountText");
@@ -14021,7 +14287,7 @@
       }
 
       tbody.innerHTML = list.map(p => {
-        const isLow = p.stok < 10;
+        const isLow = p.stok < 5;
         const pSku = p.sku || p.id || "";
         const pId = p.id || pSku;
         return `
@@ -14153,7 +14419,7 @@
 
       const tbody = document.getElementById("printStockTableBody");
       tbody.innerHTML = state.products.map((p, i) => {
-        const isLow = p.stok < 10;
+        const isLow = p.stok < 5;
         return `
           <tr>
             <td style="text-align: center;">${i + 1}</td>
@@ -14183,12 +14449,12 @@
       document.getElementById("reorderDocOfficer").innerText = "Petugas: " + state.currentUser.name;
       document.getElementById("reorderSignOfficer").innerText = state.currentUser.title;
 
-      const lowItems = state.products.filter(p => p.stok < 10);
+      const lowItems = state.products.filter(p => p.stok < 5);
       let totalEstBudget = 0;
 
       const tbody = document.getElementById("reorderTableBody");
       if (lowItems.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; color: #16a34a; font-weight: 700;">🎉 Seluruh stok barang dalam kondisi aman (tidak ada yang di bawah 10 pcs).</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; color: #16a34a; font-weight: 700;">🎉 Seluruh stok barang dalam kondisi aman (tidak ada yang di bawah 5 pcs).</td></tr>`;
         document.getElementById("reorderTotalBudget").innerText = "Rp 0";
       } else {
         tbody.innerHTML = lowItems.map((p, i) => {
@@ -15570,6 +15836,12 @@
         window.standaloneGoogleAuth = loginWithGoogleDirect;
         window.standaloneResetPassword = openResetPasswordDirect;
 
+        window.openProductModal = typeof openProductModal === 'function' ? openProductModal : window.openProductModal;
+        window.closeProductModal = typeof closeProductModal === 'function' ? closeProductModal : window.closeProductModal;
+        window.saveProductFromModal = typeof saveProductFromModal === 'function' ? saveProductFromModal : window.saveProductFromModal;
+        window.handleDeleteProductAction = typeof handleDeleteProductAction === 'function' ? handleDeleteProductAction : window.handleDeleteProductAction;
+        window.openKelolaPetugasModal = typeof openKelolaPetugasModal === 'function' ? openKelolaPetugasModal : window.openKelolaPetugasModal;
+        window.closeKelolaPetugasModal = typeof closeKelolaPetugasModal === 'function' ? closeKelolaPetugasModal : window.closeKelolaPetugasModal;
         window.openAuthModal = openAuthModalDirect;
         window.closeAuthModal = closeAuthModalDirect;
         window.submitModalAuthForm = standaloneSubmitAuth;
@@ -15707,6 +15979,74 @@
         document.addEventListener("click", function (e) {
           const target = e.target;
           if (!target || !(target instanceof Element)) return;
+
+          // ==========================================================
+          // CRITICAL EVENT DELEGATION: MANAJEMEN STOK & PRODUK TOKO
+          // ==========================================================
+          // a) Tombol "+ Input Stock Barang" (Operator / Admin)
+          const btnAddStock = target.closest("#btnInputStockBarang, [data-action='add-stock'], .btn-add-stock");
+          if (btnAddStock && !target.closest("#productModal, #operatorModal, #editProductModal, #kelolaPetugasModal")) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.openProductModal === "function") {
+              window.openProductModal("add");
+            } else {
+              const pModal = document.getElementById("productModal");
+              if (pModal) {
+                pModal.style.setProperty("display", "flex", "important");
+                pModal.style.setProperty("visibility", "visible", "important");
+                pModal.style.setProperty("z-index", "99999", "important");
+                pModal.style.setProperty("pointer-events", "auto", "important");
+              }
+            }
+            return;
+          }
+
+          // b) Tombol "Edit" di tabel produk
+          const btnEditStock = target.closest(".btn-action-edit, button[data-action='edit-product']");
+          if (btnEditStock && !target.closest("#productModal")) {
+            e.preventDefault();
+            e.stopPropagation();
+            const sku = btnEditStock.getAttribute("data-sku") || btnEditStock.getAttribute("data-id") || btnEditStock.closest("tr")?.getAttribute("data-sku");
+            if (typeof window.openProductModal === "function" && sku) {
+              window.openProductModal("edit", sku);
+            }
+            return;
+          }
+
+          // c) Tombol "Hapus" di tabel produk
+          const btnDelStock = target.closest(".btn-action-delete, button[data-action='delete-product']");
+          if (btnDelStock && !target.closest("#productModal")) {
+            e.preventDefault();
+            e.stopPropagation();
+            const sku = btnDelStock.getAttribute("data-sku") || btnDelStock.getAttribute("data-id") || btnDelStock.closest("tr")?.getAttribute("data-sku");
+            if (typeof window.handleDeleteProductAction === "function" && sku) {
+              window.handleDeleteProductAction(sku);
+            }
+            return;
+          }
+
+          // d) Tombol Simpan/Submit di dalam Modal Produk
+          const btnSubmitProd = target.closest("#prodModalBtnSubmit, button[data-action='save-product']");
+          if (btnSubmitProd) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.saveProductFromModal === "function") {
+              window.saveProductFromModal();
+            }
+            return;
+          }
+
+          // e) Tombol Kelola Petugas (Super Admin)
+          const btnKelola = target.closest("#btnBukaKelolaPetugas, [data-action='kelola-petugas']");
+          if (btnKelola) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.openKelolaPetugasModal === "function") {
+              window.openKelolaPetugasModal();
+            }
+            return;
+          }
 
           // 1. Tombol & Link Interaktif di Dalam Modal Masuk / Daftar
           if (target.closest("#btnModalAuthSubmit, button.btn-auth-main-action")) {

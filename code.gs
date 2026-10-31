@@ -344,8 +344,8 @@ function simpanProduk(data) {
     lock.waitLock(10000);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
-    var sheet = ss.getSheetByName("DataProduk");
-    if (!sheet) return { success: false, message: "Tab DataProduk tidak ditemukan." };
+    var sheet = ss.getSheetByName("DataProduk") || ss.getSheetByName("PRODUK") || ss.getSheetByName("Produk");
+    if (!sheet) return { success: false, message: "Sheet DataProduk / PRODUK tidak ditemukan." };
 
     if (!data) return { success: false, message: "Data produk tidak boleh kosong." };
 
@@ -377,6 +377,7 @@ function simpanProduk(data) {
       finalFotoUrl = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/" + finalFotoUrl;
     }
 
+    var finalVideoUrl = String(data.videoUrl || "").trim();
     var katUtama = data.kategoriUtama || data.kategori || "Wanita";
     var subKat = data.subKategori || data.kategori || "Koleksi Fashion";
     var jenisKain = data.jenisKain || "Premium Quality";
@@ -468,8 +469,8 @@ function hapusProduk(skuOrId) {
     lock.waitLock(10000);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
-    var sheet = ss.getSheetByName("DataProduk");
-    if (!sheet) return { success: false, message: "Tab DataProduk tidak ditemukan." };
+    var sheet = ss.getSheetByName("DataProduk") || ss.getSheetByName("PRODUK") || ss.getSheetByName("Produk");
+    if (!sheet) return { success: false, message: "Sheet DataProduk / PRODUK tidak ditemukan." };
 
     var query = String(skuOrId || "").trim();
     if (query && sheet.getLastRow() > 1) {
@@ -494,6 +495,125 @@ function hapusProduk(skuOrId) {
     return { success: false, message: err.toString() };
   } finally {
     lock.releaseLock();
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 5C. API KELOLA PETUGAS BARU (KHUSUS SUPER ADMIN)
+// ----------------------------------------------------------------------------
+function tambahPetugas(dataPetugas) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
+
+    // Validasi wewenang Super Admin
+    var callerRole = String(dataPetugas.callerRole || "").toUpperCase();
+    var callerName = String(dataPetugas.callerName || "").toUpperCase();
+    if (callerRole !== "SUPER_ADMIN" && !callerName.includes("PINKY") && !callerName.includes("ADMIN-G")) {
+      return { success: false, message: "Akses Ditolak: Hanya SUPER ADMIN yang berwenang menambah akun petugas baru!" };
+    }
+
+    if (!dataPetugas.email || !dataPetugas.nama || !dataPetugas.password) {
+      return { success: false, message: "Email, Nama Lengkap, dan Password wajib diisi!" };
+    }
+
+    // Cari sheet USERS atau DataPengguna
+    var sheetUser = ss.getSheetByName("USERS") || ss.getSheetByName("DataPengguna");
+    if (!sheetUser) {
+      sheetUser = ss.insertSheet("USERS");
+      sheetUser.appendRow(["Email", "Nama_Lengkap", "Password", "Role", "Status", "Tanggal_Daftar"]);
+    }
+
+    var nowFormatted = Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd HH:mm:ss");
+    var email = String(dataPetugas.email).trim();
+    var nama = String(dataPetugas.nama).trim();
+    var password = String(dataPetugas.password).trim();
+    var role = String(dataPetugas.role || "OPERATOR").toUpperCase();
+    var status = String(dataPetugas.status || "Aktif").trim();
+
+    // Periksa kolom sheet
+    var headers = sheetUser.getRange(1, 1, 1, sheetUser.getLastColumn()).getValues()[0];
+    var colMap = {};
+    for (var h = 0; h < headers.length; h++) {
+      colMap[String(headers[h]).trim().toLowerCase()] = h + 1;
+    }
+
+    // Cek duplikasi email
+    var lastRow = sheetUser.getLastRow();
+    if (lastRow > 1) {
+      var emailColIdx = colMap["email"] || 1;
+      var emails = sheetUser.getRange(2, emailColIdx, lastRow - 1, 1).getValues();
+      for (var e = 0; e < emails.length; e++) {
+        if (String(emails[e][0]).trim().toLowerCase() === email.toLowerCase()) {
+          return { success: false, message: "Email '" + email + "' sudah terdaftar sebagai petugas sebelumnya." };
+        }
+      }
+    }
+
+    if (colMap["idpengguna"]) {
+      var nextId = "USR-" + ("000" + lastRow).slice(-3);
+      sheetUser.appendRow([
+        nextId,
+        nama,
+        role,
+        email,
+        dataPetugas.noWhatsApp || "-",
+        password,
+        status
+      ]);
+    } else {
+      // Basis Data USERS: Email, Nama_Lengkap, Password, Role, Status, Tanggal_Daftar
+      sheetUser.appendRow([
+        email,
+        nama,
+        password,
+        role,
+        status,
+        nowFormatted
+      ]);
+    }
+
+    return {
+      success: true,
+      message: "Akun petugas '" + nama + "' (" + role + ") berhasil didaftarkan ke sheet USERS!"
+    };
+  } catch (err) {
+    Logger.log("Error tambahPetugas: " + err.toString());
+    return { success: false, message: err.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function getDaftarPetugas() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return { success: false, message: "Spreadsheet tidak ditemukan." };
+    var sheetUser = ss.getSheetByName("USERS") || ss.getSheetByName("DataPengguna");
+    var list = [];
+    if (sheetUser && sheetUser.getLastRow() > 1) {
+      var rows = sheetUser.getRange(2, 1, sheetUser.getLastRow() - 1, sheetUser.getLastColumn()).getValues();
+      var headers = sheetUser.getRange(1, 1, 1, sheetUser.getLastColumn()).getValues()[0];
+      var colMap = {};
+      for (var h = 0; h < headers.length; h++) {
+        colMap[String(headers[h]).trim().toLowerCase()] = h;
+      }
+
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        list.push({
+          email: String(colMap["email"] !== undefined ? r[colMap["email"]] : r[0]),
+          nama: String(colMap["nama_lengkap"] !== undefined ? r[colMap["nama_lengkap"]] : (colMap["nama"] !== undefined ? r[colMap["nama"]] : r[1])),
+          role: String(colMap["role"] !== undefined ? r[colMap["role"]] : (colMap["levelrole"] !== undefined ? r[colMap["levelrole"]] : r[2])),
+          status: String(colMap["status"] !== undefined ? r[colMap["status"]] : "Aktif")
+        });
+      }
+    }
+    return { success: true, list: list };
+  } catch (err) {
+    return { success: false, message: err.toString() };
   }
 }
 
