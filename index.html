@@ -7058,7 +7058,7 @@
   <!-- ============================================================== -->
   <!-- MODAL: INPUT & EDIT MASTER PRODUK / STOK (LENGKAP CRUD)       -->
   <!-- ============================================================== -->
-  <div class="modal-overlay" id="productModal" style="display: none; z-index: 99999;">
+  <div class="modal-overlay" id="productModal" style="display: none; z-index: 99999;" onclick="if(event.target === this) window.forceCloseAllModals()">
     <div class="bottom-sheet" style="max-width: 540px; border-top: 4px solid var(--gold);">
       <div class="sheet-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border); background: #fdfafb;">
         <div>
@@ -7067,7 +7067,7 @@
             🛡️ Otoritas: SUPER ADMIN, ADMIN & OPERATOR (ADMIN-G)
           </div>
         </div>
-        <button type="button" class="icon-btn" onclick="closeProductModal()" style="border:none; font-size: 1.25rem; cursor: pointer;">✕</button>
+        <button type="button" class="icon-btn" onclick="window.forceCloseAllModals()" style="border:none; font-size: 1.25rem; cursor: pointer;">✕</button>
       </div>
       <div class="sheet-body" style="padding: 16px; max-height: 75vh; overflow-y: auto;">
         <input type="hidden" id="prodModalId">
@@ -7158,7 +7158,7 @@
           🗑️ Hapus Produk
         </button>
         <div style="display: flex; gap: 8px; margin-left: auto;">
-          <button type="button" class="btn-secondary" onclick="closeProductModal()" style="cursor: pointer;">Batal</button>
+          <button type="button" class="btn-secondary" onclick="window.forceCloseAllModals()" style="cursor: pointer;">Batal</button>
           <button type="button" class="btn-primary" id="btnSimpanProduk" data-action="save-product" onclick="window.handleDirectSaveProduct(this, event)" style="cursor: pointer; background: var(--primary); border-color: var(--primary); font-weight: 700; padding: 8px 16px;">💾 Simpan Produk</button>
         </div>
       </div>
@@ -11143,6 +11143,15 @@
       modal.style.setProperty("visibility", "visible", "important");
       modal.style.setProperty("z-index", "99999", "important");
       modal.style.setProperty("opacity", "1", "important");
+      modal.style.setProperty("pointer-events", "auto", "important");
+
+      const innerCards = modal.querySelectorAll(".bottom-sheet, .modal-content, .modal-card, form");
+      innerCards.forEach(card => {
+        card.style.removeProperty("display");
+        card.style.setProperty("opacity", "1", "important");
+        card.style.setProperty("visibility", "visible", "important");
+        card.style.setProperty("pointer-events", "auto", "important");
+      });
 
       setTimeout(() => {
         if (!isEdit && namaEl) namaEl.focus();
@@ -11150,15 +11159,53 @@
     }
     window.openProductModal = openProductModal;
 
-    function closeProductModal() {
-      const modal = document.getElementById("productModal");
-      if (modal) modal.style.setProperty("display", "none", "important");
-      const opModal = document.getElementById("operatorModal");
-      if (opModal) opModal.style.setProperty("display", "none", "important");
-      const edModal = document.getElementById("editProductModal");
-      if (edModal) edModal.style.setProperty("display", "none", "important");
+    function forceCloseAllModals() {
+      // 1. Cari dan sembunyikan SEMUA elemen modal overlay terluar
+      const overlays = document.querySelectorAll(".modal-overlay, [id*='Modal'], [id*='modal'], [class*='overlay']");
+      overlays.forEach(overlay => {
+        if (overlay.classList.contains("modal-overlay") || (overlay.id && overlay.id.toLowerCase().includes("modal"))) {
+          overlay.style.setProperty("display", "none", "important");
+          overlay.style.setProperty("visibility", "hidden", "important");
+          overlay.style.setProperty("opacity", "0", "important");
+          overlay.style.setProperty("pointer-events", "none", "important");
+
+          // Reset elemen kartu putih di dalamnya agar saat dibuka lagi tidak hilang
+          const innerCards = overlay.querySelectorAll(".bottom-sheet, .modal-content, .modal-card, .detail-dialog-wrap, form");
+          innerCards.forEach(card => {
+            card.style.removeProperty("display");
+            card.style.setProperty("opacity", "1", "important");
+            card.style.setProperty("visibility", "visible", "important");
+            card.style.setProperty("pointer-events", "auto", "important");
+          });
+        }
+      });
+
+      // 2. Bersihkan body dan documentElement dari efek blur / overflow hidden
+      if (document.body) {
+        document.body.classList.remove("modal-open", "blur", "overflow-hidden", "has-modal-open");
+        document.body.style.filter = "none";
+        document.body.style.backdropFilter = "none";
+        document.body.style.overflow = "auto";
+        document.body.style.pointerEvents = "auto";
+      }
+      if (document.documentElement) {
+        document.documentElement.classList.remove("modal-open", "blur", "overflow-hidden", "has-modal-open");
+        document.documentElement.style.filter = "none";
+        document.documentElement.style.backdropFilter = "none";
+        document.documentElement.style.overflow = "auto";
+        document.documentElement.style.pointerEvents = "auto";
+      }
+
+      // 3. Bersihkan kontainer utama dan bingkai preview
+      const appContainers = document.querySelectorAll("#app, .app-container, .main-layout, .device-screen, .preview-frame");
+      appContainers.forEach(el => {
+        el.style.filter = "none";
+        el.style.backdropFilter = "none";
+        el.style.pointerEvents = "auto";
+      });
     }
-    window.closeProductModal = closeProductModal;
+    window.forceCloseAllModals = forceCloseAllModals;
+    window.closeProductModal = forceCloseAllModals;
 
     function updateProductModalPreview(url) {
       const preview = document.getElementById("prodModalPreviewImg");
@@ -15674,6 +15721,7 @@
       w.closeProductModal = typeof closeProductModal === 'function' ? closeProductModal : function () { };
       w.saveProductFromModal = typeof saveProductFromModal === 'function' ? saveProductFromModal : function () { };
       w.executeSaveProduct = typeof executeSaveProduct === 'function' ? executeSaveProduct : function () { };
+      w.forceCloseAllModals = typeof forceCloseAllModals === 'function' ? forceCloseAllModals : function () { };
       w.loadDaftarProduk = typeof loadDaftarProduk === 'function' ? loadDaftarProduk : function () { };
       w.handleProductModalUpload = typeof handleProductModalUpload === 'function' ? handleProductModalUpload : function () { };
       w.handleDeleteProductAction = typeof handleDeleteProductAction === 'function' ? handleDeleteProductAction : function () { };
@@ -15916,9 +15964,11 @@
           google.script.run
             .withSuccessHandler(function (res) {
               console.log("GAS simpanProduk success:", res);
+              if (typeof window.forceCloseAllModals === "function") window.forceCloseAllModals();
             })
             .withFailureHandler(function (err) {
               console.warn("GAS simpanProduk notice:", err);
+              if (typeof window.forceCloseAllModals === "function") window.forceCloseAllModals();
             })
             .simpanProduk(payload);
         } catch (gasErr) {
@@ -15926,20 +15976,21 @@
         }
       }
 
-      // 5. TUTUP MODAL
+      // 5. TUTUP MODAL DENGAN SAPU BERSIH BACKDROP & BLUR
       setTimeout(() => {
-        if (typeof closeProductModal === "function") {
+        if (typeof window.forceCloseAllModals === "function") {
+          window.forceCloseAllModals();
+        } else if (typeof closeProductModal === "function") {
           closeProductModal();
-        } else {
-          modalEl.style.setProperty("display", "none", "important");
         }
+
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = "💾 Simpan Produk";
           btn.style.background = "";
           btn.style.borderColor = "";
         }
-        statusBanner.style.display = "none";
+        if (statusBanner) statusBanner.style.display = "none";
 
         const tableWrap = document.getElementById("adminProductsTableWrap") ||
                           document.getElementById("inventoryTable") ||
@@ -15961,12 +16012,44 @@
     (function () {
       "use strict";
 
+      // ESCAPE KEY LISTENER (TUTUP SEMUA MODAL & HAPUS BLUR SAAT TEKAN ESC)
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" || e.keyCode === 27) {
+          if (typeof window.forceCloseAllModals === "function") {
+            window.forceCloseAllModals();
+          }
+        }
+      }, true);
+
       // ==========================================================
-      // 0. CAPTURE PHASE LISTENER (ANTI-MELESET) UNTUK SIMPAN PRODUK
+      // 0. CAPTURE PHASE LISTENER (ANTI-MELESET) UNTUK SIMPAN PRODUK & SAPU BERSIH MODAL
       // ==========================================================
       document.addEventListener("click", function (e) {
         const target = e.target;
         if (!target || !(target instanceof Element)) return;
+
+        // A. Deteksi tombol X, Batal, atau tombol close modal
+        const isCloseBtn = target.closest("button.icon-btn, button.close-btn, [data-close-modal], [onclick*='closeProductModal'], [onclick*='forceCloseAllModals']") ||
+                           (target.tagName === "BUTTON" && (target.textContent.trim() === "✕" || target.textContent.trim() === "Batal"));
+        if (isCloseBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof window.forceCloseAllModals === "function") {
+            window.forceCloseAllModals();
+          }
+          return;
+        }
+
+        // B. Deteksi klik tepat pada area luar backdrop overlay (efek blur)
+        if (target.classList.contains("modal-overlay") || 
+            (target.id && target.id.toLowerCase().includes("modal") && target.classList.contains("modal-overlay"))) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof window.forceCloseAllModals === "function") {
+            window.forceCloseAllModals();
+          }
+          return;
+        }
 
         const btn = target.closest("button, [role='button'], .btn-primary, .btn-secondary");
         if (!btn) return;
