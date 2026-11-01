@@ -5,15 +5,16 @@ if (typeof Assistant === 'undefined') {
 
 /**
  * ============================================================================
- * PAC (Pink ACcessories) - Indian Fashion & Accessories
+ * PAC (Pink ACcessories) • Butik V&T - Indian Fashion & Accessories
  * File: setup.gs
  * Fungsi: Inisialisasi Database Google Sheets & Safe Migration (Idempoten)
  * ============================================================================
- * Aturan Rekayasa Sistem ZettBOT:
- * 1. DILARANG menggunakan karakter underscore (_) pada nama sheet.
- * 2. Idempoten & Safe Migrate: Tidak menghapus atau menimpa data riil pengguna.
- * 3. Menambahkan header baru di posisi paling kanan jika belum ada.
- * 4. Data contoh hanya diisikan jika sheet dalam kondisi kosong baru dibuat.
+ * Standar Rekayasa Sistem ZettBOT:
+ * 1. Idempoten & Safe Migrate: Tidak pernah menggunakan clear() atau menghapus
+ *    baris data pengguna yang sudah ada.
+ * 2. Menambahkan kolom header baru di posisi paling kanan jika belum ada.
+ * 3. Data sampel awal (14 kolom presisi) hanya diisikan jika sheet baru dibuat
+ *    dan masih kosong.
  */
 
 function setupDatabase() {
@@ -22,7 +23,7 @@ function setupDatabase() {
     throw new Error("Skrip harus dijalankan dari Google Spreadsheet yang aktif!");
   }
 
-  // 1. Inisialisasi Tab DataProduk (Lengkap dengan Departemen & Jenis Kain)
+  // 1. Inisialisasi Tab DataProduk (14 Kolom Presisi)
   initSheet(ss, "DataProduk", [
     "IdProduk",
     "SkuBarcode",
@@ -40,7 +41,7 @@ function setupDatabase() {
     "Status"
   ], getSampleProduk());
 
-  // 2. Inisialisasi Tab DataTransaksi
+  // 2. Inisialisasi Tab DataTransaksi (12 Kolom POS Kasir)
   initSheet(ss, "DataTransaksi", [
     "IdTransaksi",
     "Tanggal",
@@ -56,7 +57,7 @@ function setupDatabase() {
     "Catatan"
   ], []);
 
-  // 3. Inisialisasi Tab DetailTransaksi
+  // 3. Inisialisasi Tab DetailTransaksi (10 Kolom Rincian Item POS)
   initSheet(ss, "DetailTransaksi", [
     "IdDetail",
     "IdTransaksi",
@@ -70,13 +71,23 @@ function setupDatabase() {
     "LabaKotor"
   ], []);
 
-  // 4. Inisialisasi Tab PengaturanToko
-  initSheet(ss, "PengaturanToko", [
-    "Kunci",
-    "Nilai"
-  ], getSamplePengaturan());
+  // 4. Inisialisasi Tab PESANAN (12 Kolom E-Commerce Checkout)
+  initSheet(ss, "PESANAN", [
+    "NoPesanan",
+    "TanggalWaktu",
+    "NamaPelanggan",
+    "NoWhatsApp",
+    "AlamatCatatan",
+    "RincianItem",
+    "TotalItem",
+    "TotalBelanja",
+    "MetodeBayar",
+    "StatusBayar",
+    "StatusOrder",
+    "Petugas"
+  ], getSamplePesanan());
 
-  // 5. Inisialisasi Tab DataPengguna (Hierarki Hak Akses & Database OTP)
+  // 5. Inisialisasi Tab DataPengguna (7 Kolom RBAC Petugas & Admin)
   initSheet(ss, "DataPengguna", [
     "IdPengguna",
     "Nama",
@@ -87,54 +98,52 @@ function setupDatabase() {
     "Status"
   ], getSamplePengguna());
 
-  Logger.log("✅ Inisialisasi Database PAC Indian Fashion & Accessories Berhasil Sempurna!");
-  return "Database berhasil diinisialisasi!";
+  // 6. Inisialisasi Tab AlamatPelanggan (8 Kolom Buku Alamat)
+  initSheet(ss, "AlamatPelanggan", [
+    "IdAlamat",
+    "NamaPenerima",
+    "NoTelepon",
+    "KotaKecamatan",
+    "KodePos",
+    "AlamatLengkap",
+    "IsUtama",
+    "Tanggal"
+  ], getSampleAlamat());
+
+  // 7. Inisialisasi Tab PengaturanToko (2 Kolom Konfigurasi)
+  initSheet(ss, "PengaturanToko", [
+    "Kunci",
+    "Nilai"
+  ], getSamplePengaturan());
+
+  SpreadsheetApp.flush();
+  Logger.log("Inisialisasi Database PAC Indian Fashion & Accessories Berhasil Sempurna!");
+  return "Database berhasil diinisialisasi dengan Safe Migrate!";
 }
 
 /**
- * Daftar Akun Resmi Toko PAC (Hierarki Hak Akses RBAC)
- */
-function getSamplePengguna() {
-  return [
-    ["USR-001", "PINKY", "SUPER_ADMIN", "pinky@pinkaccessories.com", "6281234567891", "1234", "Aktif"],
-    ["USR-003", "VICKY", "ADMIN1", "vicky@pinkaccessories.com", "6281234567892", "1234", "Aktif"],
-    ["USR-004", "TISH", "ADMIN2", "tish@pinkaccessories.com", "6281234567893", "1234", "Aktif"],
-    ["USR-005", "WIDYA", "OPERATOR1", "widya@pinkaccessories.com", "6281234567894", "1234", "Aktif"],
-    ["USR-006", "MILA", "OPERATOR2", "mila@pinkaccessories.com", "6281234567895", "1234", "Aktif"],
-    ["USR-007", "ROSSI", "OPERATOR3", "rossi@pinkaccessories.com", "6281234567896", "1234", "Aktif"]
-  ];
-}
-
-/**
- * Helper Safe Migration untuk Inisialisasi Sheet Idempoten
+ * Helper Safe Migration untuk Inisialisasi Sheet Idempoten (Non-Destruktif)
  */
 function initSheet(ss, sheetName, expectedHeaders, sampleData) {
   var sheet = ss.getSheetByName(sheetName);
-  var isNewSheet = false;
-
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
-    isNewSheet = true;
   }
 
-  // Cek apakah sheet benar-benar kosong
   var lastRow = sheet.getLastRow();
   var lastCol = sheet.getLastColumn();
 
   if (lastRow === 0 || lastCol === 0) {
-    // Sheet kosong baru: pasang seluruh header
+    // Sheet baru dan kosong: pasang seluruh header dan data sampel awal
     sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
     formatHeaderRow(sheet, expectedHeaders.length);
 
-    // Pasang sample data awal jika ada
     if (sampleData && sampleData.length > 0) {
       sheet.getRange(2, 1, sampleData.length, sampleData[0].length).setValues(sampleData);
     }
   } else {
-    // Sheet sudah ada: Jalankan Safe Migration untuk header
-    var existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-    
-    // Cari kolom yang belum ada dan tambahkan di ujung kanan
+    // Sheet sudah berisi data: DILARANG menggunakan clear(), cukup tambahkan header baru di kanan
+    var existingHeaders = sheet.getRange(1, 1, 1, lastCol).getDisplayValues()[0];
     for (var i = 0; i < expectedHeaders.length; i++) {
       var headerName = expectedHeaders[i];
       if (existingHeaders.indexOf(headerName) === -1) {
@@ -148,11 +157,11 @@ function initSheet(ss, sheetName, expectedHeaders, sampleData) {
 }
 
 /**
- * Format Styling Baris Header Spreadsheet agar rapi dan profesional
+ * Format Styling Baris Header Spreadsheet
  */
 function formatHeaderRow(sheet, colCount) {
   var headerRange = sheet.getRange(1, 1, 1, colCount);
-  headerRange.setBackground("#c2185b"); // Warna khas PAC Magenta
+  headerRange.setBackground("#c2185b");
   headerRange.setFontColor("#ffffff");
   headerRange.setFontWeight("bold");
   headerRange.setHorizontalAlignment("center");
@@ -160,93 +169,226 @@ function formatHeaderRow(sheet, colCount) {
 }
 
 /**
- * Sampel Master Produk Busana & Aksesoris India PAC
+ * Daftar Akun Resmi Toko PAC (Hierarki Hak Akses RBAC)
+ */
+function getSamplePengguna() {
+  return [
+    ["USR-001", "PINKY", "SUPER_ADMIN", "pinky@pinkaccessories.com", "6281234567891", "1234", "Aktif"],
+    ["USR-002", "VICKY", "ADMIN", "vicky@pinkaccessories.com", "6281234567892", "1234", "Aktif"],
+    ["USR-003", "TISH", "ADMIN", "tish@pinkaccessories.com", "6281234567893", "1234", "Aktif"],
+    ["USR-004", "WIDYA", "OPERATOR", "widya@pinkaccessories.com", "6281234567894", "1234", "Aktif"],
+    ["USR-005", "MILA", "OPERATOR", "mila@pinkaccessories.com", "6281234567895", "1234", "Aktif"],
+    ["USR-006", "ROSSI", "OPERATOR", "rossi@pinkaccessories.com", "6281234567896", "1234", "Aktif"]
+  ];
+}
+
+/**
+ * Sampel Master Produk Busana & Aksesoris India PAC (Presisi 14 Kolom)
  */
 function getSampleProduk() {
+  var baseCdn = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/";
   return [
     [
       "PRD-001",
-      "SKU-PAC-001",
-      "Banarasi Silk Saree Royal Maroon Gold",
-      "Saree",
-      "Maroon, Gold, Navy",
-      "Free Size",
-      450000,
-      750000,
-      12,
-      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card4_dress.jpg",
-      "Saree sutra Banarasi premium dengan tenunan benang zari emas asli, motif floral klasik India.",
+      "7CAD1TBK",
+      "TaffOmicron Tensimeter Digital Pengukur Tekanan Darah Indonesian Voice",
+      "All Accesories and Luxury Goods",
+      "Tensimeter Digital",
+      "Digital Sensor",
+      "Black, White",
+      "All Size Arm Cuff",
+      42000,
+      69500,
+      24,
+      baseCdn + "card1_website.jpg",
+      "Tensimeter digital otomatis dengan panduan suara Bahasa Indonesia dan layar LCD jelas.",
       "Aktif"
     ],
     [
       "PRD-002",
-      "SKU-PAC-002",
-      "Anarkali Kurti Festive Plum Embroidery",
-      "Kurti",
-      "Plum, Rose Pink, Teal",
-      "M, L, XL",
-      280000,
-      485000,
+      "7CSE2PUR",
+      "TaffOmicron Termometer Suhu Badan Digital Thermogun Infrared Non-Contact",
+      "All Accesories and Luxury Goods",
+      "Thermogun Infrared",
+      "Infrared Optical",
+      "Purple, White",
+      "Standard Handheld",
+      18000,
+      31300,
       18,
-      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card3_kurta.jpg",
-      "Setelan Kurti Anarkali anggun dengan sulaman payet tangan khas Jaipur dan selendang senada.",
+      baseCdn + "card2_gelang.jpg",
+      "Termometer inframerah tanpa sentuh dengan sensor presisi tinggi dan layar LED.",
       "Aktif"
     ],
     [
       "PRD-003",
-      "SKU-PAC-003",
-      "Bridal Lehenga Choli Champagne Floral",
-      "Lehenga",
-      "Champagne, Peach, Ivory",
-      "All Size (Tali Serut)",
-      850000,
-      1450000,
-      8,
-      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card4_dress.jpg",
-      "Gaun pengantin Lehenga pesta mewah berbordir bunga timbul kristal swarovski lengkap dengan dupatta.",
+      "7CNEB3WHT",
+      "TaffOmicron Alat Terapi Pernapasan Mesh Nebulizer Portable Inhaler",
+      "All Accesories and Luxury Goods",
+      "Nebulizer Portable",
+      "Medical Grade Mesh",
+      "White",
+      "Portable Pocket",
+      16000,
+      27200,
+      32,
+      baseCdn + "card3_kurta.jpg",
+      "Alat terapi pernapasan portable ultrasonic mesh nebulizer yang hening dan praktis.",
       "Aktif"
     ],
     [
       "PRD-004",
-      "SKU-PAC-004",
-      "Traditional Indian Chuda Bangles Set",
-      "Perhiasan & Gelang",
-      "Red & Gold, Pink & Silver",
-      "Size 2.4, 2.6, 2.8",
-      120000,
-      225000,
-      25,
-      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card2_gelang.jpg",
-      "Set gelang pengantin Chuda tradisional India berhias permata berkilau dan latkan gantung.",
+      "7COXI4WHT",
+      "Oximeter Alat Ukur Saturasi Oksigen Darah Pulse Fingertip SpO2",
+      "All Accesories and Luxury Goods",
+      "Oximeter Saturasi",
+      "Optical Sensor",
+      "White, Blue",
+      "Fingertip",
+      65000,
+      105800,
+      15,
+      baseCdn + "card4_dress.jpg",
+      "Fingertip pulse oximeter pengukur saturasi oksigen SpO2 dan detak jantung akurat.",
       "Aktif"
     ],
     [
       "PRD-005",
-      "SKU-PAC-005",
-      "Kundan Bridal Choker Necklace Set",
-      "Perhiasan & Gelang",
-      "Gold Green, Gold Ruby",
-      "All Size",
-      350000,
-      590000,
-      10,
-      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/Kotak_Kosmetik_(3).jpg",
-      "Set kalung choker batu Kundan kerajaan India lengkap dengan anting jhumka dan maang tikka dahi.",
+      "7CSE2TBK",
+      "Ilfioreemio Baju T-Shirt Korset Pembentuk Tubuh Body Shaper L - YS107",
+      "Indian Man Fashion",
+      "Korset & Shaper",
+      "Elastic Spandex Mesh",
+      "Black, White",
+      "M, L, XL",
+      38000,
+      63600,
+      20,
+      baseCdn + "detail_corset_main.jpg",
+      "Baju kaos korset pembentuk tubuh pria berbahan spandex bernapas yang nyaman dipakai harian.",
       "Aktif"
     ],
     [
       "PRD-006",
-      "SKU-PAC-006",
-      "Net Embroidered Dupatta Gold Border",
-      "Dupatta",
-      "Golden Yellow, Maroon, Fuchsia",
-      "Panjang 2.5 Meter",
-      95000,
-      175000,
-      30,
-      "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg",
-      "Selendang Dupatta bahan jaring lembut dengan pinggiran renda kiran emas mewah untuk pelengkap busana pesta.",
+      "SKU-TAS-006",
+      "Biutteco Tas Kosmetik Make Up Travel Organizer Bag Wanita X3235",
+      "All Accesories and Luxury Goods",
+      "Tas Kosmetik",
+      "Waterproof Oxford & Satin",
+      "Pink, Rose Gold, Black",
+      "Medium Travel",
+      28000,
+      45000,
+      4,
+      baseCdn + "biutteco-tas-kosmetik-make-up-travel-organizer-bag-wanita-x3235.jpg",
+      "Tas kosmetik travel organizer tahan air dengan sekat fleksibel untuk peralatan make up.",
       "Aktif"
+    ],
+    [
+      "PRD-007",
+      "SKU-GLS-007",
+      "Samjune Kacamata Pria Polarized Sunglasses Anti-Reflective UV400",
+      "Indian Man Fashion",
+      "Kacamata Polarized",
+      "Polarized UV400 Metal Frame",
+      "Black Metallic, Gold",
+      "Standard All Size",
+      22000,
+      38500,
+      22,
+      baseCdn + "samjune-kacamata-pria-polarized-sunglasses-anti-reflective-uv400-j-198.jpg",
+      "Kacamata hitam polarized pelindung sinar UV400 dengan bingkai metal maskulin.",
+      "Aktif"
+    ],
+    [
+      "PRD-008",
+      "SKU-BOX-008",
+      "Kotak Kosmetik Organizer Perhiasan & Aksesoris Mewah",
+      "All Accesories and Luxury Goods",
+      "Kotak Perhiasan",
+      "Beludru Velvet & Leatherette",
+      "Royal Maroon Gold, Emerald",
+      "Large Multi-Tier",
+      52000,
+      85000,
+      14,
+      baseCdn + "Kotak_Kosmetik_(3).jpg",
+      "Kotak penyimpanan perhiasan India, cincin, anting jhumka, dan kalung berlapis beludru lembut.",
+      "Aktif"
+    ],
+    [
+      "PRD-009",
+      "SKU-SAR-009",
+      "Banarasi Silk Saree Royal Maroon Gold Zari",
+      "Indian Woman Fashion",
+      "Saree",
+      "Sutra (Banarasi Silk)",
+      "Maroon, Gold, Navy",
+      "Free Size (5.5m + Blouse)",
+      450000,
+      750000,
+      12,
+      baseCdn + "card4_dress.jpg",
+      "Saree sutra Banarasi kerajaan India dengan tenunan benang emas zari mewah untuk pesta dan pernikahan.",
+      "Aktif"
+    ],
+    [
+      "PRD-010",
+      "SKU-SHR-010",
+      "Royal Maharaja Sherwani Brokat Gold & Kurta Pajama Set",
+      "Indian Man Fashion",
+      "Sherwani",
+      "Brokat Emas Mewah",
+      "Champagne Gold, Maroon",
+      "L, XL, XXL",
+      750000,
+      1350000,
+      8,
+      baseCdn + "card3_kurta.jpg",
+      "Setelan jas pengantin pria Maharaja Sherwani berbahan brokat sulam emas lengkap dengan celana churidar.",
+      "Aktif"
+    ]
+  ];
+}
+
+/**
+ * Sampel Data Pesanan Awal
+ */
+function getSamplePesanan() {
+  var nowStr = Utilities.formatDate(new Date(), "Asia/Jakarta", "dd/MM/yyyy HH:mm:ss");
+  return [
+    [
+      "ORD-20261029-0001",
+      nowStr,
+      "Gaya Murty",
+      "08116072491",
+      "Jl. Jenggala No.71, Kel. Madras Hulu, Medan Polonia - 20152",
+      "Banarasi Silk Saree Royal Maroon Gold Zari (SKU-SAR-009) x1 @Rp 750.000",
+      1,
+      750000,
+      "Transfer Bank BCA (Ac. 0223142807 a/n Vicky Gaya Galani)",
+      "Lunas",
+      "DIPROSES",
+      "PINKY"
+    ]
+  ];
+}
+
+/**
+ * Sampel Alamat Pelanggan Awal
+ */
+function getSampleAlamat() {
+  var nowStr = Utilities.formatDate(new Date(), "Asia/Jakarta", "dd/MM/yyyy HH:mm:ss");
+  return [
+    [
+      "ADDR-001",
+      "GAYA MURTY",
+      "08116072491",
+      "Sumatera Utara, Medan, Medan Polonia",
+      "20152",
+      "Jl. Jenggala No.71, Kel. Madras Hulu",
+      "TRUE",
+      nowStr
     ]
   ];
 }
@@ -261,7 +403,7 @@ function getSamplePengaturan() {
     ["NoWhatsApp", "628116072491"],
     ["EmailToko", "hritishgayagalani99@gmail.com"],
     ["Alamat", "THE PAC Boutique • V&T, Jl. Teuku Cik Ditiro No. 22, Medan, Indonesia"],
-    ["JamOperasional", "Senin - Jumat: 10:30 - 21:00 WIB, Sabtu - Minggu: 10:30 - 21:00 WIB (Hari Besar: Libur)"],
+    ["JamOperasional", "Senin - Minggu: 10:30 - 21:00 WIB (Hari Besar: Libur)"],
     ["PinKasir", "1234"],
     ["PesanNota", "Dhanyavad! Terima kasih telah berbelanja busana India di PAC. Barang yang sudah dibeli dapat ditukar dalam 3 hari dengan faktur invoice resmi."],
     ["InfoRekening", "BCA: 0223142807 a.n Vicky Gaya Galani | QRIS Toko Tersedia"]

@@ -5,133 +5,169 @@ if (typeof Assistant === 'undefined') {
 
 /**
  * ============================================================================
- * PAC (Pink ACcessories) - Indian Fashion & Accessories
+ * PAC (Pink ACcessories) • Butik V&T - Indian Fashion & Accessories
  * File: code.gs
- * Fungsi: Backend Controller API & Web App Router (Google Apps Script)
+ * Fungsi: Backend Controller API, Pagination, CRUD & Web App Router
  * ============================================================================
  * Standar Rekayasa ZettBOT:
  * 1. Index-Based Column Mapping (Kebal terhadap perubahan teks label header)
- * 2. Sequential Incremental Unique ID Generator (TRX-YYYYMM-XXX) dengan LockService
- * 3. Sanitasi Input & Operasi Basis Data Non-Destruktif
- * 4. Safe Concurrency saat Transaksi Multi-Perangkat
+ * 2. Sequential Daily Unique ID Generator dengan LockService
+ * 3. Pembacaan Data menggunakan getDisplayValues() & Zona Waktu Asia/Jakarta
+ * 4. Setiap mutasi data wajib diakhiri SpreadsheetApp.flush()
  */
 
-// ----------------------------------------------------------------------------
-// 1. DEFINISI KONSTANTA PEMETAAN INDEKS KOLOM (INDEX-BASED MAPPING)
-// ----------------------------------------------------------------------------
-const COL_PRODUK = {
-  ID: 0,             // Kolom A: IdProduk
-  SKU: 1,            // Kolom B: SkuBarcode
-  NAMA: 2,           // Kolom C: NamaProduk
-  KATEGORI_UTAMA: 3, // Kolom D: KategoriUtama (Wanita/Pria/Aksesoris/Wedding)
-  KATEGORI: 3,       // Kolom D: Kategori (Alias)
-  SUB_KATEGORI: 4,   // Kolom E: SubKategori (Saree/Kurta/Sherwani/Anting/dll)
-  JENIS_KAIN: 5,     // Kolom F: JenisKain (Sutra/Brokat/Chiffon/dll)
-  WARNA: 6,          // Kolom G: VarianWarna
-  UKURAN: 7,         // Kolom H: VarianUkuran
-  MODAL: 8,          // Kolom I: HargaModal
-  JUAL: 9,           // Kolom J: HargaJual
-  STOK: 10,          // Kolom K: Stok
-  FOTO: 11,          // Kolom L: FotoUrl
-  DESKRIPSI: 12,     // Kolom M: Deskripsi
-  STATUS: 13         // Kolom N: Status ("Aktif" / "Nonaktif")
+var COL_PRODUK = {
+  ID: 0,
+  SKU: 1,
+  NAMA: 2,
+  KATEGORI_UTAMA: 3,
+  KATEGORI: 3,
+  SUB_KATEGORI: 4,
+  JENIS_KAIN: 5,
+  WARNA: 6,
+  UKURAN: 7,
+  MODAL: 8,
+  JUAL: 9,
+  STOK: 10,
+  FOTO: 11,
+  DESKRIPSI: 12,
+  STATUS: 13
 };
 
-const COL_USER = {
-  ID: 0,             // Kolom A: IdPengguna
-  NAMA: 1,           // Kolom B: Nama
-  ROLE: 2,           // Kolom C: LevelRole (SUPER_ADMIN, ADMIN, OPERATOR)
-  EMAIL: 3,          // Kolom D: Email
-  WHATSAPP: 4,       // Kolom E: NoWhatsApp
-  PIN: 5,            // Kolom F: PinAkses
-  STATUS: 6          // Kolom G: Status
+var COL_USER = {
+  ID: 0,
+  NAMA: 1,
+  ROLE: 2,
+  EMAIL: 3,
+  WHATSAPP: 4,
+  PIN: 5,
+  STATUS: 6
 };
 
-const COL_TRX = {
-  ID: 0,          // Kolom A: IdTransaksi
-  TANGGAL: 1,     // Kolom B: Tanggal
-  KASIR: 2,       // Kolom C: NamaKasir
-  PELANGGAN: 3,   // Kolom D: NamaPelanggan
-  TOTAL_ITEM: 4,  // Kolom E: TotalItem
-  TOTAL_BELANJA: 5,// Kolom F: TotalBelanja
-  DISKON: 6,      // Kolom G: Diskon
-  TOTAL_AKHIR: 7, // Kolom H: TotalAkhir
-  METODE: 8,      // Kolom I: MetodeBayar
-  BAYAR: 9,       // Kolom J: JumlahBayar
-  KEMBALIAN: 10,  // Kolom K: Kembalian
-  CATATAN: 11     // Kolom L: Catatan
+var COL_TRX = {
+  ID: 0,
+  TANGGAL: 1,
+  KASIR: 2,
+  PELANGGAN: 3,
+  TOTAL_ITEM: 4,
+  TOTAL_BELANJA: 5,
+  DISKON: 6,
+  TOTAL_AKHIR: 7,
+  METODE: 8,
+  BAYAR: 9,
+  KEMBALIAN: 10,
+  CATATAN: 11
 };
 
-const COL_DTL = {
-  ID_DETAIL: 0,   // Kolom A: IdDetail
-  ID_TRX: 1,      // Kolom B: IdTransaksi
-  ID_PRODUK: 2,   // Kolom C: IdProduk
-  NAMA: 3,        // Kolom D: NamaProduk
-  VARIAN: 4,      // Kolom E: VarianDipilih
-  HARGA_SATUAN: 5,// Kolom F: HargaSatuan
-  JUMLAH: 6,      // Kolom G: Jumlah
-  SUBTOTAL: 7,    // Kolom H: Subtotal
-  MODAL_SATUAN: 8,// Kolom I: HargaModalSatuan
-  LABA: 9         // Kolom J: LabaKotor
+var COL_DTL = {
+  ID_DETAIL: 0,
+  ID_TRX: 1,
+  ID_PRODUK: 2,
+  NAMA: 3,
+  VARIAN: 4,
+  HARGA_SATUAN: 5,
+  JUMLAH: 6,
+  SUBTOTAL: 7,
+  MODAL_SATUAN: 8,
+  LABA: 9
 };
 
-// ----------------------------------------------------------------------------
-// 2. ENTRY POINT WEB APP (doGet)
-// ----------------------------------------------------------------------------
+/**
+ * Entry Point Web App & Helper Modular HTML
+ */
 function doGet(e) {
   var template = HtmlService.createTemplateFromFile("index");
   return template.evaluate()
-    .setTitle("PAC Indian Fashion & Accessories")
+    .setTitle("PAC (Pink ACcessories) • V&T - Indian Fashion & Exclusive Accessories")
     .addMetaTag("viewport", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// ----------------------------------------------------------------------------
-// 3. API INITIAL DATA (MASTER PRODUCTS, CATEGORIES, SETTINGS)
-// ----------------------------------------------------------------------------
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+/**
+ * Helper Parsing Angka dari Display String
+ */
+function parseCleanNumber(val) {
+  if (typeof val === "number") return val;
+  var str = String(val || "").replace(/[^0-9.-]/g, "");
+  var num = Number(str);
+  return isNaN(num) ? 0 : num;
+}
+
+/**
+ * Helper Normalisasi Foto Produk (Mendukung URL CDN & Base64 Terkompresi)
+ */
+function normalizeFotoUrl(rawFoto) {
+  var defaultCdn = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
+  var clean = String(rawFoto || "").trim();
+  if (!clean) return defaultCdn;
+  if (clean.indexOf("data:image/") === 0 && clean.length <= 45000) {
+    return clean;
+  }
+  if (clean.indexOf("data:") === 0 && clean.length > 45000) {
+    return defaultCdn;
+  }
+  if (clean.indexOf("googleusercontent.com") !== -1 || clean.indexOf("drive.google.com") !== -1) {
+    return defaultCdn;
+  }
+  if (clean.indexOf("assets/") === 0) {
+    return "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/" + clean;
+  }
+  return clean;
+}
+
+/**
+ * 1. API INITIAL DATA (MASTER PRODUCTS, CATEGORIES, SETTINGS, ORDERS)
+ */
 function getInitData() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
 
-    // Baca Produk
     var sheetProduk = ss.getSheetByName("DataProduk");
+    if (!sheetProduk) {
+      setupDatabase();
+      sheetProduk = ss.getSheetByName("DataProduk");
+    }
+
     var listProduk = [];
     var setKategori = {};
 
     if (sheetProduk && sheetProduk.getLastRow() > 1) {
-      var rowsProduk = sheetProduk.getRange(2, 1, sheetProduk.getLastRow() - 1, sheetProduk.getLastColumn()).getValues();
+      var rowsProduk = sheetProduk.getRange(2, 1, sheetProduk.getLastRow() - 1, sheetProduk.getLastColumn()).getDisplayValues();
       for (var i = 0; i < rowsProduk.length; i++) {
         var r = rowsProduk[i];
         var status = r[COL_PRODUK.STATUS] ? String(r[COL_PRODUK.STATUS]).trim() : "Aktif";
         if (status === "Aktif" || status === "") {
-          var rawFoto = String(r[COL_PRODUK.FOTO] || "").trim();
-          var fotoFinal = rawFoto;
-          if (!fotoFinal || fotoFinal.indexOf("googleusercontent.com") !== -1 || fotoFinal.indexOf("drive.google.com") !== -1) {
-            fotoFinal = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
-          } else if (fotoFinal.indexOf("assets/") === 0) {
-            fotoFinal = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/" + fotoFinal;
-          }
-
+          var fotoFinal = normalizeFotoUrl(r[COL_PRODUK.FOTO]);
+          var hargaJual = parseCleanNumber(r[COL_PRODUK.JUAL]);
           var p = {
-            id: String(r[COL_PRODUK.ID] || ""),
-            sku: String(r[COL_PRODUK.SKU] || ""),
+            id: String(r[COL_PRODUK.ID] || ("PRD-" + ("000" + (i + 1)).slice(-3))),
+            sku: String(r[COL_PRODUK.SKU] || ("SKU-" + ("000" + (i + 1)).slice(-3))),
             nama: String(r[COL_PRODUK.NAMA] || ""),
-            kategori: String(r[COL_PRODUK.KATEGORI_UTAMA] || "Wanita"),
-            kategoriUtama: String(r[COL_PRODUK.KATEGORI_UTAMA] || "Wanita"),
+            kategori: String(r[COL_PRODUK.KATEGORI_UTAMA] || "Indian Woman Fashion"),
+            kategoriUtama: String(r[COL_PRODUK.KATEGORI_UTAMA] || "Indian Woman Fashion"),
             subKategori: String(r[COL_PRODUK.SUB_KATEGORI] || "Koleksi Fashion"),
             jenisKain: String(r[COL_PRODUK.JENIS_KAIN] || "Premium Quality"),
-            warna: String(r[COL_PRODUK.WARNA] || ""),
-            ukuran: String(r[COL_PRODUK.UKURAN] || ""),
-            hargaModal: Number(r[COL_PRODUK.MODAL]) || 0,
-            hargaJual: Number(r[COL_PRODUK.JUAL]) || 0,
-            stok: Number(r[COL_PRODUK.STOK]) || 0,
+            warna: String(r[COL_PRODUK.WARNA] || "Standar"),
+            ukuran: String(r[COL_PRODUK.UKURAN] || "All Size"),
+            hargaModal: parseCleanNumber(r[COL_PRODUK.MODAL]),
+            hargaJual: hargaJual,
+            strikePrice: Math.round(hargaJual * 1.58),
+            diskonPercent: "-37%",
+            stok: parseCleanNumber(r[COL_PRODUK.STOK]),
             fotoUrl: fotoFinal,
             deskripsi: String(r[COL_PRODUK.DESKRIPSI] || ""),
-            status: status
+            status: status,
+            lokasiGudang: 13,
+            rating: 5,
+            ulasanCount: "1rb+"
           };
           listProduk.push(p);
-          if (p.kategori) setKategori[p.kategori] = true;
+          if (p.kategoriUtama) setKategori[p.kategoriUtama] = true;
         }
       }
     }
@@ -140,15 +176,13 @@ function getInitData() {
     var sheetPengaturan = ss.getSheetByName("PengaturanToko");
     var settings = {};
     if (sheetPengaturan && sheetPengaturan.getLastRow() > 1) {
-      var rowsSet = sheetPengaturan.getRange(2, 1, sheetPengaturan.getLastRow() - 1, 2).getValues();
+      var rowsSet = sheetPengaturan.getRange(2, 1, sheetPengaturan.getLastRow() - 1, 2).getDisplayValues();
       for (var j = 0; j < rowsSet.length; j++) {
         var k = String(rowsSet[j][0]).trim();
         var v = String(rowsSet[j][1]).trim();
         if (k) settings[k] = v;
       }
     }
-
-    // Default jika belum diset di sheet
     if (!settings.NamaToko) settings.NamaToko = "PAC (Pink ACcessories) • V&T";
     if (!settings.NoWhatsApp) settings.NoWhatsApp = "628116072491";
     if (!settings.PinKasir) settings.PinKasir = "1234";
@@ -160,26 +194,40 @@ function getInitData() {
       var totalTrxRows = sheetTrx.getLastRow() - 1;
       var takeRows = Math.min(totalTrxRows, 30);
       var startRow = 2 + (totalTrxRows - takeRows);
-      var rowsTrx = sheetTrx.getRange(startRow, 1, takeRows, sheetTrx.getLastColumn()).getValues();
-      
+      var rowsTrx = sheetTrx.getRange(startRow, 1, takeRows, sheetTrx.getLastColumn()).getDisplayValues();
+
       for (var t = rowsTrx.length - 1; t >= 0; t--) {
         var tr = rowsTrx[t];
         listTrx.push({
+          trxId: String(tr[COL_TRX.ID] || ""),
           id: String(tr[COL_TRX.ID] || ""),
           tanggal: String(tr[COL_TRX.TANGGAL] || ""),
-          kasir: String(tr[COL_TRX.KASIR] || ""),
-          pelanggan: String(tr[COL_TRX.PELANGGAN] || ""),
-          totalItem: Number(tr[COL_TRX.TOTAL_ITEM]) || 0,
-          totalBelanja: Number(tr[COL_TRX.TOTAL_BELANJA]) || 0,
-          diskon: Number(tr[COL_TRX.DISKON]) || 0,
-          totalAkhir: Number(tr[COL_TRX.TOTAL_AKHIR]) || 0,
-          metode: String(tr[COL_TRX.METODE] || "Tunai"),
-          bayar: Number(tr[COL_TRX.BAYAR]) || 0,
-          kembalian: Number(tr[COL_TRX.KEMBALIAN]) || 0,
-          catatan: String(tr[COL_TRX.CATATAN] || "")
+          namaKasir: String(tr[COL_TRX.KASIR] || "PINKY"),
+          namaCustomer: String(tr[COL_TRX.PELANGGAN] || "Pelanggan POS"),
+          kontakCustomer: "08116072491",
+          totalItem: parseCleanNumber(tr[COL_TRX.TOTAL_ITEM]),
+          subtotal: parseCleanNumber(tr[COL_TRX.TOTAL_BELANJA]),
+          diskon: parseCleanNumber(tr[COL_TRX.DISKON]),
+          grandTotal: parseCleanNumber(tr[COL_TRX.TOTAL_AKHIR]),
+          metodeBayar: String(tr[COL_TRX.METODE] || "Tunai"),
+          bayar: parseCleanNumber(tr[COL_TRX.BAYAR]),
+          kembalian: parseCleanNumber(tr[COL_TRX.KEMBALIAN]),
+          catatan: String(tr[COL_TRX.CATATAN] || ""),
+          periode: "DAILY",
+          items: [
+            {
+              nama: "Transaksi Kasir POS (" + (tr[COL_TRX.TOTAL_ITEM] || "1") + " Item)",
+              varian: "Standar",
+              hargaSatuan: parseCleanNumber(tr[COL_TRX.TOTAL_AKHIR]),
+              qty: 1,
+              subtotal: parseCleanNumber(tr[COL_TRX.TOTAL_AKHIR])
+            }
+          ]
         });
       }
     }
+
+    var pesananRes = getDaftarPesanan();
 
     return {
       success: true,
@@ -187,7 +235,8 @@ function getInitData() {
       listProduk: listProduk,
       kategori: Object.keys(setKategori),
       pengaturan: settings,
-      transaksiTerakhir: listTrx
+      transaksiTerakhir: listTrx,
+      pesanan: pesananRes.success ? pesananRes.list : []
     };
   } catch (err) {
     Logger.log("Error getInitData: " + err.toString());
@@ -195,13 +244,53 @@ function getInitData() {
   }
 }
 
-// ----------------------------------------------------------------------------
-// 4. API SIMPAN TRANSAKSI KASIR (ANTI-COLLISION INCREMENTAL ID & AUTO-STOCK)
-// ----------------------------------------------------------------------------
+/**
+ * 2. API SERVER-SIDE FILTERING & PAGINATION PRODUK (ANTI-LAG)
+ */
+function getProdukPaginated(filterObj) {
+  try {
+    var init = getInitData();
+    if (!init.success) return init;
+
+    var all = init.produk || [];
+    var q = filterObj && filterObj.query ? String(filterObj.query).toLowerCase().trim() : "";
+    var mainCat = filterObj && filterObj.kategoriUtama ? String(filterObj.kategoriUtama).trim() : "Semua";
+    var subCat = filterObj && filterObj.subKategori ? String(filterObj.subKategori).trim() : "Semua";
+    var onlyAvail = filterObj && filterObj.onlyAvailable === true;
+    var limit = filterObj && filterObj.limit ? Number(filterObj.limit) : 24;
+    var offset = filterObj && filterObj.offset ? Number(filterObj.offset) : 0;
+
+    var filtered = [];
+    for (var i = 0; i < all.length; i++) {
+      var p = all[i];
+      var matchMain = (mainCat === "Semua" || mainCat === "All" || p.kategoriUtama === mainCat);
+      var matchSub = (subCat === "Semua" || p.subKategori.toLowerCase().indexOf(subCat.toLowerCase()) !== -1);
+      var matchSearch = (!q || p.nama.toLowerCase().indexOf(q) !== -1 || p.sku.toLowerCase().indexOf(q) !== -1 || p.subKategori.toLowerCase().indexOf(q) !== -1);
+      var matchStock = (!onlyAvail || p.stok > 0);
+      if (matchMain && matchSub && matchSearch && matchStock) {
+        filtered.push(p);
+      }
+    }
+
+    var paged = filtered.slice(offset, offset + limit);
+    return {
+      success: true,
+      totalCount: filtered.length,
+      offset: offset,
+      limit: limit,
+      items: paged
+    };
+  } catch (err) {
+    return { success: false, message: err.toString(), items: [] };
+  }
+}
+
+/**
+ * 3. API SIMPAN TRANSAKSI KASIR POS (DAILY SEQUENTIAL ID & AUTO-STOCK)
+ */
 function simpanTransaksi(payload) {
   var lock = LockService.getScriptLock();
   try {
-    // Kunci proses maksimal 20 detik untuk multi-user safety
     lock.waitLock(20000);
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -213,28 +302,29 @@ function simpanTransaksi(payload) {
       return { success: false, message: "Struktur sheet tidak lengkap. Jalankan setupDatabase terlebih dahulu." };
     }
 
-    var items = payload.items || [];
+    var items = (payload && payload.items) ? payload.items : [];
     if (items.length === 0) {
       return { success: false, message: "Keranjang kasir kosong." };
     }
 
-    // 1. Validasi & Pengurangan Stok di DataProduk
     var produkDataRange = sheetProduk.getRange(2, 1, sheetProduk.getLastRow() - 1, sheetProduk.getLastColumn());
-    var produkValues = produkDataRange.getValues();
+    var produkValues = produkDataRange.getDisplayValues();
     var idToRowMap = {};
 
     for (var r = 0; r < produkValues.length; r++) {
       var prodId = String(produkValues[r][COL_PRODUK.ID]).trim();
-      idToRowMap[prodId] = r; // Index di dalam array produkValues
+      var prodSku = String(produkValues[r][COL_PRODUK.SKU]).trim();
+      idToRowMap[prodId] = r;
+      if (prodSku) idToRowMap[prodSku] = r;
     }
 
-    // Cek ketersediaan stok terlebih dahulu
+    // Cek ketersediaan stok
     for (var i = 0; i < items.length; i++) {
       var itm = items[i];
-      var rowIndex = idToRowMap[itm.idProduk];
+      var rowIndex = idToRowMap[itm.idProduk || itm.id];
       if (rowIndex !== undefined) {
-        var currentStock = Number(produkValues[rowIndex][COL_PRODUK.STOK]) || 0;
-        if (currentStock < itm.qty) {
+        var currentStock = parseCleanNumber(produkValues[rowIndex][COL_PRODUK.STOK]);
+        if (currentStock < Number(itm.qty)) {
           return {
             success: false,
             message: "Stok produk '" + itm.nama + "' tidak mencukupi! Sisa stok: " + currentStock
@@ -243,16 +333,15 @@ function simpanTransaksi(payload) {
       }
     }
 
-    // Generate Nomor Transaksi Sekuensial TRX-YYYYMM-XXX
+    // Generate ID Transaksi Sekuensial Harian TRX-YYYYMMDD-0001
     var now = new Date();
-    var year = now.getFullYear();
-    var month = ("0" + (now.getMonth() + 1)).slice(-2);
-    var dateFormatted = Utilities.formatDate(now, "GMT+7", "yyyy-MM-dd HH:mm:ss");
-    var prefix = "TRX-" + year + month + "-";
+    var ymd = Utilities.formatDate(now, "Asia/Jakarta", "yyyyMMdd");
+    var dateFormatted = Utilities.formatDate(now, "Asia/Jakarta", "dd/MM/yyyy HH:mm:ss");
+    var prefix = "TRX-" + ymd + "-";
 
     var maxNum = 0;
     if (sheetTrx.getLastRow() > 1) {
-      var existingIds = sheetTrx.getRange(2, 1, sheetTrx.getLastRow() - 1, 1).getValues();
+      var existingIds = sheetTrx.getRange(2, 1, sheetTrx.getLastRow() - 1, 1).getDisplayValues();
       for (var k = 0; k < existingIds.length; k++) {
         var curId = String(existingIds[k][0]).trim();
         if (curId.indexOf(prefix) === 0) {
@@ -263,56 +352,54 @@ function simpanTransaksi(payload) {
         }
       }
     }
-    var nextTrxId = prefix + ("000" + (maxNum + 1)).slice(-3);
+    var nextTrxId = prefix + ("0000" + (maxNum + 1)).slice(-4);
 
-    // 2. Terapkan Pengurangan Stok Fisik
+    // Kurangi stok fisik di sheet DataProduk
     for (var j = 0; j < items.length; j++) {
       var itmP = items[j];
-      var rowIdx = idToRowMap[itmP.idProduk];
+      var rowIdx = idToRowMap[itmP.idProduk || itmP.id];
       if (rowIdx !== undefined) {
-        var curStok = Number(produkValues[rowIdx][COL_PRODUK.STOK]) || 0;
-        produkValues[rowIdx][COL_PRODUK.STOK] = Math.max(0, curStok - itmP.qty);
+        var curStok = parseCleanNumber(produkValues[rowIdx][COL_PRODUK.STOK]);
+        var newStok = Math.max(0, curStok - Number(itmP.qty || 1));
+        sheetProduk.getRange(rowIdx + 2, COL_PRODUK.STOK + 1).setValue(newStok);
       }
     }
-    produkDataRange.setValues(produkValues);
 
-    // 3. Simpan Kepala Transaksi di DataTransaksi
     var totalItem = 0;
-    for (var m = 0; m < items.length; m++) totalItem += items[m].qty;
+    for (var m = 0; m < items.length; m++) totalItem += Number(items[m].qty || 1);
 
     var rowTrx = [
       nextTrxId,
       dateFormatted,
-      payload.kasir || "Kasir PAC",
-      payload.pelanggan || "Umum",
+      payload.kasir || "PINKY",
+      payload.pelanggan || "Pelanggan Butik PAC",
       totalItem,
-      payload.totalBelanja || 0,
-      payload.diskon || 0,
-      payload.totalAkhir || 0,
+      Number(payload.totalBelanja) || 0,
+      Number(payload.diskon) || 0,
+      Number(payload.totalAkhir) || 0,
       payload.metode || "Tunai",
-      payload.bayar || 0,
-      payload.kembalian || 0,
+      Number(payload.bayar) || 0,
+      Number(payload.kembalian) || 0,
       payload.catatan || ""
     ];
     sheetTrx.appendRow(rowTrx);
 
-    // 4. Simpan Rincian Detail di DetailTransaksi
     var detailRows = [];
     for (var d = 0; d < items.length; d++) {
       var it = items[d];
-      var detailId = "DTL-" + year + month + "-" + ("0000" + (d + 1)).slice(-4) + Math.floor(Math.random() * 90 + 10);
-      var sub = Number(it.hargaSatuan) * Number(it.qty);
-      var modalSat = Number(it.hargaModal) || 0;
-      var labaKotor = sub - (modalSat * Number(it.qty));
+      var detailId = "DTL-" + ymd + "-" + ("0000" + (d + 1)).slice(-4) + Math.floor(Math.random() * 90 + 10);
+      var sub = Number(it.hargaSatuan || 0) * Number(it.qty || 1);
+      var modalSat = Number(it.hargaModal) || Math.round(Number(it.hargaSatuan || 0) * 0.6);
+      var labaKotor = sub - (modalSat * Number(it.qty || 1));
 
       detailRows.push([
         detailId,
         nextTrxId,
-        it.idProduk || "",
+        it.idProduk || it.id || "",
         it.nama || "",
-        it.varian || "-",
-        it.hargaSatuan || 0,
-        it.qty || 1,
+        it.varian || "Standar",
+        Number(it.hargaSatuan) || 0,
+        Number(it.qty) || 1,
         sub,
         modalSat,
         labaKotor
@@ -323,6 +410,8 @@ function simpanTransaksi(payload) {
       sheetDtl.getRange(sheetDtl.getLastRow() + 1, 1, detailRows.length, detailRows[0].length).setValues(detailRows);
     }
 
+    SpreadsheetApp.flush();
+
     return {
       success: true,
       trxId: nextTrxId,
@@ -331,7 +420,6 @@ function simpanTransaksi(payload) {
       kembalian: payload.kembalian,
       message: "Transaksi " + nextTrxId + " berhasil disimpan!"
     };
-
   } catch (err) {
     Logger.log("Error simpanTransaksi: " + err.toString());
     return { success: false, message: err.toString() };
@@ -340,23 +428,18 @@ function simpanTransaksi(payload) {
   }
 }
 
-// ----------------------------------------------------------------------------
-// 5. API MANAJEMEN PRODUK (TAMBAH / EDIT / RESTOCK)
-// ----------------------------------------------------------------------------
+/**
+ * 4. API MANAJEMEN PRODUK (TAMBAH / EDIT / RESTOCK + DUKUNGAN GALERI BASE64)
+ */
 function simpanProduk(data) {
+  var lock = LockService.getScriptLock();
   try {
-    var lock = LockService.getScriptLock();
-    try {
-      lock.waitLock(10000);
-    } catch (lockErr) {
-      Logger.log("Lock wait notice: " + lockErr.toString());
-    }
+    lock.waitLock(10000);
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
     var sheet = ss.getSheetByName("DataProduk") || ss.getSheetByName("PRODUK") || ss.getSheetByName("Produk");
-    if (!sheet) return { success: false, message: "Sheet DataProduk / PRODUK tidak ditemukan." };
-
+    if (!sheet) return { success: false, message: "Sheet DataProduk tidak ditemukan." };
     if (!data) return { success: false, message: "Data produk tidak boleh kosong." };
 
     var id = data.id ? String(data.id).trim() : "";
@@ -364,16 +447,15 @@ function simpanProduk(data) {
     var isEdit = false;
     var targetRow = -1;
 
-    // Cari baris berdasarkan ID atau SKU (Kolom A & B)
     if (sheet.getLastRow() > 1) {
-      var range = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues();
+      var range = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getDisplayValues();
       for (var i = 0; i < range.length; i++) {
         var rowId = String(range[i][0]).trim();
         var rowSku = String(range[i][1]).trim();
-        if ((id && (rowId === id || rowId.toLowerCase() === id.toLowerCase())) ||
-            (sku && (rowSku === sku || rowSku.toLowerCase() === sku.toLowerCase())) ||
-            (id && (rowSku === id || rowSku.toLowerCase() === id.toLowerCase())) ||
-            (sku && (rowId === sku || rowId.toLowerCase() === sku.toLowerCase()))) {
+        if ((id && rowId.toLowerCase() === id.toLowerCase()) ||
+            (sku && rowSku.toLowerCase() === sku.toLowerCase()) ||
+            (id && rowSku.toLowerCase() === id.toLowerCase()) ||
+            (sku && rowId.toLowerCase() === sku.toLowerCase())) {
           isEdit = true;
           targetRow = i + 2;
           break;
@@ -381,54 +463,49 @@ function simpanProduk(data) {
       }
     }
 
-    // Pastikan fotoUrl menggunakan tautan CDN jsDelivr dari repo GyPro-dot/ProjekAntigravity@main/assets/ alih-alih base64 panjang
-    var defaultCdnFoto = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
-    var finalFotoUrl = String(data.fotoUrl || "").trim();
-
-    // Jika foto base64 terlalu panjang (> 45000 karakter) atau format data:URI, gunakan fallback aman CDN jsDelivr
-    if (!finalFotoUrl || finalFotoUrl.indexOf("data:") === 0 || finalFotoUrl.length > 45000 || finalFotoUrl.indexOf("googleusercontent.com") !== -1 || finalFotoUrl.indexOf("drive.google.com") !== -1) {
-      finalFotoUrl = defaultCdnFoto;
-    } else if (finalFotoUrl.indexOf("assets/") === 0) {
-      finalFotoUrl = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/" + finalFotoUrl;
-    }
-
-    var katUtama = data.kategoriUtama || data.kategori || "Wanita";
-    var subKat = data.subKategori || data.kategori || "Koleksi Fashion";
-    var jenisKain = data.jenisKain || "Premium Quality";
-    var warna = data.warna || "Standar";
-    var ukuran = data.ukuran || "All Size";
-    var hargaModal = Number(data.hargaModal) || 0;
-    var hargaJual = Number(data.hargaJual) || 0;
-    var stok = Number(data.stok) || 1;
-    var deskripsi = data.deskripsi || (data.nama ? (data.nama + " - Koleksi istimewa butik V&T.") : "Koleksi istimewa butik V&T.");
-    var nama = data.nama || ("Produk V&T " + (sku || id));
+    var finalFotoUrl = normalizeFotoUrl(data.fotoUrl);
+    var katUtama = String(data.kategoriUtama || data.kategori || "Indian Woman Fashion").trim();
+    var subKat = String(data.subKategori || data.kategori || "Koleksi Fashion").trim();
+    var jenisKain = String(data.jenisKain || "Premium Quality").trim();
+    var warna = String(data.warna || "Standar").trim();
+    var ukuran = String(data.ukuran || "All Size").trim();
+    var hargaModal = parseCleanNumber(data.hargaModal);
+    var hargaJual = parseCleanNumber(data.hargaJual);
+    var stok = data.stok !== undefined ? parseCleanNumber(data.stok) : 10;
+    var nama = String(data.nama || ("Produk V&T " + (sku || id))).trim();
+    var deskripsi = String(data.deskripsi || (nama + " - Koleksi istimewa butik V&T.")).trim();
 
     if (isEdit && targetRow > 1) {
-      // Update produk eksisting sesuai Index Kolom COL_PRODUK
-      if (sku) sheet.getRange(targetRow, COL_PRODUK.SKU + 1).setValue(sku);
-      sheet.getRange(targetRow, COL_PRODUK.NAMA + 1).setValue(nama);
-      sheet.getRange(targetRow, COL_PRODUK.KATEGORI_UTAMA + 1).setValue(katUtama);
-      sheet.getRange(targetRow, COL_PRODUK.SUB_KATEGORI + 1).setValue(subKat);
-      sheet.getRange(targetRow, COL_PRODUK.JENIS_KAIN + 1).setValue(jenisKain);
-      sheet.getRange(targetRow, COL_PRODUK.WARNA + 1).setValue(warna);
-      sheet.getRange(targetRow, COL_PRODUK.UKURAN + 1).setValue(ukuran);
-      sheet.getRange(targetRow, COL_PRODUK.MODAL + 1).setValue(hargaModal);
-      sheet.getRange(targetRow, COL_PRODUK.JUAL + 1).setValue(hargaJual);
-      sheet.getRange(targetRow, COL_PRODUK.STOK + 1).setValue(stok);
-      sheet.getRange(targetRow, COL_PRODUK.FOTO + 1).setValue(finalFotoUrl);
-      sheet.getRange(targetRow, COL_PRODUK.DESKRIPSI + 1).setValue(deskripsi);
+      var existingRowId = sheet.getRange(targetRow, 1).getDisplayValue() || id;
+      var updatedRow = [[
+        existingRowId,
+        sku || existingRowId,
+        nama,
+        katUtama,
+        subKat,
+        jenisKain,
+        warna,
+        ukuran,
+        hargaModal,
+        hargaJual,
+        stok,
+        finalFotoUrl,
+        deskripsi,
+        "Aktif"
+      ]];
+      sheet.getRange(targetRow, 1, 1, 14).setValues(updatedRow);
+      SpreadsheetApp.flush();
       return {
         success: true,
         isEdit: true,
-        id: id || sku,
+        id: existingRowId,
         sku: sku,
-        message: "Data produk berhasil disimpan ke database!"
+        message: "Data produk '" + nama + "' berhasil diperbarui di database!"
       };
     } else {
-      // Buat Produk Baru dengan ID Sekuensial PRD-XXX
       var maxP = 0;
       if (sheet.getLastRow() > 1) {
-        var existingProdIds = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+        var existingProdIds = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getDisplayValues();
         for (var p = 0; p < existingProdIds.length; p++) {
           var pId = String(existingProdIds[p][0]).trim();
           if (pId.indexOf("PRD-") === 0) {
@@ -440,7 +517,6 @@ function simpanProduk(data) {
       var newId = id || ("PRD-" + ("000" + (maxP + 1)).slice(-3));
       var skuBaru = sku || ("SKU-PAC-" + ("000" + (maxP + 1)).slice(-3));
 
-      // 14 Kolom Standar DataProduk
       var newRow = [
         newId,
         skuBaru,
@@ -458,27 +534,26 @@ function simpanProduk(data) {
         "Aktif"
       ];
       sheet.appendRow(newRow);
+      SpreadsheetApp.flush();
       return {
         success: true,
         isEdit: false,
         id: newId,
         sku: skuBaru,
-        message: "Data produk berhasil disimpan ke database!"
+        message: "Produk baru '" + nama + "' berhasil disimpan ke database!"
       };
     }
   } catch (e) {
     Logger.log("Error simpanProduk: " + e.toString());
     return { success: false, message: e.toString() };
   } finally {
-    try {
-      if (lock) lock.releaseLock();
-    } catch (lErr) {}
+    try { lock.releaseLock(); } catch (lErr) {}
   }
 }
 
-// ----------------------------------------------------------------------------
-// 5B. API HAPUS PRODUK DARI DATABASE
-// ----------------------------------------------------------------------------
+/**
+ * 5. API HAPUS PRODUK DARI DATABASE
+ */
 function hapusProduk(skuOrId) {
   var lock = LockService.getScriptLock();
   try {
@@ -486,26 +561,26 @@ function hapusProduk(skuOrId) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
     var sheet = ss.getSheetByName("DataProduk") || ss.getSheetByName("PRODUK") || ss.getSheetByName("Produk");
-    if (!sheet) return { success: false, message: "Sheet DataProduk / PRODUK tidak ditemukan." };
+    if (!sheet) return { success: false, message: "Sheet DataProduk tidak ditemukan." };
 
-    var query = String(skuOrId || "").trim();
+    var query = String(skuOrId || "").trim().toLowerCase();
     if (query && sheet.getLastRow() > 1) {
-      // Periksa Kolom A (IdProduk) dan Kolom B (SkuBarcode)
-      var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues();
+      var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getDisplayValues();
       for (var i = 0; i < rows.length; i++) {
-        var rowId = String(rows[i][0]).trim();
-        var rowSku = String(rows[i][1]).trim();
-        if (rowId === query || rowSku === query || rowId.toLowerCase() === query.toLowerCase() || rowSku.toLowerCase() === query.toLowerCase()) {
+        var rowId = String(rows[i][0]).trim().toLowerCase();
+        var rowSku = String(rows[i][1]).trim().toLowerCase();
+        if (rowId === query || rowSku === query) {
           sheet.deleteRow(i + 2);
+          SpreadsheetApp.flush();
           return {
             success: true,
-            sku: query,
-            message: "Produk '" + query + "' berhasil dihapus dari database!"
+            sku: skuOrId,
+            message: "Produk '" + skuOrId + "' berhasil dihapus dari database!"
           };
         }
       }
     }
-    return { success: false, message: "Produk dengan SKU/ID '" + query + "' tidak ditemukan." };
+    return { success: false, message: "Produk dengan SKU/ID '" + skuOrId + "' tidak ditemukan." };
   } catch (err) {
     Logger.log("Error hapusProduk: " + err.toString());
     return { success: false, message: err.toString() };
@@ -514,9 +589,9 @@ function hapusProduk(skuOrId) {
   }
 }
 
-// ----------------------------------------------------------------------------
-// 5C. API KELOLA PETUGAS BARU (KHUSUS SUPER ADMIN)
-// ----------------------------------------------------------------------------
+/**
+ * 6. API KELOLA PETUGAS BARU (KHUSUS SUPER ADMIN)
+ */
 function tambahPetugas(dataPetugas) {
   var lock = LockService.getScriptLock();
   try {
@@ -524,10 +599,9 @@ function tambahPetugas(dataPetugas) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
 
-    // Validasi wewenang Super Admin
     var callerRole = String(dataPetugas.callerRole || "").toUpperCase();
     var callerName = String(dataPetugas.callerName || "").toUpperCase();
-    if (callerRole !== "SUPER_ADMIN" && !callerName.includes("PINKY") && !callerName.includes("ADMIN-G")) {
+    if (callerRole !== "SUPER_ADMIN" && callerName.indexOf("PINKY") === -1 && callerName.indexOf("ADMIN-G") === -1) {
       return { success: false, message: "Akses Ditolak: Hanya SUPER ADMIN yang berwenang menambah akun petugas baru!" };
     }
 
@@ -535,65 +609,44 @@ function tambahPetugas(dataPetugas) {
       return { success: false, message: "Email, Nama Lengkap, dan Password wajib diisi!" };
     }
 
-    // Cari sheet USERS atau DataPengguna
-    var sheetUser = ss.getSheetByName("USERS") || ss.getSheetByName("DataPengguna");
+    var sheetUser = ss.getSheetByName("DataPengguna") || ss.getSheetByName("USERS");
     if (!sheetUser) {
-      sheetUser = ss.insertSheet("USERS");
-      sheetUser.appendRow(["Email", "Nama_Lengkap", "Password", "Role", "Status", "Tanggal_Daftar"]);
+      sheetUser = ss.insertSheet("DataPengguna");
+      sheetUser.appendRow(["IdPengguna", "Nama", "LevelRole", "Email", "NoWhatsApp", "PinAkses", "Status"]);
     }
 
-    var nowFormatted = Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd HH:mm:ss");
     var email = String(dataPetugas.email).trim();
-    var nama = String(dataPetugas.nama).trim();
+    var nama = String(dataPetugas.nama).trim().toUpperCase();
     var password = String(dataPetugas.password).trim();
     var role = String(dataPetugas.role || "OPERATOR").toUpperCase();
     var status = String(dataPetugas.status || "Aktif").trim();
 
-    // Periksa kolom sheet
-    var headers = sheetUser.getRange(1, 1, 1, sheetUser.getLastColumn()).getValues()[0];
-    var colMap = {};
-    for (var h = 0; h < headers.length; h++) {
-      colMap[String(headers[h]).trim().toLowerCase()] = h + 1;
-    }
-
-    // Cek duplikasi email
     var lastRow = sheetUser.getLastRow();
     if (lastRow > 1) {
-      var emailColIdx = colMap["email"] || 1;
-      var emails = sheetUser.getRange(2, emailColIdx, lastRow - 1, 1).getValues();
-      for (var e = 0; e < emails.length; e++) {
-        if (String(emails[e][0]).trim().toLowerCase() === email.toLowerCase()) {
-          return { success: false, message: "Email '" + email + "' sudah terdaftar sebagai petugas sebelumnya." };
+      var existingRows = sheetUser.getRange(2, 1, lastRow - 1, sheetUser.getLastColumn()).getDisplayValues();
+      for (var e = 0; e < existingRows.length; e++) {
+        var rowEmail = String(existingRows[e][3] || existingRows[e][0] || "").trim().toLowerCase();
+        if (rowEmail === email.toLowerCase()) {
+          return { success: false, message: "Email '" + email + "' sudah terdaftar sebelumnya." };
         }
       }
     }
 
-    if (colMap["idpengguna"]) {
-      var nextId = "USR-" + ("000" + lastRow).slice(-3);
-      sheetUser.appendRow([
-        nextId,
-        nama,
-        role,
-        email,
-        dataPetugas.noWhatsApp || "-",
-        password,
-        status
-      ]);
-    } else {
-      // Basis Data USERS: Email, Nama_Lengkap, Password, Role, Status, Tanggal_Daftar
-      sheetUser.appendRow([
-        email,
-        nama,
-        password,
-        role,
-        status,
-        nowFormatted
-      ]);
-    }
+    var nextId = "USR-" + ("000" + lastRow).slice(-3);
+    sheetUser.appendRow([
+      nextId,
+      nama,
+      role,
+      email,
+      dataPetugas.noWhatsApp || "-",
+      password,
+      status
+    ]);
 
+    SpreadsheetApp.flush();
     return {
       success: true,
-      message: "Akun petugas '" + nama + "' (" + role + ") berhasil didaftarkan ke sheet USERS!"
+      message: "Akun petugas '" + nama + "' (" + role + ") berhasil didaftarkan!"
     };
   } catch (err) {
     Logger.log("Error tambahPetugas: " + err.toString());
@@ -607,35 +660,30 @@ function getDaftarPetugas() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet tidak ditemukan." };
-    var sheetUser = ss.getSheetByName("USERS") || ss.getSheetByName("DataPengguna");
+    var sheetUser = ss.getSheetByName("DataPengguna") || ss.getSheetByName("USERS");
     var list = [];
     if (sheetUser && sheetUser.getLastRow() > 1) {
-      var rows = sheetUser.getRange(2, 1, sheetUser.getLastRow() - 1, sheetUser.getLastColumn()).getValues();
-      var headers = sheetUser.getRange(1, 1, 1, sheetUser.getLastColumn()).getValues()[0];
-      var colMap = {};
-      for (var h = 0; h < headers.length; h++) {
-        colMap[String(headers[h]).trim().toLowerCase()] = h;
-      }
-
+      var rows = sheetUser.getRange(2, 1, sheetUser.getLastRow() - 1, sheetUser.getLastColumn()).getDisplayValues();
       for (var i = 0; i < rows.length; i++) {
         var r = rows[i];
         list.push({
-          email: String(colMap["email"] !== undefined ? r[colMap["email"]] : r[0]),
-          nama: String(colMap["nama_lengkap"] !== undefined ? r[colMap["nama_lengkap"]] : (colMap["nama"] !== undefined ? r[colMap["nama"]] : r[1])),
-          role: String(colMap["role"] !== undefined ? r[colMap["role"]] : (colMap["levelrole"] !== undefined ? r[colMap["levelrole"]] : r[2])),
-          status: String(colMap["status"] !== undefined ? r[colMap["status"]] : "Aktif")
+          id: String(r[0] || ""),
+          nama: String(r[1] || ""),
+          role: String(r[2] || "OPERATOR"),
+          email: String(r[3] || ""),
+          status: String(r[6] || "Aktif")
         });
       }
     }
     return { success: true, list: list };
   } catch (err) {
-    return { success: false, message: err.toString() };
+    return { success: false, message: err.toString(), list: [] };
   }
 }
 
-// ----------------------------------------------------------------------------
-// 6. API SIMPAN PENGATURAN TOKO (PIN, KONTAK, REKENING)
-// ----------------------------------------------------------------------------
+/**
+ * 7. API SIMPAN PENGATURAN TOKO
+ */
 function simpanPengaturan(dataObj) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -644,10 +692,10 @@ function simpanPengaturan(dataObj) {
 
     var existingKeys = {};
     if (sheet.getLastRow() > 1) {
-      var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues();
+      var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getDisplayValues();
       for (var i = 0; i < rows.length; i++) {
         var k = String(rows[i][0]).trim();
-        existingKeys[k] = i + 2; // Baris row
+        existingKeys[k] = i + 2;
       }
     }
 
@@ -662,6 +710,7 @@ function simpanPengaturan(dataObj) {
       }
     }
 
+    SpreadsheetApp.flush();
     return { success: true, message: "Pengaturan toko berhasil disimpan!" };
   } catch (err) {
     Logger.log("Error simpanPengaturan: " + err.toString());
@@ -669,10 +718,9 @@ function simpanPengaturan(dataObj) {
   }
 }
 
-
-// ----------------------------------------------------------------------------
-// 7. API ALAMAT PENGIRIMAN PELANGGAN (SIMPAN & AMBIL DARI DATABASE)
-// ----------------------------------------------------------------------------
+/**
+ * 8. API ALAMAT PENGIRIMAN PELANGGAN
+ */
 function simpanAlamat(data) {
   var lock = LockService.getScriptLock();
   try {
@@ -686,9 +734,11 @@ function simpanAlamat(data) {
       sheet.appendRow(["IdAlamat", "NamaPenerima", "NoTelepon", "KotaKecamatan", "KodePos", "AlamatLengkap", "IsUtama", "Tanggal"]);
     }
 
+    var nowFormatted = Utilities.formatDate(new Date(), "Asia/Jakarta", "dd/MM/yyyy HH:mm:ss");
     var id = String(data.id || "").trim();
+
     if (id && sheet.getLastRow() > 1) {
-      var ids = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+      var ids = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getDisplayValues();
       for (var i = 0; i < ids.length; i++) {
         if (String(ids[i][0]).trim() === id) {
           var row = i + 2;
@@ -699,14 +749,15 @@ function simpanAlamat(data) {
             data.kodePos || "",
             data.alamat || "",
             data.isUtama ? "TRUE" : "FALSE",
-            new Date().toISOString()
+            nowFormatted
           ]]);
-          return { success: true, id: id, message: "Alamat berhasil diperbarui di basis data cloud!" };
+          SpreadsheetApp.flush();
+          return { success: true, id: id, message: "Alamat berhasil diperbarui di basis data!" };
         }
       }
     }
 
-    var newId = id || ("ADDR-" + Utilities.getUuid().substring(0, 8).toUpperCase());
+    var newId = id || ("ADDR-" + ("000" + sheet.getLastRow()).slice(-3));
     sheet.appendRow([
       newId,
       data.nama || "",
@@ -715,10 +766,11 @@ function simpanAlamat(data) {
       data.kodePos || "",
       data.alamat || "",
       data.isUtama ? "TRUE" : "FALSE",
-      new Date().toISOString()
+      nowFormatted
     ]);
 
-    return { success: true, id: newId, message: "Alamat baru berhasil disimpan di basis data cloud!" };
+    SpreadsheetApp.flush();
+    return { success: true, id: newId, message: "Alamat baru berhasil disimpan di basis data!" };
   } catch (err) {
     Logger.log("Error simpanAlamat: " + err.toString());
     return { success: false, message: err.toString() };
@@ -735,7 +787,7 @@ function ambilAlamat() {
     var sheet = ss.getSheetByName("AlamatPelanggan");
     if (!sheet || sheet.getLastRow() <= 1) return { success: true, addresses: [] };
 
-    var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues();
+    var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getDisplayValues();
     var list = [];
     for (var i = 0; i < rows.length; i++) {
       var r = rows[i];
@@ -753,13 +805,13 @@ function ambilAlamat() {
     return { success: true, addresses: list };
   } catch (err) {
     Logger.log("Error ambilAlamat: " + err.toString());
-    return { success: false, message: err.toString() };
+    return { success: false, message: err.toString(), addresses: [] };
   }
 }
 
-// ----------------------------------------------------------------------------
-// 8. API CHECKOUT PESANAN KE SHEET PESANAN & AUTO PENGURANGAN STOK
-// ----------------------------------------------------------------------------
+/**
+ * 9. API CHECKOUT PESANAN KE SHEET PESANAN & AUTO PENGURANGAN STOK
+ */
 function simpanPesanan(orderData) {
   var lock = LockService.getScriptLock();
   try {
@@ -767,20 +819,19 @@ function simpanPesanan(orderData) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
 
-    // Siapkan sheet PESANAN
     var sheetPesanan = ss.getSheetByName("PESANAN") || ss.getSheetByName("DataPesanan");
     var headers = [
-      "No_Pesanan",
-      "Tanggal_Waktu",
-      "Nama_Pelanggan",
-      "No_WhatsApp",
-      "Alamat_Catatan",
-      "Rincian_Item",
-      "Total_Item",
-      "Total_Belanja",
-      "Metode_Bayar",
-      "Status_Bayar",
-      "Status_Order",
+      "NoPesanan",
+      "TanggalWaktu",
+      "NamaPelanggan",
+      "NoWhatsApp",
+      "AlamatCatatan",
+      "RincianItem",
+      "TotalItem",
+      "TotalBelanja",
+      "MetodeBayar",
+      "StatusBayar",
+      "StatusOrder",
       "Petugas"
     ];
 
@@ -793,15 +844,15 @@ function simpanPesanan(orderData) {
       hr.setFontWeight("bold");
     }
 
-    // Generate ID unik: ORD-YYYYMMDD-XXX
+    // Generate ID Sekuensial Harian ORD-YYYYMMDD-0001
     var now = new Date();
-    var ymd = Utilities.formatDate(now, "GMT+7", "yyyyMMdd");
-    var dateFormatted = Utilities.formatDate(now, "GMT+7", "yyyy-MM-dd HH:mm:ss");
+    var ymd = Utilities.formatDate(now, "Asia/Jakarta", "yyyyMMdd");
+    var dateFormatted = Utilities.formatDate(now, "Asia/Jakarta", "dd/MM/yyyy HH:mm:ss");
     var prefix = "ORD-" + ymd + "-";
 
     var maxNum = 0;
     if (sheetPesanan.getLastRow() > 1) {
-      var existingIds = sheetPesanan.getRange(2, 1, sheetPesanan.getLastRow() - 1, 1).getValues();
+      var existingIds = sheetPesanan.getRange(2, 1, sheetPesanan.getLastRow() - 1, 1).getDisplayValues();
       for (var k = 0; k < existingIds.length; k++) {
         var curId = String(existingIds[k][0]).trim();
         if (curId.indexOf(prefix) === 0) {
@@ -812,35 +863,32 @@ function simpanPesanan(orderData) {
         }
       }
     }
-    var nextOrderId = prefix + ("000" + (maxNum + 1)).slice(-3);
+    var nextOrderId = prefix + ("0000" + (maxNum + 1)).slice(-4);
 
-    // Pengurangan stok fisik di sheet PRODUK / DataProduk
+    // Pengurangan stok fisik di sheet DataProduk
     var sheetProduk = ss.getSheetByName("DataProduk") || ss.getSheetByName("PRODUK") || ss.getSheetByName("Produk");
-    var items = orderData.items || [];
+    var items = (orderData && orderData.items) ? orderData.items : [];
 
     if (sheetProduk && sheetProduk.getLastRow() > 1 && items.length > 0) {
-      var prodDataRange = sheetProduk.getRange(2, 1, sheetProduk.getLastRow() - 1, sheetProduk.getLastColumn());
-      var prodValues = prodDataRange.getValues();
-
+      var prodValues = sheetProduk.getRange(2, 1, sheetProduk.getLastRow() - 1, sheetProduk.getLastColumn()).getDisplayValues();
       for (var it = 0; it < items.length; it++) {
         var itm = items[it];
-        var targetSku = String(itm.sku || itm.id || "").trim();
+        var targetSku = String(itm.sku || itm.id || itm.idProduk || "").trim().toLowerCase();
         var buyQty = Number(itm.qty) || 1;
 
         for (var r = 0; r < prodValues.length; r++) {
-          var pId = String(prodValues[r][COL_PRODUK.ID]).trim();
-          var pSku = String(prodValues[r][COL_PRODUK.SKU]).trim();
+          var pId = String(prodValues[r][COL_PRODUK.ID]).trim().toLowerCase();
+          var pSku = String(prodValues[r][COL_PRODUK.SKU]).trim().toLowerCase();
           if (pSku === targetSku || pId === targetSku) {
-            var curStock = Number(prodValues[r][COL_PRODUK.STOK]) || 0;
-            prodValues[r][COL_PRODUK.STOK] = Math.max(0, curStock - buyQty);
+            var curStock = parseCleanNumber(prodValues[r][COL_PRODUK.STOK]);
+            var updatedStock = Math.max(0, curStock - buyQty);
+            sheetProduk.getRange(r + 2, COL_PRODUK.STOK + 1).setValue(updatedStock);
             break;
           }
         }
       }
-      prodDataRange.setValues(prodValues);
     }
 
-    // Format rincian item teks
     var rincianArr = [];
     var totalQty = 0;
     for (var m = 0; m < items.length; m++) {
@@ -850,31 +898,32 @@ function simpanPesanan(orderData) {
       rincianArr.push(itemObj.nama + " (" + (itemObj.sku || itemObj.id || "-") + ") x" + q + " @Rp " + (Number(itemObj.hargaSatuan) || 0).toLocaleString("id-ID"));
     }
 
-    var totalBelanja = Number(orderData.totalBelanja || orderData.grandTotal) || 0;
+    var totalBelanja = parseCleanNumber(orderData.totalBelanja || orderData.grandTotal || orderData.totalBayar);
     var rowPesanan = [
       nextOrderId,
       dateFormatted,
-      orderData.nama || orderData.namaPelanggan || "Pelanggan Umum",
-      orderData.wa || orderData.noWhatsApp || "-",
-      orderData.alamat || orderData.catatan || "-",
+      orderData.nama || orderData.customerName || orderData.namaPelanggan || "Pelanggan Umum",
+      orderData.wa || orderData.customerPhone || orderData.noWhatsApp || "-",
+      orderData.alamat || orderData.alamatKirim || orderData.catatan || "-",
       rincianArr.join("; "),
       totalQty || Number(orderData.totalItem) || 1,
       totalBelanja,
-      orderData.metodeBayar || "Transfer Bank BCA",
+      orderData.metodeBayar || orderData.paymentMethod || "Transfer Bank BCA",
       orderData.statusBayar || "Lunas",
-      orderData.statusOrder || "Diproses",
+      orderData.statusOrder || orderData.status || "DIPROSES",
       orderData.petugas || "Web Butik V&T"
     ];
 
     sheetPesanan.appendRow(rowPesanan);
+    SpreadsheetApp.flush();
 
     return {
       success: true,
       orderId: nextOrderId,
+      tanggal: dateFormatted,
       data: orderData,
       message: "Pesanan " + nextOrderId + " berhasil disimpan ke sheet PESANAN!"
     };
-
   } catch (err) {
     Logger.log("Error simpanPesanan: " + err.toString());
     return { success: false, message: err.toString() };
@@ -883,59 +932,66 @@ function simpanPesanan(orderData) {
   }
 }
 
-// ----------------------------------------------------------------------------
-// 9. API BACA DAFTAR PESANAN DARI SHEET PESANAN
-// ----------------------------------------------------------------------------
+/**
+ * 10. API BACA DAFTAR PESANAN DARI SHEET PESANAN
+ */
 function getDaftarPesanan() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    if (!ss) return { success: false, message: "Spreadsheet tidak ditemukan." };
+    if (!ss) return { success: false, message: "Spreadsheet tidak ditemukan.", list: [] };
 
     var sheetPesanan = ss.getSheetByName("PESANAN") || ss.getSheetByName("DataPesanan");
     if (!sheetPesanan || sheetPesanan.getLastRow() <= 1) {
       return { success: true, list: [] };
     }
 
-    var rows = sheetPesanan.getRange(2, 1, sheetPesanan.getLastRow() - 1, sheetPesanan.getLastColumn()).getValues();
+    var rows = sheetPesanan.getRange(2, 1, sheetPesanan.getLastRow() - 1, sheetPesanan.getLastColumn()).getDisplayValues();
     var list = [];
 
     for (var i = rows.length - 1; i >= 0; i--) {
       var r = rows[i];
       var rincian = String(r[5] || "");
+      var totalVal = parseCleanNumber(r[7]);
+      var qtyVal = parseCleanNumber(r[6]) || 1;
+      var statusRaw = String(r[10] || "DIPROSES").toUpperCase();
+
       list.push({
         orderId: String(r[0] || ""),
         tanggal: String(r[1] || ""),
-        customerName: String(r[2] || ""),
-        nama: String(r[2] || ""),
-        customerPhone: String(r[3] || ""),
-        wa: String(r[3] || ""),
-        alamatKirim: String(r[4] || ""),
-        catatan: String(r[4] || ""),
+        customerName: String(r[2] || "Pelanggan Butik"),
+        nama: String(r[2] || "Pelanggan Butik"),
+        customerPhone: String(r[3] || "-"),
+        wa: String(r[3] || "-"),
+        alamatKirim: String(r[4] || "-"),
+        catatan: String(r[4] || "-"),
         rincianItem: rincian,
-        totalItem: Number(r[6]) || 1,
-        itemCount: Number(r[6]) || 1,
-        totalBayar: Number(r[7]) || 0,
-        grandTotal: Number(r[7]) || 0,
-        subtotal: Number(r[7]) || 0,
+        totalItem: qtyVal,
+        itemCount: qtyVal,
+        totalBayar: totalVal,
+        grandTotal: totalVal,
+        subtotal: totalVal,
         paymentMethod: String(r[8] || "Transfer Bank BCA"),
         metodeBayar: String(r[8] || "Transfer Bank BCA"),
         statusBayar: String(r[9] || "Lunas"),
-        status: String(r[10] || "DIPROSES"),
+        status: statusRaw,
         statusLabel: String(r[10] || "Diproses"),
-        petugas: String(r[11] || "Web Butik V&T")
+        petugas: String(r[11] || "Web Butik V&T"),
+        storeName: "THE PAC • V&T Medan",
+        metodeLabel: String(r[4] || "").toLowerCase().indexOf("ambil") !== -1 ? "Ambil di Toko" : "Kirim",
+        metodeDetail: String(r[4] || "").toLowerCase().indexOf("ambil") !== -1 ? "PAC Butik Medan" : "Kurir Reguler"
       });
     }
 
     return { success: true, list: list };
   } catch (err) {
     Logger.log("Error getDaftarPesanan: " + err.toString());
-    return { success: false, message: err.toString() };
+    return { success: false, message: err.toString(), list: [] };
   }
 }
 
-// ----------------------------------------------------------------------------
-// 10. API CETAK LAPORAN PENJUALAN & REKAP STOK TOKO
-// ----------------------------------------------------------------------------
+/**
+ * 11. API CETAK LAPORAN PENJUALAN & REKAP STOK TOKO (FIXED COLUMN MAPPING)
+ */
 function getLaporanPenjualan(filterOpt) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -944,40 +1000,50 @@ function getLaporanPenjualan(filterOpt) {
     var list = [];
     var pesananRes = getDaftarPesanan();
     if (pesananRes && pesananRes.success && Array.isArray(pesananRes.list)) {
-      list = pesananRes.list;
+      list = pesananRes.list.slice();
     }
 
-    // Gabungkan dengan data transaksi kasir POS jika ada
+    // Gabungkan dengan data transaksi kasir POS dengan pemetaan COL_TRX yang akurat
     var sheetTrx = ss.getSheetByName("DataTransaksi");
     if (sheetTrx && sheetTrx.getLastRow() > 1) {
-      var trxRows = sheetTrx.getRange(2, 1, sheetTrx.getLastRow() - 1, sheetTrx.getLastColumn()).getValues();
-      for (var t = 0; t < trxRows.length; t++) {
+      var trxRows = sheetTrx.getRange(2, 1, sheetTrx.getLastRow() - 1, sheetTrx.getLastColumn()).getDisplayValues();
+      for (var t = trxRows.length - 1; t >= 0; t--) {
         var tr = trxRows[t];
-        var trxId = String(tr[0] || "").trim();
+        var trxId = String(tr[COL_TRX.ID] || "").trim();
         if (!trxId) continue;
-        var exists = list.some(function(item) { return item.orderId === trxId; });
+
+        var exists = false;
+        for (var e = 0; e < list.length; e++) {
+          if (list[e].orderId === trxId) {
+            exists = true;
+            break;
+          }
+        }
+
         if (!exists) {
+          var itemQty = parseCleanNumber(tr[COL_TRX.TOTAL_ITEM]) || 1;
+          var totalAkhir = parseCleanNumber(tr[COL_TRX.TOTAL_AKHIR]);
           list.push({
             orderId: trxId,
-            tanggal: String(tr[1] || ""),
-            customerName: String(tr[2] || "Pelanggan POS"),
-            nama: String(tr[2] || "Pelanggan POS"),
+            tanggal: String(tr[COL_TRX.TANGGAL] || ""),
+            customerName: String(tr[COL_TRX.PELANGGAN] || "Pelanggan POS"),
+            nama: String(tr[COL_TRX.PELANGGAN] || "Pelanggan POS"),
             customerPhone: "-",
             wa: "-",
             alamatKirim: "Toko Fisik / POS",
-            catatan: "Penjualan Kasir POS",
-            rincianItem: "Koleksi Fashion V&T (" + (tr[3] || 1) + " Pcs)",
-            totalItem: Number(tr[3]) || 1,
-            itemCount: Number(tr[3]) || 1,
-            totalBayar: Number(tr[4]) || 0,
-            grandTotal: Number(tr[4]) || 0,
-            subtotal: Number(tr[4]) || 0,
-            paymentMethod: String(tr[5] || "Cash / Tunai"),
-            metodeBayar: String(tr[5] || "Cash / Tunai"),
+            catatan: String(tr[COL_TRX.CATATAN] || "Penjualan Kasir POS"),
+            rincianItem: "Koleksi Fashion V&T (" + itemQty + " Pcs)",
+            totalItem: itemQty,
+            itemCount: itemQty,
+            totalBayar: totalAkhir,
+            grandTotal: totalAkhir,
+            subtotal: parseCleanNumber(tr[COL_TRX.TOTAL_BELANJA]) || totalAkhir,
+            paymentMethod: String(tr[COL_TRX.METODE] || "Tunai"),
+            metodeBayar: String(tr[COL_TRX.METODE] || "Tunai"),
             statusBayar: "Lunas",
             status: "SELESAI",
             statusLabel: "Selesai",
-            petugas: String(tr[7] || "Kasir V&T")
+            petugas: String(tr[COL_TRX.KASIR] || "PINKY")
           });
         }
       }
