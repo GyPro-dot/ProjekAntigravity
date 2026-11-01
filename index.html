@@ -7090,9 +7090,8 @@
   <!-- ============================================================== -->
   <!-- MODAL: INPUT & EDIT MASTER PRODUK / STOK (LENGKAP CRUD)       -->
   <!-- ============================================================== -->
-  <div class="modal-overlay" id="productModal" style="display: none; z-index: 99999;"
-    onclick="if(event.target === this) window.forceCloseAllModals()">
-    <div class="bottom-sheet" style="max-width: 540px; border-top: 4px solid var(--gold);">
+  <div class="modal-overlay" id="productModal" style="display: none; z-index: 99999;">
+    <div class="bottom-sheet" style="max-width: 540px; border-top: 4px solid var(--gold);" onclick="event.stopPropagation()">
       <div class="sheet-header"
         style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border); background: #fdfafb;">
         <div>
@@ -14622,26 +14621,26 @@
       }
     });
 
-    function handleUserLogout() {
-      const prevUser = state.currentUser;
-      const prevName = (prevUser && prevUser.name && prevUser.name !== "Masuk") ? prevUser.name : "Pengguna";
-      const wasStaff = isStaffUser(prevUser);
-
-      try {
-        localStorage.removeItem("vt_active_user");
-      } catch (e) { }
-
-      state.currentUser = USER_ROLES["PELANGGAN:TAMU"];
-      updateRoleDisplay();
-      closeUserDropdown();
-
-      if (wasStaff) {
-        showToast(`👋 Petugas ${prevName} berhasil Logout. Akses dikembalikan ke Mode Pelanggan/Tamu.`);
+    function handleUserLogout(event) {
+      if (typeof window.handleDirectLogout === "function") {
+        window.handleDirectLogout(event);
       } else {
-        showToast(`👋 ${prevName} telah berhasil keluar (Logout).`);
-      }
+        const prevUser = state.currentUser;
+        const prevName = (prevUser && prevUser.name && prevUser.name !== "Masuk") ? prevUser.name : "Pengguna";
+        const wasStaff = isStaffUser(prevUser);
 
-      switchTab('catalog');
+        try { localStorage.removeItem("vt_active_user"); } catch (e) { }
+        state.currentUser = USER_ROLES["PELANGGAN:TAMU"] || { role: "CUSTOMER", name: "Masuk", title: "Pelanggan / Masuk", icon: "👤", canManageStock: false };
+        updateRoleDisplay();
+        closeUserDropdown();
+
+        if (wasStaff) {
+          showToast(`👋 Petugas ${prevName} berhasil Logout. Akses dikembalikan ke Mode Pelanggan/Tamu.`);
+        } else {
+          showToast(`👋 ${prevName} telah berhasil keluar (Logout).`);
+        }
+        switchTab('catalog');
+      }
     }
 
     function scrollToCatalog() {
@@ -16287,6 +16286,25 @@
         window.forceCloseAllModals();
       }
 
+      // 3b. Pastikan DOM form login (#authModal) tetap utuh, bersih, dan siap untuk re-login instan
+      const authModalEl = document.getElementById("authModal");
+      if (authModalEl) {
+        const heading = document.getElementById("modalAuthHeading");
+        if (heading) { heading.style.setProperty("display", "block", "important"); heading.style.setProperty("visibility", "visible", "important"); heading.style.setProperty("opacity", "1", "important"); }
+        const subWrap = document.getElementById("modalAuthSubtitleWrap");
+        if (subWrap) { subWrap.style.setProperty("display", "block", "important"); subWrap.style.setProperty("visibility", "visible", "important"); }
+        const emailWrap = document.getElementById("modalAuthEmailWrap");
+        if (emailWrap) { emailWrap.style.setProperty("display", "block", "important"); emailWrap.style.setProperty("visibility", "visible", "important"); }
+        const emailInp = document.getElementById("modalAuthEmail");
+        if (emailInp) { emailInp.value = ""; emailInp.style.setProperty("display", "block", "important"); emailInp.style.setProperty("visibility", "visible", "important"); }
+        const passWrap = document.getElementById("modalAuthPassWrap");
+        if (passWrap) { passWrap.style.setProperty("display", "block", "important"); passWrap.style.setProperty("visibility", "visible", "important"); }
+        const passInp = document.getElementById("modalAuthPass");
+        if (passInp) { passInp.value = ""; passInp.style.setProperty("display", "block", "important"); passInp.style.setProperty("visibility", "visible", "important"); }
+        const submitBtn = document.getElementById("btnModalAuthSubmit");
+        if (submitBtn) { submitBtn.innerText = "Masuk"; submitBtn.style.setProperty("display", "block", "important"); submitBtn.style.setProperty("visibility", "visible", "important"); submitBtn.style.setProperty("opacity", "1", "important"); submitBtn.style.setProperty("pointer-events", "auto", "important"); }
+      }
+
       // 4. Ubah tampilan header kembali menjadi "Masuk" dan sembunyikan fitur manajemen stok
       const roleNameTag = document.getElementById("roleNameTag");
       if (roleNameTag) roleNameTag.innerText = "Masuk";
@@ -17030,14 +17048,20 @@
         const target = e.target;
         if (!target || !(target instanceof Element)) return;
 
-        // A. Deteksi tombol X, Batal, atau tombol close modal (dengan teks Batal, ✕, ×, X, atau aria-label="Close")
-        const targetCloseBtn = target.closest('button, [role="button"], .close, .icon-btn, .close-btn, [data-close-modal], [onclick*="handleDirectCloseModal"], [onclick*="forceCloseAllModals"], [onclick*="closeProductModal"]');
+        // PENGECUALIAN MUTLAK: Klik di dalam form input / konten kartu modal
+        // Jangan pernah menutup modal saat user mengetik, klik input, upload file, atau memilih dropdown!
+        if (target.closest('input, textarea, select, label, .form-group, #opGalleryPreviewWrap, #prodGalleryFilePreview')) {
+          return;
+        }
+
+        // A. Deteksi tombol X, Batal, atau tombol close modal yang sah
+        const targetCloseBtn = target.closest('button.icon-btn, button.close-btn, [data-close-modal], button[onclick*="handleDirectCloseModal"], button[onclick*="closeProductModal"], button[onclick*="closeAuthModal"]');
         if (targetCloseBtn) {
           const txt = (targetCloseBtn.textContent || "").trim();
           const ariaLabel = (targetCloseBtn.getAttribute("aria-label") || "").toLowerCase();
           const isCloseMatch = txt === "Batal" || txt === "✕" || txt === "×" || txt === "X" ||
             ariaLabel === "close" ||
-            targetCloseBtn.matches("[data-close-modal], [onclick*='handleDirectCloseModal'], [onclick*='forceCloseAllModals'], .icon-btn, .close-btn");
+            targetCloseBtn.matches("[data-close-modal], [onclick*='handleDirectCloseModal'], .icon-btn, .close-btn");
           if (isCloseMatch) {
             e.preventDefault();
             e.stopPropagation();
@@ -17051,9 +17075,14 @@
           }
         }
 
+        // Jika klik terjadi di dalam kartu / sheet modal (selain tombol close), HENTIKAN penutupan modal!
+        if (target.closest('.bottom-sheet, .modal-card, .auth-modal-card, .modal-content, .detail-dialog-wrap, form')) {
+          return;
+        }
+
         // B. Deteksi klik tepat pada area luar backdrop overlay (efek blur)
-        if (target.id === "operatorModal" || target.id === "editProductModal") {
-          // Cegah modal input stok dan edit produk tertutup otomatis saat klik backdrop/overlay
+        if (target.id === "productModal" || target.id === "operatorModal" || target.id === "editProductModal") {
+          // Modal stok dan edit produk HANYA boleh ditutup lewat tombol X, Batal, atau setelah Simpan
           return;
         }
 
@@ -18119,9 +18148,25 @@
 
       // Safe execution check
       if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initStandaloneUI);
+        document.addEventListener("DOMContentLoaded", function () {
+          initStandaloneUI();
+          try {
+            const saved = localStorage.getItem("vt_active_user");
+            if (saved) {
+              const u = JSON.parse(saved);
+              if (u && u.name && u.name !== "Masuk") applyLoggedInUser(u);
+            }
+          } catch (e) { }
+        });
       } else {
         initStandaloneUI();
+        try {
+          const saved = localStorage.getItem("vt_active_user");
+          if (saved) {
+            const u = JSON.parse(saved);
+            if (u && u.name && u.name !== "Masuk") applyLoggedInUser(u);
+          }
+        } catch (e) { }
       }
     })();
   </script>
