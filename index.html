@@ -9917,6 +9917,11 @@
       "assets/biutteco-tas-kosmetik-make-up-travel-organizer-bag-wanita-x3235.jpg": CDN_ASSETS.CARD_TAS,
       "assets/samjune-kacamata-pria-polarized-sunglasses-anti-reflective-uv400-j-198.jpg": CDN_ASSETS.CARD_KACAMATA,
       "assets/Kotak_Kosmetik_(3).jpg": CDN_ASSETS.CARD_KOTAK,
+      "assets/detail_thumb_1.jpg": CDN_ASSETS.THUMB_1,
+      "assets/detail_thumb_2.jpg": CDN_ASSETS.THUMB_2,
+      "assets/detail_thumb_3.jpg": CDN_ASSETS.THUMB_3,
+      "assets/detail_thumb_4.jpg": CDN_ASSETS.THUMB_4,
+      "assets/detail_thumb_5.jpg": CDN_ASSETS.THUMB_5,
       "assets/taffomicron-tensimeter-digital-pengukur-tekanan-darah-indonesian-voice-a01.jpg": CDN_ASSETS.CARD_TENSIMETER,
       "assets/taffomicron-thermogun-thermometer-tembak-suhu-badan-infrared-ad801.jpg": CDN_ASSETS.CARD_THERMOGUN,
       "assets/taffomicron-alat-terapi-pernapasan-mesh-nebulizer-portable-jsl-w302.jpg": CDN_ASSETS.CARD_NEBULIZER,
@@ -10222,6 +10227,69 @@
           lokasiGudang: 13,
           rating: 5,
           ulasanCount: "950+"
+        },
+        {
+          id: "PRD-011",
+          sku: "SKU-SAR-013",
+          nama: "Saree Pink1",
+          kategoriUtama: "Indian Woman Fashion",
+          subKategori: "Saree",
+          jenisKain: "Sutra (Silk)",
+          warna: "Pink, Gold",
+          ukuran: "Free Size",
+          hargaModal: 350000,
+          hargaJual: 550000,
+          strikePrice: 850000,
+          diskonPercent: "-35%",
+          stok: 12,
+          fotoUrl: "assets/detail_thumb_2.jpg",
+          deskripsi: "Koleksi Saree Pink1 eksklusif dengan sentuhan warna pink anggun dan sulaman emas mewah khas India.",
+          badge: "NEW",
+          lokasiGudang: 13,
+          rating: 5,
+          ulasanCount: "500+"
+        },
+        {
+          id: "PRD-012",
+          sku: "SKU-KUR-014",
+          nama: "Jazz Woll",
+          kategoriUtama: "Indian Man Fashion",
+          subKategori: "Kurta",
+          jenisKain: "Wool & Cotton Blend",
+          warna: "Navy, Charcoal, Grey",
+          ukuran: "M, L, XL",
+          hargaModal: 280000,
+          hargaJual: 450000,
+          strikePrice: 700000,
+          diskonPercent: "-35%",
+          stok: 15,
+          fotoUrl: "assets/detail_thumb_3.jpg",
+          deskripsi: "Setelan Kurta Jazz Woll pria dengan bahan wol premium yang nyaman, elegan, dan berkelas untuk berbagai acara pesta.",
+          badge: "NEW",
+          lokasiGudang: 13,
+          rating: 5,
+          ulasanCount: "350+"
+        },
+        {
+          id: "PRD-013",
+          sku: "SKU-JEW-015",
+          nama: "Diamond TISH",
+          kategoriUtama: "All Accesories and Luxury Goods",
+          subKategori: "Kotak Perhiasan",
+          jenisKain: "Gold Plated & Zircon Diamond",
+          warna: "Sparkling Diamond Gold",
+          ukuran: "All Size Luxury",
+          hargaModal: 500000,
+          hargaJual: 850000,
+          strikePrice: 1250000,
+          diskonPercent: "-32%",
+          stok: 10,
+          fotoUrl: "assets/Kotak_Kosmetik_(3).jpg",
+          deskripsi: "Koleksi perhiasan eksklusif edisi Diamond TISH dengan kilau permata zirkon premium berbalut emas murni.",
+          badge: "SIGNATURE",
+          lokasiGudang: 13,
+          rating: 5,
+          ulasanCount: "1.5rb+"
         },
         {
           id: "PRD-014",
@@ -16174,7 +16242,16 @@
           .then(r => r.json())
           .then(data => {
             if (data && Array.isArray(data.products) && data.products.length > 0) {
-              state.products = data.products;
+              // Smart merge local REST API products with state.products
+              const merged = [...data.products];
+              if (Array.isArray(state.products)) {
+                state.products.forEach(p => {
+                  if (p && !merged.some(m => (m.id && m.id === p.id) || (m.sku && m.sku === p.sku))) {
+                    merged.push(p);
+                  }
+                });
+              }
+              state.products = merged;
               try {
                 localStorage.setItem("vt_custom_products", JSON.stringify(state.products));
               } catch (e) { }
@@ -16191,20 +16268,42 @@
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            state.products = parsed;
+            // Smart merge saved localStorage products with default state.products
+            const merged = [...parsed];
+            if (Array.isArray(state.products)) {
+              state.products.forEach(p => {
+                if (p && !merged.some(m => (m.id && m.id === p.id) || (m.sku && m.sku === p.sku))) {
+                  merged.push(p);
+                }
+              });
+            }
+            state.products = merged;
           }
         }
       } catch (e) {
         console.error("Error reading saved products from localStorage:", e);
       }
 
-      // 3. Baca dari Google Apps Script jika di cloud
+      // 3. Baca dari Google Apps Script jika di cloud (Penggabungan Pintar Anti-Hilang)
       if (typeof google !== "undefined" && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(res => {
             const list = (res && res.success) ? (res.produk || res.listProduk) : null;
             if (list && Array.isArray(list) && list.length > 0) {
-              state.products = list;
+              // Smart merge: Prioritaskan produk dari Google Sheets, tapi jangan menimpa hilang produk baru di state.products
+              const merged = [...list];
+              if (Array.isArray(state.products)) {
+                state.products.forEach(localP => {
+                  if (localP) {
+                    const localKey = String(localP.id || localP.sku || "").toUpperCase();
+                    const exists = merged.some(m => String(m.id || m.sku || "").toUpperCase() === localKey);
+                    if (!exists) {
+                      merged.push(localP);
+                    }
+                  }
+                });
+              }
+              state.products = merged;
               saveProductsToStorage();
               renderCatalog();
               renderAdminTable();
