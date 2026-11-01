@@ -17,10 +17,33 @@ if (typeof Assistant === 'undefined') {
  *    dan masih kosong.
  */
 
-function setupDatabase() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+function setupDatabase(ssOptional) {
+  var ss = ssOptional;
   if (!ss) {
-    throw new Error("Skrip harus dijalankan dari Google Spreadsheet yang aktif!");
+    try {
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+    } catch (e) {}
+  }
+  if (!ss && typeof getAppSpreadsheet === "function") {
+    ss = getAppSpreadsheet();
+  }
+  if (!ss) {
+    try {
+      var props = PropertiesService.getScriptProperties();
+      var sheetId = props.getProperty("SPREADSHEET_ID");
+      if (sheetId) {
+        ss = SpreadsheetApp.openById(sheetId);
+      }
+    } catch (e) {}
+  }
+  if (!ss) {
+    try {
+      ss = SpreadsheetApp.create("Database PAC (Pink ACcessories) • V&T");
+      PropertiesService.getScriptProperties().setProperty("SPREADSHEET_ID", ss.getId());
+    } catch (e) {}
+  }
+  if (!ss) {
+    throw new Error("Skrip harus terhubung ke Google Spreadsheet yang aktif!");
   }
 
   // 1. Inisialisasi Tab DataProduk (14 Kolom Presisi)

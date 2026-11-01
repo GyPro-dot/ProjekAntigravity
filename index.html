@@ -10295,31 +10295,43 @@
           id: "PRD-014",
           sku: "SKU-MHN-014",
           nama: "Mehendi Rajasthani Cone & Innai Herbal Rambut Alami",
-          kategoriUtama: "Aksesoris & Perhiasan",
-          subKategori: "Mehendi & Innai Pewarna Rambut",
+          kategoriUtama: "All Accesories and Luxury Goods",
+          subKategori: "Mehendi & Innai",
           jenisKain: "Herbal Organik",
           warna: "Natural Dark Maroon, Herbal Black",
           ukuran: "Paket Box (6 Cone + 1 Pack Henna)",
           hargaModal: 32000,
           hargaJual: 65000,
+          strikePrice: 100000,
+          diskonPercent: "-35%",
           stok: 45,
           fotoUrl: "https://images.unsplash.com/photo-1616091216791-a5360b5fc78a?auto=format&fit=crop&w=600&q=80",
-          badge: "HERBAL"
+          deskripsi: "Mehendi kerucut Rajasthani asli dan bubuk innai herbal alami untuk tata rias tangan, kaki, dan pewarna rambut berkilau.",
+          badge: "HERBAL",
+          lokasiGudang: 13,
+          rating: 5,
+          ulasanCount: "350+"
         },
         {
           id: "PRD-015",
           sku: "SKU-KAJ-015",
           nama: "Kajal Ayurvedic Kohl Herbal (Pensil Pewarna Mata India)",
-          kategoriUtama: "Aksesoris & Perhiasan",
-          subKategori: "Kajal (Pensil Pewarna Mata)",
-          jenisKain: "Mineral & Minyak Almond",
-          warna: "Jet Black Waterproof",
-          ukuran: "Satuan (Stick Roll)",
-          hargaModal: 28000,
-          hargaJual: 58000,
-          stok: 50,
+          kategoriUtama: "All Accesories and Luxury Goods",
+          subKategori: "Kajal & Rias Mata",
+          jenisKain: "Ayurvedic Herbal Ekstrak Almond & Castor Oil",
+          warna: "Deep Jet Black",
+          ukuran: "Standard Pencil 3g",
+          hargaModal: 25000,
+          hargaJual: 48000,
+          strikePrice: 75000,
+          diskonPercent: "-36%",
+          stok: 38,
           fotoUrl: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=80",
-          badge: "AYURVEDIC"
+          deskripsi: "Kajal herbal khas India berbahan alami minyak almond organik untuk riasan mata hitam pekat dramatis yang sejuk dan menyehatkan mata.",
+          badge: "AYURVEDIC",
+          lokasiGudang: 13,
+          rating: 5,
+          ulasanCount: "820+"
         }
       ],
       cart: [],
@@ -13445,7 +13457,7 @@
       if (!file) return;
 
       showToast("⏳ Mengoptimasi foto produk baru...");
-      compressAndOptimizeImage(file, 640, 640, 0.82, function (optimizedDataUrl, fileName, approxBytes) {
+      compressAndOptimizeImage(file, 360, 360, 0.65, function (optimizedDataUrl, fileName, approxBytes) {
         document.getElementById("opFotoUrl").value = optimizedDataUrl;
         const preview = document.getElementById("opFotoPreview");
         const wrap = document.getElementById("opGalleryPreviewWrap");
@@ -13480,8 +13492,8 @@
         img.onload = function () {
           let w = img.width;
           let h = img.height;
-          const maxW = maxWidth || 640;
-          const maxH = maxHeight || 640;
+          const maxW = maxWidth || 360;
+          const maxH = maxHeight || 360;
 
           if (w > maxW || h > maxH) {
             if (w > h) {
@@ -13500,7 +13512,7 @@
           ctx.drawImage(img, 0, 0, w, h);
 
           // Hasilkan DataURL terkompresi (~30-60 KB) yang aman untuk localStorage & Database
-          const optimizedDataUrl = canvas.toDataURL("image/jpeg", quality || 0.82);
+          const optimizedDataUrl = canvas.toDataURL("image/jpeg", quality || 0.65);
           const approxBytes = Math.round(optimizedDataUrl.length * 0.75);
           callback(optimizedDataUrl, file.name, approxBytes);
         };
@@ -13517,7 +13529,7 @@
       if (!file) return;
 
       showToast("⏳ Mengoptimasi foto dari HP/Laptop...");
-      compressAndOptimizeImage(file, 640, 640, 0.82, function (optimizedDataUrl, fileName, approxBytes) {
+      compressAndOptimizeImage(file, 360, 360, 0.65, function (optimizedDataUrl, fileName, approxBytes) {
         document.getElementById("editProdFotoUrl").value = optimizedDataUrl;
         const preview = document.getElementById("editProdImgPreview");
         const label = document.getElementById("editProdFileNameLabel");
@@ -16288,9 +16300,9 @@
       if (typeof google !== "undefined" && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(res => {
-            const list = (res && res.success) ? (res.produk || res.listProduk) : null;
+            const list = (res && res.success) ? (res.listProduk || res.produk) : null;
             if (list && Array.isArray(list) && list.length > 0) {
-              // Smart merge: Prioritaskan produk dari Google Sheets, tapi jangan menimpa hilang produk baru di state.products
+              // Smart merge by ID: Jangan timpa hilang produk lokal jika cloud kurang lengkap
               const merged = [...list];
               if (Array.isArray(state.products)) {
                 state.products.forEach(localP => {
@@ -16305,9 +16317,14 @@
               }
               state.products = merged;
               saveProductsToStorage();
-              renderCatalog();
-              renderAdminTable();
             }
+            renderCatalog();
+            renderAdminTable();
+          })
+          .withFailureHandler(err => {
+            console.error("Cloud getInitData notice/fallback:", err);
+            renderCatalog();
+            renderAdminTable();
           })
           .getInitData();
       }

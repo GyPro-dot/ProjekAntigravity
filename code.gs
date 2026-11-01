@@ -21,7 +21,6 @@ var COL_PRODUK = {
   SKU: 1,
   NAMA: 2,
   KATEGORI_UTAMA: 3,
-  KATEGORI: 3,
   SUB_KATEGORI: 4,
   JENIS_KAIN: 5,
   WARNA: 6,
@@ -122,9 +121,61 @@ function normalizeFotoUrl(rawFoto) {
 /**
  * 1. API INITIAL DATA (MASTER PRODUCTS, CATEGORIES, SETTINGS, ORDERS)
  */
+/**
+ * Helper Akses Spreadsheet (Mendukung Container-Bound & Standalone Web App /exec)
+ */
+function getAppSpreadsheet() {
+  var ss = null;
+  try {
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  } catch (e) {}
+  if (ss) return ss;
+
+  var props = PropertiesService.getScriptProperties();
+  var sheetId = props.getProperty("SPREADSHEET_ID");
+  if (sheetId) {
+    try {
+      ss = SpreadsheetApp.openById(sheetId);
+      if (ss) return ss;
+    } catch (e) {
+      Logger.log("Gagal openById: " + e.toString());
+    }
+  }
+
+  // Coba cari file di Drive jika ada akses DriveApp
+  try {
+    if (typeof DriveApp !== "undefined") {
+      var files = DriveApp.getFilesByName("Database PAC (Pink ACcessories) • V&T");
+      if (files.hasNext()) {
+        var file = files.next();
+        ss = SpreadsheetApp.openById(file.getId());
+        if (ss) {
+          props.setProperty("SPREADSHEET_ID", ss.getId());
+          return ss;
+        }
+      }
+    }
+  } catch (eDrive) {}
+
+  // Buat spreadsheet otomatis jika standalone
+  try {
+    ss = SpreadsheetApp.create("Database PAC (Pink ACcessories) • V&T");
+    if (ss) {
+      props.setProperty("SPREADSHEET_ID", ss.getId());
+      if (typeof setupDatabase === "function") {
+        setupDatabase(ss);
+      }
+      return ss;
+    }
+  } catch (err) {
+    Logger.log("Gagal membuat spreadsheet baru: " + err.toString());
+  }
+  return null;
+}
+
 function getInitData() {
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
 
     var sheetProduk = ss.getSheetByName("DataProduk");
@@ -148,10 +199,10 @@ function getInitData() {
             id: String(r[COL_PRODUK.ID] || ("PRD-" + ("000" + (i + 1)).slice(-3))),
             sku: String(r[COL_PRODUK.SKU] || ("SKU-" + ("000" + (i + 1)).slice(-3))),
             nama: String(r[COL_PRODUK.NAMA] || ""),
-            kategori: String(r[COL_PRODUK.KATEGORI_UTAMA] || "Indian Woman Fashion"),
             kategoriUtama: String(r[COL_PRODUK.KATEGORI_UTAMA] || "Indian Woman Fashion"),
-            subKategori: String(r[COL_PRODUK.SUB_KATEGORI] || "Koleksi Fashion"),
-            jenisKain: String(r[COL_PRODUK.JENIS_KAIN] || "Premium Quality"),
+            subKategori: String(r[COL_PRODUK.SUB_KATEGORI] || "Saree"),
+            jenisKain: String(r[COL_PRODUK.JENIS_KAIN] || "Sutra (Silk)"),
+            kategori: String(r[COL_PRODUK.KATEGORI_UTAMA] || "Lainnya"),
             warna: String(r[COL_PRODUK.WARNA] || "Standar"),
             ukuran: String(r[COL_PRODUK.UKURAN] || "All Size"),
             hargaModal: parseCleanNumber(r[COL_PRODUK.MODAL]),
@@ -293,7 +344,7 @@ function simpanTransaksi(payload) {
   try {
     lock.waitLock(20000);
 
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     var sheetProduk = ss.getSheetByName("DataProduk");
     var sheetTrx = ss.getSheetByName("DataTransaksi");
     var sheetDtl = ss.getSheetByName("DetailTransaksi");
@@ -436,7 +487,7 @@ function simpanProduk(data) {
   try {
     lock.waitLock(10000);
 
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
     var sheet = ss.getSheetByName("DataProduk") || ss.getSheetByName("PRODUK") || ss.getSheetByName("Produk");
     if (!sheet) return { success: false, message: "Sheet DataProduk tidak ditemukan." };
@@ -464,9 +515,16 @@ function simpanProduk(data) {
     }
 
     var finalFotoUrl = normalizeFotoUrl(data.fotoUrl);
+    if (finalFotoUrl && finalFotoUrl.indexOf("data:") === 0 && finalFotoUrl.length > 45000) {
+      try {
+        var pKey = "IMG_" + (id || sku || ("NEW_" + new Date().getTime()));
+        PropertiesService.getScriptProperties().setProperty(pKey, finalFotoUrl.substring(0, 9000));
+      } catch (propErr) {}
+      finalFotoUrl = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
+    }
     var katUtama = String(data.kategoriUtama || data.kategori || "Indian Woman Fashion").trim();
-    var subKat = String(data.subKategori || data.kategori || "Koleksi Fashion").trim();
-    var jenisKain = String(data.jenisKain || "Premium Quality").trim();
+    var subKat = String(data.subKategori || "Saree").trim();
+    var jenisKain = String(data.jenisKain || "Sutra (Silk)").trim();
     var warna = String(data.warna || "Standar").trim();
     var ukuran = String(data.ukuran || "All Size").trim();
     var hargaModal = parseCleanNumber(data.hargaModal);
@@ -558,7 +616,7 @@ function hapusProduk(skuOrId) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
     var sheet = ss.getSheetByName("DataProduk") || ss.getSheetByName("PRODUK") || ss.getSheetByName("Produk");
     if (!sheet) return { success: false, message: "Sheet DataProduk tidak ditemukan." };
@@ -596,7 +654,7 @@ function tambahPetugas(dataPetugas) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
 
     var callerRole = String(dataPetugas.callerRole || "").toUpperCase();
@@ -664,7 +722,7 @@ function daftarAkunBaru(userData) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
 
     if (!userData || !userData.email || (!userData.password && !userData.pass)) {
@@ -835,7 +893,7 @@ function loginPengguna(loginId, password) {
     }
 
     // 2. Pencocokan ke Database Google Sheets (DataPengguna)
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet tidak ditemukan." };
     var sheetUser = ss.getSheetByName("DataPengguna") || ss.getSheetByName("USERS");
     if (!sheetUser || sheetUser.getLastRow() <= 1) {
@@ -886,7 +944,7 @@ function loginPengguna(loginId, password) {
 
 function getDaftarPetugas() {
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet tidak ditemukan." };
     var sheetUser = ss.getSheetByName("DataPengguna") || ss.getSheetByName("USERS");
     var list = [];
@@ -914,7 +972,7 @@ function getDaftarPetugas() {
  */
 function simpanPengaturan(dataObj) {
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     var sheet = ss.getSheetByName("PengaturanToko");
     if (!sheet) return { success: false, message: "Tab PengaturanToko tidak ditemukan." };
 
@@ -953,7 +1011,7 @@ function simpanAlamat(data) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
 
     var sheet = ss.getSheetByName("AlamatPelanggan");
@@ -1009,7 +1067,7 @@ function simpanAlamat(data) {
 
 function ambilAlamat() {
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
 
     var sheet = ss.getSheetByName("AlamatPelanggan");
@@ -1044,7 +1102,7 @@ function simpanPesanan(orderData) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(20000);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan." };
 
     var sheetPesanan = ss.getSheetByName("PESANAN") || ss.getSheetByName("DataPesanan");
@@ -1165,7 +1223,7 @@ function simpanPesanan(orderData) {
  */
 function getDaftarPesanan() {
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet tidak ditemukan.", list: [] };
 
     var sheetPesanan = ss.getSheetByName("PESANAN") || ss.getSheetByName("DataPesanan");
@@ -1222,7 +1280,7 @@ function getDaftarPesanan() {
  */
 function getLaporanPenjualan(filterOpt) {
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet();
     if (!ss) return { success: false, message: "Spreadsheet aktif tidak ditemukan.", list: [] };
 
     var list = [];
