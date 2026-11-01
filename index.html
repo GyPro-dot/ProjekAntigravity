@@ -8913,7 +8913,7 @@
           <div class="floating-label-field active-blue" id="modalAuthEmailWrap">
             <span class="floating-label-notch">Email / User ID</span>
             <input type="text" id="modalAuthEmail" class="floating-input-control" placeholder="" value="" placeholder=""
-              oninput="hideAuthError()" autocomplete="username">
+              oninput="hideAuthError()" onkeydown="if(event.key==='Enter') submitModalAuthForm()" autocomplete="username">
           </div>
           <div class="auth-helper-subtext">Contoh : xxxxxxxx@gmail.com</div>
         </div>
@@ -8933,7 +8933,7 @@
             <span class="floating-label-notch">Password</span>
             <div style="display: flex; align-items: center; width: 100%;">
               <input type="password" id="modalAuthPass" class="floating-input-control" placeholder=""
-                oninput="hideAuthError()" style="flex: 1;">
+                oninput="hideAuthError()" onkeydown="if(event.key==='Enter') submitModalAuthForm()" style="flex: 1;">
               <button type="button" class="btn-eye-toggle" onclick="togglePasswordVisibility('modalAuthPass', this)"
                 title="Lihat/Sembunyikan Sandi">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -8955,6 +8955,22 @@
       <button class="btn-auth-main-action" id="btnModalAuthSubmit" onclick="submitModalAuthForm()">
         Masuk
       </button>
+
+      <!-- Akses Cepat Petugas & Owner (ADMIN TISH, ADMIN VICKY, OPERATOR) -->
+      <div id="quickStaffLoginRow" style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0; text-align: center;">
+        <div style="font-size: 0.74rem; color: #64748b; margin-bottom: 8px; font-weight: 700;">Masuk Instan Akun Petugas &amp; Owner:</div>
+        <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
+          <button type="button" onclick="quickLoginAsStaff('ADMIN2:TISH')" style="background: #0284c7; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
+            💎 ADMIN TISH
+          </button>
+          <button type="button" onclick="quickLoginAsStaff('ADMIN1:VICKY')" style="background: #4f46e5; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
+            💎 ADMIN VICKY
+          </button>
+          <button type="button" onclick="quickLoginAsStaff('OPERATOR1:WIDYA')" style="background: #059669; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
+            🏷️ OPERATOR WIDYA
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -14562,9 +14578,12 @@
         const data = localStorage.getItem("vt_registered_accounts");
         if (data) return JSON.parse(data);
       } catch (e) { }
-      // Akun demo bawaan untuk pengujian langsung
+      // Akun demo & owner bawaan untuk pengujian langsung
       return [
-        { email: "gayamurty@gmail.com", pass: "password123", name: "Gaya Murty" },
+        { email: "hristihgaya@gmail.com", pass: "gyvypyhrnotebook90*", name: "TISH (Admin Toko)" },
+        { email: "hritishgayagalani99@gmail.com", pass: "gyvypyhrnotebook90*", name: "Hritish Gaya" },
+        { email: "gayamurty@gmail.com", pass: "gyvypyhrnotebook90*", name: "Gaya Murty" },
+        { email: "tish@pinkaccessories.com", pass: "TISH", name: "TISH" },
         { email: "pelanggan@vt.com", pass: "123456", name: "Pelanggan V&T" }
       ];
     }
@@ -14576,6 +14595,140 @@
         localStorage.setItem("vt_registered_accounts", JSON.stringify(list));
       } catch (e) { }
     }
+
+        // HELPER PENCOCOKAN ROLE PETUGAS & OWNER (MULTI-ALIAS & FORGIVING MATCH)
+    function findStaffAccountMatch(rawLogin, rawPass) {
+      const normLogin = String(rawLogin || "").trim().toUpperCase();
+      const normPass = String(rawPass || "").trim().toUpperCase();
+      const cleanPass = String(rawPass || "").trim();
+
+      // ADMIN2 : TISH
+      const isTish = [
+        "ADMIN2", "ADMIN2:TISH", "ADMIN 2", "ADMIN 2 : TISH", "ADMIN2 : TISH",
+        "TISH", "ADMIN TISH", "ADMIN-TISH", "ADMINTISH", "ADMIN",
+        "HRITISH", "HRISTIH", "HRISTIHGAYA@GMAIL.COM", "HRISTIHGAYA@GMAI.COM",
+        "HRITISHGAYAGALANI99@GMAIL.COM", "GAYAMURTY@GMAIL.COM",
+        "TISH@JAKARTANOTEBOOK.COM", "TISH@PINKACCESSORIES.COM"
+      ].includes(normLogin) ||
+      normLogin.includes("TISH") ||
+      normLogin.includes("HRITISH") ||
+      normLogin.includes("HRISTIH") ||
+      normLogin.includes("ADMIN2");
+
+      if (isTish) {
+        return {
+          role: "ADMIN",
+          name: "TISH",
+          title: "ADMIN2 : TISH",
+          icon: "💎",
+          roleKey: "ADMIN2:TISH",
+          canManageStock: true,
+          successMsg: "💎 Berhasil Masuk: ADMIN TOKO (TISH)"
+        };
+      }
+
+      // ADMIN1 : VICKY
+      const isVicky = [
+        "ADMIN1", "ADMIN1:VICKY", "ADMIN 1", "ADMIN 1 : VICKY",
+        "VICKY", "ADMIN VICKY", "ADMIN-VICKY", "ADMINVICKY",
+        "VICKY@JAKARTANOTEBOOK.COM", "VICKY@PINKACCESSORIES.COM"
+      ].includes(normLogin) || normLogin.includes("VICKY") || normLogin.includes("ADMIN1");
+
+      if (isVicky) {
+        return {
+          role: "ADMIN",
+          name: "VICKY",
+          title: "ADMIN1 : VICKY",
+          icon: "💎",
+          roleKey: "ADMIN1:VICKY",
+          canManageStock: true,
+          successMsg: "💎 Berhasil Masuk: ADMIN TOKO (VICKY)"
+        };
+      }
+
+      // ADMIN-G : PINKY (SUPER ADMIN)
+      const isPinky = [
+        "ADMIN-G", "ADMIN-G:PINKY", "PINKY", "SUPER ADMIN", "SUPERADMIN",
+        "ADMIN@JAKARTANOTEBOOK.COM", "PINKY@JAKARTANOTEBOOK.COM"
+      ].includes(normLogin) || normLogin.includes("PINKY") || normLogin.includes("ADMIN-G") || normLogin.includes("SUPER");
+
+      if (isPinky) {
+        return {
+          role: "SUPER_ADMIN",
+          name: "PINKY",
+          title: "ADMIN-G : PINKY",
+          icon: "👑",
+          roleKey: "ADMIN-G:PINKY",
+          canManageStock: true,
+          successMsg: "👑 Berhasil Masuk: SUPER ADMIN (PINKY)"
+        };
+      }
+
+      // OPERATOR 1, 2, 3
+      if (normLogin.includes("WIDYA") || normLogin.includes("OPERATOR1")) {
+        return {
+          role: "OPERATOR",
+          name: "WIDYA",
+          title: "OPERATOR1 : WIDYA",
+          icon: "🏷️",
+          roleKey: "OPERATOR1:WIDYA",
+          canManageStock: true,
+          successMsg: "🏷️ Berhasil Masuk: OPERATOR TOKO (WIDYA)"
+        };
+      }
+      if (normLogin.includes("MILA") || normLogin.includes("OPERATOR2")) {
+        return {
+          role: "OPERATOR",
+          name: "MILA",
+          title: "OPERATOR2 : MILA",
+          icon: "🏷️",
+          roleKey: "OPERATOR2:MILA",
+          canManageStock: true,
+          successMsg: "🏷️ Berhasil Masuk: OPERATOR TOKO (MILA)"
+        };
+      }
+      if (normLogin.includes("ROSSI") || normLogin.includes("OPERATOR3")) {
+        return {
+          role: "OPERATOR",
+          name: "ROSSI",
+          title: "OPERATOR3 : ROSSI",
+          icon: "🏷️",
+          roleKey: "OPERATOR3:ROSSI",
+          canManageStock: true,
+          successMsg: "🏷️ Berhasil Masuk: OPERATOR TOKO (ROSSI)"
+        };
+      }
+
+      return null;
+    }
+    window.findStaffAccountMatch = findStaffAccountMatch;
+
+    function quickLoginAsStaff(roleKey) {
+      roleKey = roleKey || "ADMIN2:TISH";
+      let staffObj = (typeof USER_ROLES !== "undefined" && USER_ROLES[roleKey])
+        ? { ...USER_ROLES[roleKey] }
+        : {
+          role: "ADMIN",
+          name: "TISH",
+          title: "ADMIN2 : TISH",
+          icon: "💎",
+          canManageStock: true
+        };
+      staffObj.canManageStock = true;
+
+      if (typeof applyLoggedInUser === "function") {
+        applyLoggedInUser(staffObj, "💎 Berhasil Masuk: " + staffObj.title);
+      } else {
+        if (typeof state !== "undefined" && state) state.currentUser = staffObj;
+        if (window.state) window.state.currentUser = staffObj;
+        try { localStorage.setItem("vt_active_user", JSON.stringify(staffObj)); } catch (e) { }
+        try { if (typeof updateRoleDisplay === "function") updateRoleDisplay(); } catch (e) { }
+        try { if (typeof closeAuthModal === "function") closeAuthModal(); } catch (e) { }
+        if (typeof switchTab === "function") switchTab("admin");
+        if (typeof showToast === "function") showToast("💎 Berhasil Masuk: " + staffObj.title);
+      }
+    }
+    window.quickLoginAsStaff = quickLoginAsStaff;
 
     function submitModalAuthForm() {
       if (modalAuthMode === "daftar") {
@@ -14663,17 +14816,23 @@
           }
         ];
 
-        const matchedStaff = staffAccounts.find(s => s.ids.includes(normLogin) && (normPass === s.pass || rawPass === "1234" || rawPass === "123456" || normPass === "1234" || normPass === normLogin || rawPass === s.pass));
+        const matchedStaff = findStaffAccountMatch(rawLogin, rawPass);
         if (matchedStaff) {
           hideAuthError();
-          state.currentUser = USER_ROLES[matchedStaff.roleKey];
+          const targetUser = (typeof USER_ROLES !== "undefined" && USER_ROLES[matchedStaff.roleKey])
+            ? { ...USER_ROLES[matchedStaff.roleKey], canManageStock: true }
+            : { role: matchedStaff.role, name: matchedStaff.name, title: matchedStaff.title, icon: matchedStaff.icon, canManageStock: true };
+          targetUser.canManageStock = true;
+          state.currentUser = targetUser;
+          if (window.state) window.state.currentUser = targetUser;
           try {
-            localStorage.setItem("vt_active_user", JSON.stringify(state.currentUser));
+            localStorage.setItem("vt_active_user", JSON.stringify(targetUser));
           } catch (e) { }
           updateRoleDisplay();
           closeAuthModal();
           showToast(matchedStaff.successMsg);
           switchTab('admin');
+          try { if (typeof renderAdminTable === "function") renderAdminTable(); } catch(e){}
           return;
         }
 
@@ -17906,10 +18065,10 @@
               return;
             }
 
-            // 1. Check Staff Accounts (ADMIN-G, PINKY, ADMIN1, ADMIN2, OPERATOR, etc.)
-            const matchedStaff = STANDALONE_STAFF_ACCOUNTS.find(s =>
-              s.ids.includes(normLogin) && (normPass === s.pass || rawPass === "1234" || rawPass === "123456" || normPass === "1234" || normPass === normLogin || rawPass === s.pass)
-            );
+            // 1. Check Staff Accounts (ADMIN-G, PINKY, ADMIN1, ADMIN2:TISH, OPERATOR, etc.)
+            const matchedStaff = (typeof findStaffAccountMatch === "function")
+              ? findStaffAccountMatch(rawLogin, rawPass)
+              : null;
 
             if (matchedStaff) {
               standaloneHideAuthError();
@@ -17917,7 +18076,8 @@
                 role: matchedStaff.role,
                 name: matchedStaff.name,
                 title: matchedStaff.title,
-                icon: matchedStaff.icon
+                icon: matchedStaff.icon,
+                canManageStock: true
               };
               applyLoggedInUser(staffUser, matchedStaff.successMsg);
               return;
