@@ -7344,7 +7344,8 @@
             </div>
           </div>
           <input type="text" id="opFotoUrl" class="form-input"
-            placeholder="Atau tempel URL gambar / file lokal (assets/...)" value="assets/detail_corset_main.jpg">
+            oninput="const p=document.getElementById('opFotoPreview'); const w=document.getElementById('opGalleryPreviewWrap'); if(p&&w){ p.src=resolveImgUrl(this.value); w.style.display='flex'; }"
+            placeholder="Atau tempel URL gambar / file lokal (assets/...)" value="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg">
         </div>
 
         <div class="form-group">
@@ -7353,9 +7354,10 @@
             placeholder="Contoh: Koleksi busana India eksklusif dengan aksen sulam bordir benang emas asli, kain sejuk, dan kualitas premium."></textarea>
         </div>
       </div>
-      <div class="sheet-footer">
-        <button class="btn-primary" onclick="submitOperatorNewProduct()">
-          Simpan Stock Barang Baru
+      <div class="sheet-footer" style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--border); background: #fdfafb;">
+        <button type="button" class="btn-secondary" onclick="window.handleDirectCloseModal(this, event)">Batal</button>
+        <button type="button" class="btn-primary" id="btnSimpanOperatorModal" onclick="submitOperatorNewProduct()" style="cursor: pointer; background: var(--primary); font-weight: 700; padding: 8px 18px;">
+          💾 Simpan Produk
         </button>
       </div>
     </div>
@@ -9476,7 +9478,13 @@
           btnStock.style.opacity = "1";
         }
 
-        try { if (typeof renderAdminTable === "function") renderAdminTable(); } catch (e) { console.error(e); }
+        try {
+          if (typeof window.renderAdminTable === "function") {
+            window.renderAdminTable();
+          } else if (typeof renderAdminTable === "function") {
+            renderAdminTable();
+          }
+        } catch (e) { console.error(e); }
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }
@@ -12050,6 +12058,7 @@
         id: newId,
         sku: newSku,
         nama: nama,
+        kategori: mainCat,
         kategoriUtama: mainCat,
         subKategori: subCat,
         jenisKain: fabric,
@@ -12060,16 +12069,45 @@
         stok: stok,
         fotoUrl: foto,
         deskripsi: narasiDesc,
+        status: "Aktif",
         badge: "NEW"
       };
 
-      state.products.unshift(newProduct);
-      saveProductsToStorage();
+      if (typeof state !== "undefined" && state) {
+        if (!Array.isArray(state.products)) state.products = [];
+        state.products.unshift(newProduct);
+      }
+      if (typeof window.products !== "undefined" && Array.isArray(window.products)) {
+        window.products.unshift(newProduct);
+      }
+
+      try {
+        localStorage.setItem("vt_custom_products", JSON.stringify(state.products));
+      } catch (e) { }
+
+      // Sinkronisasi ke backend Google Sheets
       syncProductToBackend(newProduct, 'add');
 
-      closeOperatorInputModal();
-      renderCatalog();
-      renderAdminTable();
+      if (typeof window.forceCloseAllModals === "function") {
+        window.forceCloseAllModals();
+      } else {
+        closeOperatorInputModal();
+      }
+
+      // Perbarui tampilan tabel admin dan katalog grid
+      if (typeof window.renderAdminTable === "function") {
+        window.renderAdminTable();
+      } else if (typeof renderAdminTable === "function") {
+        renderAdminTable();
+      }
+
+      if (typeof renderCatalog === "function") {
+        renderCatalog();
+      }
+      if (typeof renderPosCatalog === "function") {
+        renderPosCatalog();
+      }
+
       showToast(`✅ Produk baru '${nama}' berhasil disimpan di sistem dan database!`);
     }
 
@@ -14339,6 +14377,12 @@
         updateRoleDisplay();
         closeAuthModal();
         showToast(`🎉 Pendaftaran berhasil! Selamat datang di V&T, ${name}!`);
+        if (typeof google !== "undefined" && google.script && google.script.run) {
+          google.script.run
+            .withSuccessHandler(function(res) { console.log("Cloud sync register:", res); })
+            .withFailureHandler(function(err) { console.warn("Cloud sync register error:", err); })
+            .daftarAkunBaru({ nama: name, email: email, phone: phone, password: pass });
+        }
       } else {
         const rawLogin = (document.getElementById("modalAuthEmail").value || "").trim();
         const rawPass = (document.getElementById("modalAuthPass").value || "").trim();
@@ -15016,15 +15060,42 @@
       document.getElementById("receiptModal").style.display = "none";
     }
 
-    // ADMIN TABLE DENGAN FOTO, STATUS RE-ORDER & QUICK RESTOCK
+    // ADMIN TABLE DENGAN FOTO, NARASI SINGKAT, STATUS RE-ORDER & QUICK RESTOCK
     function renderAdminTable() {
       const tbody = document.getElementById("adminStockTableBody");
-      const lowStockCount = state.products.filter(p => p.stok < 5).length;
+      if (!tbody) return;
+
+      // 1. Pastikan sumber data produk tersedia (state.products -> window.products -> localStorage)
+      let products = (typeof state !== "undefined" && state && Array.isArray(state.products) && state.products.length > 0)
+        ? state.products
+        : ((typeof window !== "undefined" && Array.isArray(window.products) && window.products.length > 0)
+          ? window.products
+          : []);
+
+      if (products.length === 0) {
+        try {
+          const saved = localStorage.getItem("vt_custom_products");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              products = parsed;
+            }
+          }
+        } catch (e) { }
+      }
+
+      if (typeof state !== "undefined" && state) {
+        if (!state.products || state.products.length === 0) {
+          state.products = products;
+        }
+      }
+
+      const lowStockCount = products.filter(p => Number(p.stok || 0) < 5).length;
 
       // Update badge count tabs
       const countAll = document.getElementById("countTabAll");
       const countLow = document.getElementById("countTabLow");
-      if (countAll) countAll.innerText = state.products.length;
+      if (countAll) countAll.innerText = products.length;
       if (countLow) countLow.innerText = lowStockCount;
 
       const alertBanner = document.getElementById("lowStockAlertBanner");
@@ -15035,44 +15106,53 @@
       }
 
       // Filter daftar produk
-      let list = state.products;
-      if (state.stockFilterTab === "LOW_STOCK") {
-        list = state.products.filter(p => p.stok < 5);
+      let list = products;
+      if (typeof state !== "undefined" && state.stockFilterTab === "LOW_STOCK") {
+        list = products.filter(p => Number(p.stok || 0) < 5);
       }
 
       const countText = document.getElementById("stockTableCountText");
       if (countText) {
-        countText.innerText = `Menampilkan ${list.length} dari ${state.products.length} Produk`;
+        countText.innerText = `Menampilkan ${list.length} dari ${products.length} Produk`;
       }
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Tidak ada produk pada filter ini.</td></tr>`;
-        updateStockAnalytics();
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted); font-style: italic;">Tidak ada produk pada filter ini.</td></tr>`;
+        try { updateStockAnalytics(); } catch (e) { }
         return;
       }
 
       tbody.innerHTML = list.map(p => {
-        const isLow = p.stok < 5;
+        const stokVal = Number(p.stok || 0);
+        const isLow = stokVal < 5;
         const pSku = p.sku || p.id || "";
         const pId = p.id || pSku;
+        const pName = p.nama || "Produk V&T";
+        const pDesc = p.deskripsi || p.narasi || "";
+        const pImg = resolveImgUrl(p.fotoUrl);
+        const pPrice = formatRupiah(p.hargaJual || 0);
+        const pCategory = p.subKategori || p.kategori || p.kategoriUtama || "";
+        const pFabric = p.jenisKain || "";
+
         return `
           <tr data-sku="${pSku}" data-id="${pId}" style="border-bottom: 1px solid var(--border); ${isLow ? 'background: #fffafa;' : ''}">
             <td style="padding: 6px 10px; width: 48px;">
-              <img src="${resolveImgUrl(p.fotoUrl)}" style="width: 38px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); background: #eee;">
+              <img src="${pImg}" alt="${pName}" style="width: 38px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); background: #eee;">
             </td>
-            <td style="padding: 6px 10px; font-weight: 700; font-size: 0.75rem;">${pSku}</td>
+            <td style="padding: 6px 10px; font-weight: 700; font-size: 0.75rem; font-family: monospace;">${pSku}</td>
             <td style="padding: 6px 10px;">
-              <div style="font-weight: 600; font-size: 0.8rem; color: var(--secondary);">${p.nama}</div>
-              <div style="font-size: 0.68rem; color: var(--text-muted);">${p.subKategori || p.kategori || ''} • ${p.jenisKain || ''}</div>
+              <div style="font-weight: 700; font-size: 0.8rem; color: var(--secondary);">${pName}</div>
+              <div style="font-size: 0.68rem; color: var(--text-muted);">${pCategory}${pFabric ? ' • ' + pFabric : ''}</div>
+              ${pDesc ? `<div style="font-size: 0.68rem; color: #64748b; margin-top: 2px; line-height: 1.25; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${pDesc}</div>` : ''}
             </td>
-            <td style="padding: 6px 10px; font-weight: 700; color: var(--primary); font-size: 0.8rem;">${formatRupiah(p.hargaJual)}</td>
+            <td style="padding: 6px 10px; font-weight: 700; color: var(--primary); font-size: 0.8rem;">${pPrice}</td>
             <td style="padding: 6px 10px; text-align: center;">
-              <div style="font-weight: 800; color: ${isLow ? 'var(--danger)' : 'var(--success)'}; font-size: 0.88rem;">${p.stok}</div>
+              <div style="font-weight: 800; color: ${isLow ? 'var(--danger)' : 'var(--success)'}; font-size: 0.88rem;">${stokVal}</div>
               ${isLow ? '<span style="font-size: 0.62rem; font-weight: 800; background: #fee2e2; color: #991b1b; padding: 1px 5px; border-radius: 4px; display: inline-block; margin-top: 2px;">RE-ORDER</span>' : ''}
             </td>
             <td style="padding: 6px 10px; text-align: center;">
               <div style="display: flex; gap: 4px; justify-content: center;">
-                <button type="button" class="btn-secondary btn-action-edit" data-sku="${pSku}" data-id="${pId}" style="padding: 4px 8px; font-size: 0.72rem; border-color: var(--gold); border-radius: 4px; cursor: pointer;" onclick="openProductModal('edit', '${pSku}')" title="Edit Data & Foto">
+                <button type="button" class="btn-secondary btn-action-edit" data-sku="${pSku}" data-id="${pId}" style="padding: 4px 8px; font-size: 0.72rem; border-color: var(--gold); border-radius: 4px; cursor: pointer;" onclick="openProductModal('edit', '${pSku}')" title="Edit Data, Foto & Narasi">
                   ✏️ Edit
                 </button>
                 <button type="button" class="btn-secondary btn-action-restock" data-id="${pId}" style="padding: 4px 8px; font-size: 0.72rem; border-color: #22c55e; color: #15803d; border-radius: 4px; cursor: pointer;" onclick="quickRestock('${pId}', 10)" title="Tambah Cepat +10 Pcs">
@@ -15087,8 +15167,9 @@
         `;
       }).join("");
 
-      updateStockAnalytics();
+      try { updateStockAnalytics(); } catch (e) { }
     }
+    window.renderAdminTable = renderAdminTable;
 
     // ANALISIS SISA STOK & TRANSAKSI BERDASARKAN PERIODE
     function setStockPeriod(period) {
@@ -16171,20 +16252,36 @@
       if (dropdownLaporanItem) dropdownLaporanItem.style.setProperty("display", "none", "important");
       document.querySelectorAll(".sidebar-admin-item").forEach(el => el.style.setProperty("display", "none", "important"));
 
-      // 5. Tampilkan notifikasi singkat, lalu muat ulang halaman
-      if (typeof showToast === "function") {
-        showToast("👋 Berhasil logout. Mengalihkan ke halaman utama...");
-      } else if (typeof standaloneShowToast === "function") {
-        standaloneShowToast("👋 Berhasil logout. Mengalihkan ke halaman utama...");
+      // 5. Sembunyikan #viewAdmin dan aktifkan #viewCatalog secara murni SPA (Tanpa window.location.reload yang membuat blank screen di GAS)
+      const viewAdmin = document.getElementById("viewAdmin");
+      if (viewAdmin) {
+        viewAdmin.classList.remove("active");
+        viewAdmin.style.setProperty("display", "none", "important");
       }
 
-      setTimeout(() => {
-        try {
-          window.location.reload();
-        } catch (e) {
-          if (typeof switchTab === "function") switchTab("catalog");
+      if (typeof switchTab === "function") {
+        switchTab("catalog");
+      } else {
+        const viewCatalog = document.getElementById("viewCatalog");
+        if (viewCatalog) {
+          document.querySelectorAll(".view-content").forEach(v => {
+            v.classList.remove("active");
+            v.style.setProperty("display", "none", "important");
+          });
+          viewCatalog.classList.add("active");
+          viewCatalog.style.setProperty("display", "block", "important");
         }
-      }, 400);
+      }
+
+      try { if (typeof renderCatalog === "function") renderCatalog(); } catch (e) { }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      // 6. Tampilkan notifikasi sukses logout
+      if (typeof showToast === "function") {
+        showToast("👋 Berhasil logout. Akses kembali ke Mode Pelanggan / Tamu.");
+      } else if (typeof standaloneShowToast === "function") {
+        standaloneShowToast("👋 Berhasil logout. Akses kembali ke Mode Pelanggan / Tamu.");
+      }
     };
     window.handleUserLogout = window.handleDirectLogout;
 
@@ -17357,7 +17454,7 @@
           // Toast notification
           standaloneShowToast(successMsg || ("✅ Berhasil masuk sebagai " + user.name));
 
-          // If staff, switch view to admin tab
+          // If staff, switch view to admin tab and render stock table
           if (isStaff) {
             try {
               if (typeof window.switchTab === "function") {
@@ -17365,10 +17462,16 @@
               } else {
                 const viewAdmin = document.getElementById("viewAdmin");
                 if (viewAdmin) {
-                  document.querySelectorAll(".view-tab").forEach(v => v.classList.remove("active"));
+                  document.querySelectorAll(".view-content").forEach(v => {
+                    v.classList.remove("active");
+                    v.style.setProperty("display", "none", "important");
+                  });
                   viewAdmin.classList.add("active");
                   viewAdmin.style.setProperty("display", "block", "important");
                 }
+              }
+              if (typeof window.renderAdminTable === "function") {
+                window.renderAdminTable();
               }
             } catch (e) { }
           }
@@ -17426,6 +17529,12 @@
             };
 
             applyLoggedInUser(newUser, "🎉 Pendaftaran berhasil! Selamat datang di V&T, " + name + "!");
+            if (typeof google !== "undefined" && google.script && google.script.run) {
+              google.script.run
+                .withSuccessHandler(function(res) { console.log("Cloud sync register success:", res); })
+                .withFailureHandler(function(err) { console.warn("Cloud sync register fail:", err); })
+                .daftarAkunBaru({ nama: name, email: email, phone: phone, password: pass });
+            }
           } else {
             const emailInput = document.getElementById("modalAuthEmail");
             const passInput = document.getElementById("modalAuthPass");
@@ -17491,14 +17600,64 @@
             }
 
             // Fallback to original window.submitModalAuthForm if available
-            try {
-              if (typeof window.submitModalAuthForm === "function" && window.submitModalAuthForm !== standaloneSubmitAuth) {
-                window.submitModalAuthForm();
-                return;
+            // 3. Fallback: Verifikasi Kredensial Langsung ke Database Google Sheets (DataPengguna)
+            if (typeof google !== "undefined" && google.script && google.script.run) {
+              const submitBtn = document.getElementById("btnModalAuthSubmit");
+              const origText = submitBtn ? submitBtn.innerText : "Masuk";
+              if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "⏳ Memverifikasi...";
               }
-            } catch (e) { }
+              standaloneHideAuthError();
 
-            // Invalid Credentials
+              google.script.run
+                .withSuccessHandler(function(res) {
+                  if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = origText;
+                  }
+                  if (res && res.success && res.user) {
+                    const u = res.user;
+                    const uRole = String(u.role || "CUSTOMER").toUpperCase();
+                    // Simpan ke local cache agar login berikutnya instan
+                    try {
+                      let accs = JSON.parse(localStorage.getItem("vt_registered_accounts") || "[]");
+                      if (!accs.some(a => (a.email || "").toLowerCase() === (u.email || "").toLowerCase())) {
+                        accs.push({ email: u.email, pass: rawPass, name: u.name, phone: u.phone });
+                        localStorage.setItem("vt_registered_accounts", JSON.stringify(accs));
+                      }
+                    } catch (e) { }
+
+                    const loggedUser = {
+                      role: (uRole === "SUPER_ADMIN" ? "SUPER ADMIN" : (uRole === "ADMIN" ? "ADMIN TOKO" : (uRole === "OPERATOR" ? "OPERATOR TOKO" : "CUSTOMER"))),
+                      name: u.name,
+                      title: (uRole === "CUSTOMER" ? "Pelanggan: " : "Staf: ") + u.name,
+                      icon: (uRole === "SUPER_ADMIN" ? "👑" : (uRole === "ADMIN" ? "💎" : (uRole === "OPERATOR" ? "🏷️" : "👤"))),
+                      email: u.email,
+                      phone: u.phone
+                    };
+
+                    applyLoggedInUser(loggedUser, "✅ Selamat datang, " + u.name + "!");
+                  } else {
+                    standaloneShowAuthError(res && res.message ? res.message : "Email / Password tidak sesuai.");
+                    if (passInput) {
+                      passInput.focus();
+                      passInput.select();
+                    }
+                  }
+                })
+                .withFailureHandler(function(err) {
+                  if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = origText;
+                  }
+                  standaloneShowAuthError("Gagal verifikasi ke server: " + (err.message || err));
+                })
+                .loginPengguna(rawLogin, rawPass);
+              return;
+            }
+
+            // Fallback offline jika google.script.run tidak tersedia
             standaloneShowAuthError("Email / Password tidak sesuai.");
             if (passInput) {
               passInput.focus();
