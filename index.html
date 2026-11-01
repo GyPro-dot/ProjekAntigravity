@@ -7091,7 +7091,8 @@
   <!-- MODAL: INPUT & EDIT MASTER PRODUK / STOK (LENGKAP CRUD)       -->
   <!-- ============================================================== -->
   <div class="modal-overlay" id="productModal" style="display: none; z-index: 99999;">
-    <div class="bottom-sheet" style="max-width: 540px; border-top: 4px solid var(--gold);" onclick="event.stopPropagation()">
+    <div class="bottom-sheet" style="max-width: 540px; border-top: 4px solid var(--gold);"
+      onclick="event.stopPropagation()">
       <div class="sheet-header"
         style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border); background: #fdfafb;">
         <div>
@@ -7344,7 +7345,8 @@
           </div>
           <input type="text" id="opFotoUrl" class="form-input"
             oninput="const p=document.getElementById('opFotoPreview'); const w=document.getElementById('opGalleryPreviewWrap'); if(p&&w){ p.src=resolveImgUrl(this.value); w.style.display='flex'; }"
-            placeholder="Atau tempel URL gambar / file lokal (assets/...)" value="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg">
+            placeholder="Atau tempel URL gambar / file lokal (assets/...)"
+            value="https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg">
         </div>
 
         <div class="form-group">
@@ -7353,9 +7355,11 @@
             placeholder="Contoh: Koleksi busana India eksklusif dengan aksen sulam bordir benang emas asli, kain sejuk, dan kualitas premium."></textarea>
         </div>
       </div>
-      <div class="sheet-footer" style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--border); background: #fdfafb;">
+      <div class="sheet-footer"
+        style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--border); background: #fdfafb;">
         <button type="button" class="btn-secondary" onclick="window.handleDirectCloseModal(this, event)">Batal</button>
-        <button type="button" class="btn-primary" id="btnSimpanOperatorModal" onclick="submitOperatorNewProduct()" style="cursor: pointer; background: var(--primary); font-weight: 700; padding: 8px 18px;">
+        <button type="button" class="btn-primary" id="btnSimpanOperatorModal" onclick="submitOperatorNewProduct()"
+          style="cursor: pointer; background: var(--primary); font-weight: 700; padding: 8px 18px;">
           💾 Simpan Produk
         </button>
       </div>
@@ -9389,7 +9393,33 @@
 
     // 2. VIEWPORT / TAB NAVIGATION CONTROLLER (ROBUST DISPLAY SWITCHING)
     function switchTab(tab) {
-      // Hide all view-content elements reliably
+      // a) Tutup paksa seluruh modal & pulihkan pointer-events
+      document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.classList.remove('active', 'is-open');
+        m.style.setProperty('display', 'none', 'important');
+        m.style.setProperty('visibility', 'hidden', 'important');
+        m.style.setProperty('opacity', '0', 'important');
+        m.style.setProperty('pointer-events', 'none', 'important');
+      });
+
+      if (document.body) {
+        document.body.classList.remove('modal-open', 'blur', 'overflow-hidden', 'has-modal-open');
+        document.body.style.setProperty('filter', 'none', 'important');
+        document.body.style.setProperty('backdrop-filter', 'none', 'important');
+        document.body.style.setProperty('overflow', 'auto', 'important');
+        document.body.style.setProperty('pointer-events', 'auto', 'important');
+      }
+      if (document.documentElement) {
+        document.documentElement.style.setProperty('overflow', 'auto', 'important');
+        document.documentElement.style.setProperty('pointer-events', 'auto', 'important');
+      }
+      const appContainer = document.querySelector('#app, .app-container, .main-layout, .preview-frame');
+      if (appContainer) {
+        appContainer.style.setProperty('pointer-events', 'auto', 'important');
+        appContainer.style.setProperty('filter', 'none', 'important');
+      }
+
+      // b) Sembunyikan seluruh tab view lain
       document.querySelectorAll(".view-content").forEach(v => {
         v.classList.remove("active");
         v.style.setProperty("display", "none", "important");
@@ -9408,6 +9438,8 @@
           vc.style.setProperty("display", "block", "important");
         }
         document.getElementById("navBtnCatalog")?.classList.add("active");
+        try { if (typeof renderCatalog === "function") renderCatalog(); } catch (e) { }
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } else if (tab === "cart") {
         const vc = document.getElementById("viewCart");
         if (vc) {
@@ -11982,11 +12014,72 @@
     }
 
     function closeOperatorInputModal() {
-      document.getElementById("operatorModal").style.display = "none";
+      const modal = document.getElementById("operatorModal");
+      if (modal) {
+        modal.classList.remove("active", "is-open");
+        modal.style.setProperty("display", "none", "important");
+        modal.style.setProperty("visibility", "hidden", "important");
+        modal.style.setProperty("opacity", "0", "important");
+        modal.style.setProperty("pointer-events", "none", "important");
+      }
+      const pModal = document.getElementById("productModal");
+      if (pModal) {
+        pModal.classList.remove("active", "is-open");
+        pModal.style.setProperty("display", "none", "important");
+        pModal.style.setProperty("visibility", "hidden", "important");
+        pModal.style.setProperty("opacity", "0", "important");
+        pModal.style.setProperty("pointer-events", "none", "important");
+      }
+      document.querySelectorAll(".modal-overlay").forEach(ov => {
+        ov.classList.remove("active", "is-open");
+        ov.style.setProperty("display", "none", "important");
+        ov.style.setProperty("pointer-events", "none", "important");
+      });
+      if (document.body) {
+        document.body.classList.remove("modal-open", "blur", "overflow-hidden", "has-modal-open");
+        document.body.style.setProperty("filter", "none", "important");
+        document.body.style.setProperty("backdrop-filter", "none", "important");
+        document.body.style.setProperty("overflow", "auto", "important");
+        document.body.style.setProperty("pointer-events", "auto", "important");
+      }
+      if (document.documentElement) {
+        document.documentElement.style.setProperty("overflow", "auto", "important");
+        document.documentElement.style.setProperty("pointer-events", "auto", "important");
+      }
+      const appContainer = document.querySelector("#app, .app-container, .main-layout, .preview-frame");
+      if (appContainer) {
+        appContainer.style.setProperty("pointer-events", "auto", "important");
+        appContainer.style.setProperty("filter", "none", "important");
+      }
       const subWrap = document.getElementById("opSubCatCustomWrap");
       const fabWrap = document.getElementById("opFabricCustomWrap");
       if (subWrap) subWrap.style.display = "none";
       if (fabWrap) fabWrap.style.display = "none";
+
+      // Reset form input modal agar bersih saat dibuka kembali
+      try {
+        const opName = document.getElementById("opProdName");
+        if (opName) opName.value = "";
+        const opModalPrice = document.getElementById("opPriceModal");
+        if (opModalPrice) opModalPrice.value = "250000";
+        const opSellPrice = document.getElementById("opPriceSell");
+        if (opSellPrice) opSellPrice.value = "500000";
+        const opStock = document.getElementById("opStockQty");
+        if (opStock) opStock.value = "10";
+        const opDesc = document.getElementById("opProdDesc");
+        if (opDesc) opDesc.value = "";
+        const opFileLabel = document.getElementById("opFileNameLabel");
+        if (opFileLabel) opFileLabel.innerText = "Belum ada file galeri";
+        const opPreviewWrap = document.getElementById("opGalleryPreviewWrap");
+        if (opPreviewWrap) opPreviewWrap.style.display = "none";
+        const opFileInput = document.getElementById("opGalleryFileInput");
+        if (opFileInput) opFileInput.value = "";
+        const btnSaveOp = document.getElementById("btnSimpanOperatorModal") || document.getElementById("btnSubmitOperator");
+        if (btnSaveOp) {
+          btnSaveOp.disabled = false;
+          btnSaveOp.innerHTML = "💾 Simpan Produk";
+        }
+      } catch (e) { }
     }
 
     function updateSubCatDropdown() {
@@ -12027,17 +12120,24 @@
     }
 
     function submitOperatorNewProduct() {
-      if (!isStaffUser(state.currentUser)) {
-        showToast("🔒 Hanya ADMIN & OPERATOR terdaftar yang berwenang menambah stock barang!");
-        openStaffLoginModal();
-        return;
-      }
-      const nama = document.getElementById("opProdName").value.trim();
-      if (!nama) {
-        showToast("⚠️ Masukkan nama produk terlebih dahulu!");
-        document.getElementById("opProdName").focus();
-        return;
-      }
+      try {
+        if (!isStaffUser(state.currentUser)) {
+          showToast("🔒 Hanya ADMIN & OPERATOR terdaftar yang berwenang menambah stock barang!");
+          openStaffLoginModal();
+          return;
+        }
+        const nameInput = document.getElementById("opProdName");
+        const nama = (nameInput ? nameInput.value : "").trim();
+        if (!nama) {
+          showToast("⚠️ Masukkan nama produk terlebih dahulu!");
+          if (nameInput) nameInput.focus();
+          return;
+        }
+        const btnSaveOp = document.getElementById("btnSimpanOperatorModal") || document.getElementById("btnSubmitOperator");
+        if (btnSaveOp) {
+          btnSaveOp.disabled = true;
+          btnSaveOp.innerHTML = "⏳ Menyimpan...";
+        }
 
       const mainCat = document.getElementById("opMainCat").value;
       let subCat = document.getElementById("opSubCat").value;
@@ -12115,27 +12215,35 @@
       // Sinkronisasi ke backend Google Sheets
       syncProductToBackend(newProduct, 'add');
 
+      // TUTUP MODAL & RESTORE POINTER EVENTS SEKETIKA
+      closeOperatorInputModal();
       if (typeof window.forceCloseAllModals === "function") {
         window.forceCloseAllModals();
-      } else {
-        closeOperatorInputModal();
       }
 
-      // Perbarui tampilan tabel admin dan katalog grid
-      if (typeof window.renderAdminTable === "function") {
-        window.renderAdminTable();
-      } else if (typeof renderAdminTable === "function") {
-        renderAdminTable();
+      if (btnSaveOp) {
+        btnSaveOp.disabled = false;
+        btnSaveOp.innerHTML = "💾 Simpan Produk";
       }
 
-      if (typeof renderCatalog === "function") {
-        renderCatalog();
-      }
-      if (typeof renderPosCatalog === "function") {
-        renderPosCatalog();
-      }
+      // Perbarui tampilan tabel admin dan katalog grid secara aman
+      try {
+        if (typeof window.renderAdminTable === "function") {
+          window.renderAdminTable();
+        } else if (typeof renderAdminTable === "function") {
+          renderAdminTable();
+        }
+      } catch (e) { }
+
+      try { if (typeof renderCatalog === "function") renderCatalog(); } catch (e) { }
+      try { if (typeof renderPosCatalog === "function") renderPosCatalog(); } catch (e) { }
 
       showToast(`✅ Produk baru '${nama}' berhasil disimpan di sistem dan database!`);
+      } catch (err) {
+        console.error("submitOperatorNewProduct error:", err);
+        showToast("⚠️ Terjadi kesalahan saat menyimpan produk: " + (err.message || err));
+        closeOperatorInputModal();
+      }
     }
 
     function appendDisplayChipIfMissing(subCat) {
@@ -14430,8 +14538,8 @@
         showToast(`🎉 Pendaftaran berhasil! Selamat datang di V&T, ${name}!`);
         if (typeof google !== "undefined" && google.script && google.script.run) {
           google.script.run
-            .withSuccessHandler(function(res) { console.log("Cloud sync register:", res); })
-            .withFailureHandler(function(err) { console.warn("Cloud sync register error:", err); })
+            .withSuccessHandler(function (res) { console.log("Cloud sync register:", res); })
+            .withFailureHandler(function (err) { console.warn("Cloud sync register error:", err); })
             .daftarAkunBaru({ nama: name, email: email, phone: phone, password: pass });
         }
       } else {
@@ -14622,26 +14730,84 @@
     });
 
     function handleUserLogout(event) {
-      if (typeof window.handleDirectLogout === "function") {
-        window.handleDirectLogout(event);
+      if (event) {
+        if (typeof event.preventDefault === "function") event.preventDefault();
+        if (typeof event.stopPropagation === "function") event.stopPropagation();
+      }
+
+      const prevUser = (typeof state !== "undefined" && state) ? state.currentUser : null;
+      const prevName = (prevUser && prevUser.name && prevUser.name !== "Masuk") ? prevUser.name : "Pengguna";
+      const wasStaff = (typeof isStaffUser === "function") ? isStaffUser(prevUser) : false;
+
+      // 1. Bersihkan session di storage
+      const keysToRemove = ["vt_active_user", "vt_active_role", "currentUser", "userRole", "tokenAuth", "vt_token", "activeSession", "isStaff", "authRole"];
+      keysToRemove.forEach(k => {
+        try { localStorage.removeItem(k); } catch (e) { }
+        try { sessionStorage.removeItem(k); } catch (e) { }
+      });
+
+      // 2. Set user ke Tamu default
+      const guestUser = { role: "CUSTOMER", name: "Masuk", title: "Pelanggan / Masuk", icon: "👤", canManageStock: false };
+      if (typeof state !== "undefined" && state) state.currentUser = guestUser;
+      if (window.state) window.state.currentUser = guestUser;
+
+      // 3. Update UI Header & Dropdown
+      try { if (typeof updateRoleDisplay === "function") updateRoleDisplay(); } catch (e) { }
+      try { if (typeof closeUserDropdown === "function") closeUserDropdown(); } catch (e) { }
+      const dd = document.getElementById("userAccountDropdown");
+      if (dd) dd.style.display = "none";
+
+      // 4. Tutup paksa seluruh modal dan bersihkan pointer-events
+      document.querySelectorAll(".modal-overlay").forEach(m => {
+        m.classList.remove("active", "is-open");
+        m.style.setProperty("display", "none", "important");
+        m.style.setProperty("visibility", "hidden", "important");
+        m.style.setProperty("opacity", "0", "important");
+        m.style.setProperty("pointer-events", "none", "important");
+      });
+
+      // 5. Bersihkan form auth agar siap login kembali
+      const authModal = document.getElementById("authModal");
+      if (authModal) {
+        const emailInp = document.getElementById("modalAuthEmail");
+        if (emailInp) emailInp.value = "";
+        const passInp = document.getElementById("modalAuthPass");
+        if (passInp) passInp.value = "";
+        const errBanner = document.getElementById("authErrorBanner");
+        if (errBanner) errBanner.style.setProperty("display", "none", "important");
+      }
+
+      // 6. Pulihkan pointer-events pada body & container
+      if (document.body) {
+        document.body.classList.remove("modal-open", "blur", "overflow-hidden", "has-modal-open");
+        document.body.style.setProperty("filter", "none", "important");
+        document.body.style.setProperty("backdrop-filter", "none", "important");
+        document.body.style.setProperty("overflow", "auto", "important");
+        document.body.style.setProperty("pointer-events", "auto", "important");
+      }
+      if (document.documentElement) {
+        document.documentElement.style.setProperty("overflow", "auto", "important");
+        document.documentElement.style.setProperty("pointer-events", "auto", "important");
+      }
+      const appContainer = document.querySelector("#app, .app-container, .main-layout, .preview-frame");
+      if (appContainer) {
+        appContainer.style.setProperty("pointer-events", "auto", "important");
+        appContainer.style.setProperty("filter", "none", "important");
+      }
+
+      // 7. Berpindah ke Katalog (SPA)
+      switchTab("catalog");
+      try { if (typeof renderCatalog === "function") renderCatalog(); } catch (e) { }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      if (wasStaff) {
+        showToast(`👋 Petugas ${prevName} berhasil Logout. Akses dikembalikan ke Mode Pelanggan/Tamu.`);
       } else {
-        const prevUser = state.currentUser;
-        const prevName = (prevUser && prevUser.name && prevUser.name !== "Masuk") ? prevUser.name : "Pengguna";
-        const wasStaff = isStaffUser(prevUser);
-
-        try { localStorage.removeItem("vt_active_user"); } catch (e) { }
-        state.currentUser = USER_ROLES["PELANGGAN:TAMU"] || { role: "CUSTOMER", name: "Masuk", title: "Pelanggan / Masuk", icon: "👤", canManageStock: false };
-        updateRoleDisplay();
-        closeUserDropdown();
-
-        if (wasStaff) {
-          showToast(`👋 Petugas ${prevName} berhasil Logout. Akses dikembalikan ke Mode Pelanggan/Tamu.`);
-        } else {
-          showToast(`👋 ${prevName} telah berhasil keluar (Logout).`);
-        }
-        switchTab('catalog');
+        showToast(`👋 ${prevName} telah berhasil keluar (Logout).`);
       }
     }
+    window.handleUserLogout = handleUserLogout;
+    window.handleDirectLogout = handleUserLogout;
 
     function scrollToCatalog() {
       switchTab('catalog');
@@ -15113,8 +15279,9 @@
 
     // ADMIN TABLE DENGAN FOTO, NARASI SINGKAT, STATUS RE-ORDER & QUICK RESTOCK
     function renderAdminTable() {
-      const tbody = document.getElementById("adminStockTableBody");
-      if (!tbody) return;
+      try {
+        const tbody = document.getElementById("adminStockTableBody");
+        if (!tbody) return;
 
       // 1. Pastikan sumber data produk tersedia (state.products -> window.products -> localStorage)
       let products = (typeof state !== "undefined" && state && Array.isArray(state.products) && state.products.length > 0)
@@ -15173,22 +15340,35 @@
         return;
       }
 
-      tbody.innerHTML = list.map(p => {
-        const stokVal = Number(p.stok || 0);
+      const DEFAULT_PLACEHOLDER = "https://cdn.jsdelivr.net/gh/GyPro-dot/ProjekAntigravity@main/assets/card1_website.jpg";
+
+      tbody.innerHTML = list.map((p, idx) => {
+        if (!p) return "";
+        const stokVal = Number(p.stok !== undefined ? p.stok : (p.stock !== undefined ? p.stock : 0)) || 0;
         const isLow = stokVal < 5;
-        const pSku = p.sku || p.id || "";
-        const pId = p.id || pSku;
-        const pName = p.nama || "Produk V&T";
-        const pDesc = p.deskripsi || p.narasi || "";
-        const pImg = resolveImgUrl(p.fotoUrl);
-        const pPrice = formatRupiah(p.hargaJual || 0);
-        const pCategory = p.subKategori || p.kategori || p.kategoriUtama || "";
-        const pFabric = p.jenisKain || "";
+        const pSku = String(p.sku || p.id || ("SKU-" + ("000" + (idx + 1)).slice(-3)));
+        const pId = String(p.id || pSku);
+        const pName = String(p.nama || p.name || "Koleksi Busana V&T");
+        const pDesc = String(p.deskripsi || p.narasi || p.description || "");
+        
+        let pImg = DEFAULT_PLACEHOLDER;
+        try {
+          pImg = (typeof resolveImgUrl === "function" ? resolveImgUrl(p.fotoUrl || p.image || p.foto) : (p.fotoUrl || p.image || p.foto)) || DEFAULT_PLACEHOLDER;
+        } catch (e) { pImg = DEFAULT_PLACEHOLDER; }
+
+        let pPrice = "Rp 0";
+        try {
+          const rawPrice = Number(p.hargaJual || p.price || p.harga || 0);
+          pPrice = (typeof formatRupiah === "function") ? formatRupiah(rawPrice) : ("Rp " + rawPrice.toLocaleString("id-ID"));
+        } catch (e) { pPrice = "Rp " + (p.hargaJual || 0); }
+
+        const pCategory = String(p.subKategori || p.kategori || p.kategoriUtama || p.category || "Koleksi Fashion");
+        const pFabric = String(p.jenisKain || p.fabric || "");
 
         return `
           <tr data-sku="${pSku}" data-id="${pId}" style="border-bottom: 1px solid var(--border); ${isLow ? 'background: #fffafa;' : ''}">
             <td style="padding: 6px 10px; width: 48px;">
-              <img src="${pImg}" alt="${pName}" style="width: 38px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); background: #eee;">
+              <img src="${pImg}" alt="${pName}" onerror="this.src='${DEFAULT_PLACEHOLDER}'" style="width: 38px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); background: #eee;">
             </td>
             <td style="padding: 6px 10px; font-weight: 700; font-size: 0.75rem; font-family: monospace;">${pSku}</td>
             <td style="padding: 6px 10px;">
@@ -15219,6 +15399,9 @@
       }).join("");
 
       try { updateStockAnalytics(); } catch (e) { }
+      } catch (err) {
+        console.error("renderAdminTable runtime error handled:", err);
+      }
     }
     window.renderAdminTable = renderAdminTable;
 
@@ -17638,8 +17821,8 @@
             applyLoggedInUser(newUser, "🎉 Pendaftaran berhasil! Selamat datang di V&T, " + name + "!");
             if (typeof google !== "undefined" && google.script && google.script.run) {
               google.script.run
-                .withSuccessHandler(function(res) { console.log("Cloud sync register success:", res); })
-                .withFailureHandler(function(err) { console.warn("Cloud sync register fail:", err); })
+                .withSuccessHandler(function (res) { console.log("Cloud sync register success:", res); })
+                .withFailureHandler(function (err) { console.warn("Cloud sync register fail:", err); })
                 .daftarAkunBaru({ nama: name, email: email, phone: phone, password: pass });
             }
           } else {
@@ -17718,7 +17901,7 @@
               standaloneHideAuthError();
 
               google.script.run
-                .withSuccessHandler(function(res) {
+                .withSuccessHandler(function (res) {
                   if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.innerText = origText;
@@ -17753,7 +17936,7 @@
                     }
                   }
                 })
-                .withFailureHandler(function(err) {
+                .withFailureHandler(function (err) {
                   if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.innerText = origText;
