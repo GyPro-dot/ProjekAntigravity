@@ -235,7 +235,7 @@ function getInitData() {
       }
     }
     if (!settings.NamaToko) settings.NamaToko = "PAC (Pink ACcessories) • V&T";
-    if (!settings.NoWhatsApp) settings.NoWhatsApp = "628116072491";
+    if (!settings.NoWhatsApp) settings.NoWhatsApp = "6281265167092";
     if (!settings.PinKasir) settings.PinKasir = "1234";
 
     // Baca Riwayat Transaksi Terakhir (Maksimal 30 data terbaru)
@@ -255,7 +255,7 @@ function getInitData() {
           tanggal: String(tr[COL_TRX.TANGGAL] || ""),
           namaKasir: String(tr[COL_TRX.KASIR] || "PINKY"),
           namaCustomer: String(tr[COL_TRX.PELANGGAN] || "Pelanggan POS"),
-          kontakCustomer: "08116072491",
+          kontakCustomer: "081265167092",
           totalItem: parseCleanNumber(tr[COL_TRX.TOTAL_ITEM]),
           subtotal: parseCleanNumber(tr[COL_TRX.TOTAL_BELANJA]),
           diskon: parseCleanNumber(tr[COL_TRX.DISKON]),
@@ -803,7 +803,7 @@ function loginPengguna(loginId, password) {
       "admin2", "admin2:tish", "admin 2", "admin 2 : tish",
       "tish", "admin tish", "admin-tish", "admintish", "admin",
       "hritish", "hristih", "hristihgaya@gmail.com", "hristihgaya@gmai.com",
-      "hritishgayagalani99@gmail.com", "gayamurty@gmail.com",
+      "hritishgaya@gmail.com", "gayamurty@gmail.com",
       "tish@pinkaccessories.com", "tish@jakartanotebook.com", "usr-003"
     ].indexOf(rawLogin) !== -1 ||
     rawLogin.indexOf("tish") !== -1 ||
@@ -823,7 +823,7 @@ function loginPengguna(loginId, password) {
             id: "USR-003",
             name: "TISH",
             role: "ADMIN",
-            email: "hritishgayagalani99@gmail.com",
+            email: "hritishgaya@gmail.com",
             phone: "081234567893"
           }
         };

@@ -464,7 +464,7 @@ function getSamplePesanan() {
       "ORD-20261029-0001",
       nowStr,
       "Gaya Murty",
-      "08116072491",
+      "081265167092",
       "Jl. Jenggala No.71, Kel. Madras Hulu, Medan Polonia - 20152",
       "Banarasi Silk Saree Royal Maroon Gold Zari (SKU-SAR-009) x1 @Rp 750.000",
       1,
@@ -486,7 +486,7 @@ function getSampleAlamat() {
     [
       "ADDR-001",
       "GAYA MURTY",
-      "08116072491",
+      "081265167092",
       "Sumatera Utara, Medan, Medan Polonia",
       "20152",
       "Jl. Jenggala No.71, Kel. Madras Hulu",
@@ -503,8 +503,8 @@ function getSamplePengaturan() {
   return [
     ["NamaToko", "PAC (Pink ACcessories) • V&T - Indian Fashion & Accessories"],
     ["Tagline", "Exclusive Indian Saree, Kurti, Lehenga & Bridal Accessories"],
-    ["NoWhatsApp", "628116072491"],
-    ["EmailToko", "hritishgayagalani99@gmail.com"],
+    ["NoWhatsApp", "6281265167092"],
+    ["EmailToko", "hritishgaya@gmail.com"],
     ["Alamat", "THE PAC Boutique • V&T, Jl. Teuku Cik Ditiro No. 22, Medan, Indonesia"],
     ["JamOperasional", "Senin - Minggu: 10:30 - 21:00 WIB (Hari Besar: Libur)"],
     ["PinKasir", "1234"],
