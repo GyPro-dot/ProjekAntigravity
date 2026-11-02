@@ -8913,7 +8913,8 @@
           <div class="floating-label-field active-blue" id="modalAuthEmailWrap">
             <span class="floating-label-notch">Email / User ID</span>
             <input type="text" id="modalAuthEmail" class="floating-input-control" placeholder="" value="" placeholder=""
-              oninput="hideAuthError()" onkeydown="if(event.key==='Enter') submitModalAuthForm()" autocomplete="username">
+              oninput="hideAuthError()" onkeydown="if(event.key==='Enter') submitModalAuthForm()"
+              autocomplete="username">
           </div>
           <div class="auth-helper-subtext">Contoh : xxxxxxxx@gmail.com</div>
         </div>
@@ -8957,16 +8958,21 @@
       </button>
 
       <!-- Akses Cepat Petugas & Owner (ADMIN TISH, ADMIN VICKY, OPERATOR) -->
-      <div id="quickStaffLoginRow" style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0; text-align: center;">
-        <div style="font-size: 0.74rem; color: #64748b; margin-bottom: 8px; font-weight: 700;">Masuk Instan Akun Petugas &amp; Owner:</div>
+      <div id="quickStaffLoginRow"
+        style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0; text-align: center;">
+        <div style="font-size: 0.74rem; color: #64748b; margin-bottom: 8px; font-weight: 700;">Masuk Instan Akun Petugas
+          &amp; Owner:</div>
         <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
-          <button type="button" onclick="quickLoginAsStaff('ADMIN2:TISH')" style="background: #0284c7; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
+          <button type="button" onclick="quickLoginAsStaff('ADMIN2:TISH')"
+            style="background: #0284c7; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
             💎 ADMIN TISH
           </button>
-          <button type="button" onclick="quickLoginAsStaff('ADMIN1:VICKY')" style="background: #4f46e5; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
+          <button type="button" onclick="quickLoginAsStaff('ADMIN1:VICKY')"
+            style="background: #4f46e5; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
             💎 ADMIN VICKY
           </button>
-          <button type="button" onclick="quickLoginAsStaff('OPERATOR1:WIDYA')" style="background: #059669; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
+          <button type="button" onclick="quickLoginAsStaff('OPERATOR1:WIDYA')"
+            style="background: #059669; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
             🏷️ OPERATOR WIDYA
           </button>
         </div>
@@ -9350,13 +9356,23 @@
       const appContainer = document.querySelector(".app-container") || document.getElementById("appContainer");
 
       document.body.classList.remove("is-mobile-view", "is-tablet-view", "is-desktop-view");
-      btnMobile?.classList.remove("active");
-      btnTablet?.classList.remove("active");
-      btnDesktop?.classList.remove("active");
+      
+      const btns = [btnMobile, btnTablet, btnDesktop];
+      btns.forEach(b => {
+        if (b) {
+          b.classList.remove("active");
+          b.style.removeProperty("background-color");
+          b.style.removeProperty("color");
+        }
+      });
 
       if (mode === "tablet") {
         document.body.classList.add("is-tablet-view");
-        btnTablet?.classList.add("active");
+        if (btnTablet) {
+          btnTablet.classList.add("active");
+          btnTablet.style.setProperty("background-color", "#e11d48", "important");
+          btnTablet.style.setProperty("color", "#ffffff", "important");
+        }
         if (appContainer) {
           appContainer.style.setProperty("max-width", "820px", "important");
           appContainer.style.setProperty("width", "100%", "important");
@@ -9367,33 +9383,45 @@
         if (!silent && typeof showToast === "function") showToast("📟 Mode Tablet (iPad 820px)");
       } else if (mode === "desktop") {
         document.body.classList.add("is-desktop-view");
-        btnDesktop?.classList.add("active");
+        if (btnDesktop) {
+          btnDesktop.classList.add("active");
+          btnDesktop.style.setProperty("background-color", "#e11d48", "important");
+          btnDesktop.style.setProperty("color", "#ffffff", "important");
+        }
         if (appContainer) {
-          appContainer.style.setProperty("max-width", "100%", "important");
+          appContainer.style.setProperty("max-width", "1280px", "important");
           appContainer.style.setProperty("width", "100%", "important");
-          appContainer.style.setProperty("margin", "0 auto", "important");
+          appContainer.style.setProperty("margin", "0 auto 40px auto", "important");
           appContainer.style.setProperty("border-radius", "0px", "important");
           appContainer.style.setProperty("box-shadow", "0 0 40px rgba(0, 0, 0, 0.08)", "important");
         }
-        if (!silent && typeof showToast === "function") showToast("💻 Mode Desktop (Layar Lebar Full-Width)");
+        if (!silent && typeof showToast === "function") showToast("💻 Mode Desktop (Layar Lebar 1280px)");
       } else {
         mode = "mobile";
         document.body.classList.add("is-mobile-view");
-        btnMobile?.classList.add("active");
+        if (btnMobile) {
+          btnMobile.classList.add("active");
+          btnMobile.style.setProperty("background-color", "#e11d48", "important");
+          btnMobile.style.setProperty("color", "#ffffff", "important");
+        }
         if (appContainer) {
-          appContainer.style.setProperty("max-width", "430px", "important");
+          appContainer.style.setProperty("max-width", "418px", "important");
           appContainer.style.setProperty("width", "100%", "important");
           appContainer.style.setProperty("margin", "18px auto 40px auto", "important");
           appContainer.style.setProperty("border-radius", "42px", "important");
           appContainer.style.setProperty("box-shadow", "0 25px 70px rgba(0, 0, 0, 0.75), 0 0 0 10px #1e293b, 0 0 0 13px #334155", "important");
         }
-        if (!silent && typeof showToast === "function") showToast("📱 Mode Mobile (HP 430px)");
+        if (!silent && typeof showToast === "function") showToast("📱 Mode Mobile (HP 418px)");
       }
 
       try {
         if (typeof safeStorage !== "undefined") safeStorage.setItem("vt_device_view", mode);
         else localStorage.setItem("vt_device_view", mode);
       } catch (e) { }
+
+      // Sinkronisasi render ulang katalog & kasir untuk layout multi-device
+      try { if (typeof renderCatalog === "function") renderCatalog(); } catch (e) {}
+      try { if (typeof renderPosCatalog === "function") renderPosCatalog(); } catch (e) {}
     }
 
     // (switchDeviceView hoisted to top of script)
@@ -10605,37 +10633,11 @@
 
     // VIEWPORT SWITCHER (MOBILE, TABLET, DESKTOP)
     function switchDeviceView(mode, silent = false) {
-      const btnMobile = document.getElementById("btnModeMobile") || document.getElementById("btnViewMobile");
-      const btnTablet = document.getElementById("btnModeTablet") || document.getElementById("btnViewTablet");
-      const btnDesktop = document.getElementById("btnModeDesktop") || document.getElementById("btnViewDesktop");
-
-      document.body.classList.remove("is-mobile-view", "is-tablet-view", "is-desktop-view");
-      if (btnMobile) btnMobile.classList.remove("active");
-      if (btnTablet) btnTablet.classList.remove("active");
-      if (btnDesktop) btnDesktop.classList.remove("active");
-
-      if (mode === "tablet") {
-        document.body.classList.add("is-tablet-view");
-        if (btnTablet) btnTablet.classList.add("active");
-        if (!silent && typeof showToast === "function") showToast("📟 Mode Tablet (iPad 820px)");
-      } else if (mode === "desktop") {
-        document.body.classList.add("is-desktop-view");
-        if (btnDesktop) btnDesktop.classList.add("active");
-        if (!silent && typeof showToast === "function") showToast("💻 Mode Desktop (Layar Lebar 1280px)");
-      } else {
-        // Default: mobile
-        document.body.classList.add("is-mobile-view");
-        if (btnMobile) btnMobile.classList.add("active");
-        if (!silent && typeof showToast === "function") showToast("📱 Mode Mobile (HP 418px)");
-      }
-
-      try {
-        localStorage.setItem("vt_device_view", mode);
-      } catch (e) { }
+      setPreviewMode(mode, silent);
     }
 
     function setDeviceView(mode, silent = false) {
-      switchDeviceView(mode, silent);
+      setPreviewMode(mode, silent);
     }
 
     // AUDIO STATE & LIFECYCLE MANAGEMENT (mp3 sound-Awal.mp3)
@@ -14676,7 +14678,7 @@
       } catch (e) { }
     }
 
-        // HELPER PENCOCOKAN ROLE PETUGAS & OWNER (MULTI-ALIAS & FORGIVING MATCH)
+    // HELPER PENCOCOKAN ROLE PETUGAS & OWNER (MULTI-ALIAS & FORGIVING MATCH)
     function findStaffAccountMatch(rawLogin, rawPass) {
       const normLogin = String(rawLogin || "").trim().toUpperCase();
       const normPass = String(rawPass || "").trim().toUpperCase();
@@ -14690,10 +14692,10 @@
         "HRITISHGAYAGALANI99@GMAIL.COM", "GAYAMURTY@GMAIL.COM",
         "TISH@JAKARTANOTEBOOK.COM", "TISH@PINKACCESSORIES.COM"
       ].includes(normLogin) ||
-      normLogin.includes("TISH") ||
-      normLogin.includes("HRITISH") ||
-      normLogin.includes("HRISTIH") ||
-      normLogin.includes("ADMIN2");
+        normLogin.includes("TISH") ||
+        normLogin.includes("HRITISH") ||
+        normLogin.includes("HRISTIH") ||
+        normLogin.includes("ADMIN2");
 
       if (isTish) {
         return {
@@ -14912,7 +14914,7 @@
           closeAuthModal();
           showToast(matchedStaff.successMsg);
           switchTab('admin');
-          try { if (typeof renderAdminTable === "function") renderAdminTable(); } catch(e){}
+          try { if (typeof renderAdminTable === "function") renderAdminTable(); } catch (e) { }
           return;
         }
 
@@ -15665,7 +15667,7 @@
           const stok = Number(p.stok !== undefined ? p.stok : (p.stock !== undefined ? p.stock : 0));
           const isLow = stok < 5;
           const pDesc = String(p.deskripsi || p.narasi || "");
-          
+
           let pPriceStr = "Rp " + harga.toLocaleString("id-ID");
           try {
             if (typeof formatRupiah === "function") pPriceStr = formatRupiah(harga);
@@ -17716,77 +17718,11 @@
 
         // B. Device Viewport Mode Logic
         function applyPreviewMode(mode) {
-          const appShell = document.querySelector(".app-shell") ||
-            document.querySelector(".mobile-preview-frame") ||
-            document.querySelector(".preview-wrapper") ||
-            document.getElementById("mainAppContainer") ||
-            document.body;
-
-          document.body.classList.remove("is-mobile-view", "is-tablet-view", "is-desktop-view");
-
-          const btns = [
-            document.getElementById("btnModeMobile") || document.getElementById("btnViewMobile"),
-            document.getElementById("btnModeTablet") || document.getElementById("btnViewTablet"),
-            document.getElementById("btnModeDesktop") || document.getElementById("btnViewDesktop")
-          ];
-          btns.forEach(b => {
-            if (b) {
-              b.classList.remove("active");
-              b.style.removeProperty("background-color");
-              b.style.removeProperty("color");
-            }
-          });
-
-          if (mode === "mobile") {
-            document.body.classList.add("is-mobile-view");
-            if (appShell && appShell !== document.body) {
-              appShell.style.setProperty("width", "430px", "important");
-              appShell.style.setProperty("max-width", "430px", "important");
-              appShell.style.setProperty("margin", "0 auto", "important");
-            }
-            const b = btns[0];
-            if (b) {
-              b.classList.add("active");
-              b.style.setProperty("background-color", "#e11d48", "important");
-              b.style.setProperty("color", "#ffffff", "important");
-            }
-          } else if (mode === "tablet") {
-            document.body.classList.add("is-tablet-view");
-            if (appShell && appShell !== document.body) {
-              appShell.style.setProperty("width", "820px", "important");
-              appShell.style.setProperty("max-width", "820px", "important");
-              appShell.style.setProperty("margin", "0 auto", "important");
-            }
-            const b = btns[1];
-            if (b) {
-              b.classList.add("active");
-              b.style.setProperty("background-color", "#e11d48", "important");
-              b.style.setProperty("color", "#ffffff", "important");
-            }
-          } else {
-            document.body.classList.add("is-desktop-view");
-            if (appShell && appShell !== document.body) {
-              appShell.style.setProperty("width", "100%", "important");
-              appShell.style.setProperty("max-width", "1280px", "important");
-              appShell.style.setProperty("margin", "0 auto", "important");
-            }
-            const b = btns[2];
-            if (b) {
-              b.classList.add("active");
-              b.style.setProperty("background-color", "#e11d48", "important");
-              b.style.setProperty("color", "#ffffff", "important");
-            }
-          }
-
-          try {
-            if (typeof window.switchDeviceView === "function" && window.switchDeviceView !== applyPreviewMode) {
-              window.switchDeviceView(mode);
-            }
-          } catch (e) { }
+          setPreviewMode(mode);
         }
 
-        window.setPreviewMode = applyPreviewMode;
-        window.switchDeviceView = applyPreviewMode;
+        window.setPreviewMode = setPreviewMode;
+        window.switchDeviceView = setPreviewMode;
 
         // C. View Switcher Logic
         function showView(viewId, activeBtnId) {

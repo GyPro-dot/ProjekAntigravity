@@ -12,6 +12,7 @@ scratch/
 *.log
 *.tmp
 *.temp
+*_database.json
 
 # Environment Variables & Secrets / Credentials
 .env
